@@ -1,13 +1,14 @@
 language: java
 jobs:
-  - stage: Server
-    jdk: oraclejdk10
-    script:
-      - cd Server
-      - make
+  include:
+    - stage: Server
+      script:
+        - cd Server
+        - make
 
-  - stage: Client
-    jdk: oraclejdk10
-    script:
-      - cd Client
-      - make
+    - stage: Client
+      script:
+        - cd Client
+        - make
+
+jdk: oraclejdk10
