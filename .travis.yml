@@ -1,0 +1,13 @@
+language: java
+jobs:
+  - stage: Server
+    jdk: oraclejdk10
+    script:
+      - cd Server
+      - make
+
+  - stage: Client
+    jdk: oraclejdk10
+    script:
+      - cd Client
+      - make
