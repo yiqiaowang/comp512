@@ -16,14 +16,14 @@ public class RMHashMap extends HashMap<String, RMItem>
 
 	public String toString()
 	{
-		String s = "--- BEGIN RMHashMap ---\n";
+		StringBuilder s = new StringBuilder("--- BEGIN RMHashMap ---\n");
 		for (String key : keySet())
 		{
 			String value = get(key).toString();
-			s = s + "[KEY='" + key + "']" + value + "\n";
+			s.append("[KEY='").append(key).append("']").append(value).append("\n");
 		}
-		s = s + "--- END RMHashMap ---";
-		return s;
+		s.append("--- END RMHashMap ---");
+		return s.toString();
 	}
 
 	public void dump()
@@ -31,7 +31,7 @@ public class RMHashMap extends HashMap<String, RMItem>
 		System.out.println(toString());
 	}
 
-	public Object clone()
+	public RMHashMap clone()
 	{
 		RMHashMap obj = new RMHashMap();
 		for (String key : keySet())

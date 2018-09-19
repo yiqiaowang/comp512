@@ -54,13 +54,13 @@ public enum Command {
 
 	public static String description()
 	{
-		String ret = "Commands supported by the client:\n";
+		StringBuilder ret = new StringBuilder("Commands supported by the client:\n");
 		for (Command cmd : Command.values())
 		{	 
-			ret += "\t" + cmd.name() + "\n";
+			ret.append("\t").append(cmd.name()).append("\n");
 		}
-		ret += "use help,<CommandName> for more detailed information";
-		return ret;
+		ret.append("use help,<CommandName> for more detailed information");
+		return ret.toString();
 	}
 
 	public String toString()

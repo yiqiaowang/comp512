@@ -9,12 +9,11 @@ import Server.Interface.*;
 
 import java.util.*;
 import java.rmi.RemoteException;
-import java.io.*;
 
 public class ResourceManager implements IResourceManager
 {
 	protected String m_name = "";
-	protected RMHashMap m_data = new RMHashMap();
+	protected final RMHashMap m_data = new RMHashMap();
 
 	public ResourceManager(String p_name)
 	{

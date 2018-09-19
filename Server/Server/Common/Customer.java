@@ -5,7 +5,6 @@
 
 package Server.Common;
 
-import java.util.*;
 
 public class Customer extends RMItem
 {
@@ -53,13 +52,13 @@ public class Customer extends RMItem
 
 	public String getBill()
 	{
-		String s = "Bill for customer " + m_ID + "\n";
+		StringBuilder s = new StringBuilder("Bill for customer " + m_ID + "\n");
 		for (String key : m_reservations.keySet())
 		{
 			ReservedItem item = (ReservedItem) m_reservations.get(key);
-			s += + item.getCount() + " " + item.getReservableItemKey() + " $" + item.getPrice() + "\n";
+			s.append(item.getCount()).append(" ").append(item.getReservableItemKey()).append(" $").append(item.getPrice()).append("\n");
 		}
-		return s;
+		return s.toString();
 	}
 
 	public String toString()
@@ -90,7 +89,7 @@ public class Customer extends RMItem
 	{
 		Customer obj = (Customer)super.clone();
 		obj.m_ID = m_ID;
-		obj.m_reservations = (RMHashMap)m_reservations.clone();
+		obj.m_reservations = m_reservations.clone();
 		return obj;
 	}
 }

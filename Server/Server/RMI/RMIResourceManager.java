@@ -5,15 +5,12 @@
 
 package Server.RMI;
 
-import Server.Interface.*;
-import Server.Common.*;
+import Server.Common.ResourceManager;
+import Server.Interface.IResourceManager;
 
-import java.rmi.NotBoundException;
-import java.util.*;
-
-import java.rmi.registry.Registry;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class RMIResourceManager extends ResourceManager 
@@ -46,18 +43,16 @@ public class RMIResourceManager extends ResourceManager
 			final Registry registry = l_registry;
 			registry.rebind(s_rmiPrefix + s_serverName, resourceManager);
 
-			Runtime.getRuntime().addShutdownHook(new Thread() {
-				public void run() {
-					try {
-						registry.unbind(s_rmiPrefix + s_serverName);
-						System.out.println("'" + s_serverName + "' resource manager unbound");
-					}
-					catch(Exception e) {
-						System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
-						e.printStackTrace();
-					}
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				try {
+					registry.unbind(s_rmiPrefix + s_serverName);
+					System.out.println("'" + s_serverName + "' resource manager unbound");
 				}
-			});                                       
+				catch(Exception e) {
+					System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
+					e.printStackTrace();
+				}
+			}));
 			System.out.println("'" + s_serverName + "' resource manager server ready and bound to '" + s_rmiPrefix + s_serverName + "'");
 		}
 		catch (Exception e) {

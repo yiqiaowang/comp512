@@ -434,7 +434,7 @@ public abstract class Client
 		return arguments;
 	}
 
-	public static void checkArgumentsCount(Integer expected, Integer actual) throws IllegalArgumentException
+	public static void checkArgumentsCount(int expected, int actual) throws IllegalArgumentException
 	{
 		if (expected != actual)
 		{
@@ -444,11 +444,11 @@ public abstract class Client
 
 	public static int toInt(String string) throws NumberFormatException
 	{
-		return (new Integer(string)).intValue();
+		return new Integer(string);
 	}
 
 	public static boolean toBoolean(String string)// throws Exception
 	{
-		return (new Boolean(string)).booleanValue();
+		return Boolean.valueOf(string);
 	}
 }
