@@ -1,4 +1,5 @@
 # comp512-project
+![Build Status](https://travis-ci.com/yiqiaowang/comp512.svg?token=hr7c7sHjqwUBhqrhRBYy&branch=master)
 
 To run the RMI resource manager:
 
