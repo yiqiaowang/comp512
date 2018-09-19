@@ -11,4 +11,4 @@ jobs:
         - cd Client
         - make
 
-jdk: oraclejdk10
+jdk: openjdk10
