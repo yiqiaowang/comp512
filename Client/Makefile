@@ -11,10 +11,14 @@ FORCE: ;
 ../Server/RMIInterface.jar: ../Server/Server/Interface/IResourceManager.java
 	make -C ../Server/ RMIInterface.jar
 
-compile-client: ../Server/RMIInterface.jar
-	javac -cp ../Server/RMIInterface.jar Client/*.java
+../Server/MethodLambda.jar: ../Server/Server/Common/MethodLambda.java
+	make -C ../Server/ MethodLambda.jar
+
+compile-client: ../Server/RMIInterface.jar ../Server/MethodLambda.jar
+	javac -cp ../Server/RMIInterface.jar:../Server/MethodLambda.jar Client/*.java
 
 clean:
 	rm -f Client/*.class
 	rm -f ../Server/RMIInterface.jar
+	rm -f ../Server/MethodLambda.jar
 	rm -f java.policy

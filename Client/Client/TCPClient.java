@@ -1,6 +1,7 @@
 package Client;
 
 // import Server.Interface.*;
+import Server.Common.MethodLambda;
 
 import java.io.*;
 import java.net.*;
@@ -13,8 +14,8 @@ public class TCPClient
 
     // TCP client related members
     private Socket clientSocket;
-    private PrintWriter out;
-    private BufferedReader in;
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
 
 
     public static void main(String args[])
@@ -29,8 +30,14 @@ public class TCPClient
         try {
             TCPClient client = new TCPClient();
             client.connectServer("127.0.0.1", 6666);
-            String response = client.sendMessage("Hello server");
-            System.out.println(response);
+
+            // MethodLambda helloWorld = () -> {
+            //     System.out.println("hello world from a lambda!");
+            // };
+            
+            MethodLambda helloWorld = new MethodLambda();
+
+            client.callMethod(helloWorld);
             client.stopConnection();
         } 
         catch (Exception e) {    
@@ -48,15 +55,13 @@ public class TCPClient
     public void connectServer(String ip, int port) throws IOException, UnknownHostException
     {
         clientSocket = new Socket(ip, port);
-        out = new PrintWriter(clientSocket.getOutputStream(), true);
-        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        out = new ObjectOutputStream(clientSocket.getOutputStream());
+        in = new ObjectInputStream(clientSocket.getInputStream());
     }
 
-    public String sendMessage(String msg) throws IOException
+    public void callMethod(MethodLambda method) throws IOException
     {
-        out.println(msg);
-        String resp = in.readLine();
-        return resp;
+        out.writeObject(method);
     }
 
     public void stopConnection() throws IOException

@@ -1,4 +1,4 @@
-all: java.policy compile-server-rmi
+all: java.policy compile-server-rmi compile-server-tcp
 
 java.policy: FORCE
 	@echo "Creating server java policy"
@@ -13,8 +13,16 @@ RMIInterface.jar: Server/Interface/IResourceManager.java
 	javac Server/Interface/IResourceManager.java
 	jar cvf RMIInterface.jar Server/Interface/IResourceManager.class
 
+MethodLambda.jar: Server/Common/MethodLambda.java
+	@echo "Compiling TCP method lambda interface"
+	javac Server/Common/MethodLambda.java
+	jar cvf MethodLambda.jar Server/Common/MethodLambda.class
+
 compile-server-rmi: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 	javac Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
+
+compile-server-tcp: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
+	javac Server/TCP/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 
 clean:
 	rm -f Server/Interface/*.class Server/Common/*.class Server/RMI/*.class
