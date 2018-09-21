@@ -13,10 +13,15 @@ RMIInterface.jar: Server/Interface/IResourceManager.java
 	javac Server/Interface/IResourceManager.java
 	jar cvf RMIInterface.jar Server/Interface/IResourceManager.class
 
-MethodLambda.jar: Server/Common/MethodLambda.java
-	@echo "Compiling TCP method lambda interface"
-	javac Server/Common/MethodLambda.java
-	jar cvf MethodLambda.jar Server/Common/MethodLambda.class
+ProcedureRequest.jar: Server/Common/ProcedureRequest.java
+	@echo "Compiling TCP procedure request"
+	javac Server/Common/ProcedureRequest.java
+	jar cvf ProcedureRequest.jar Server/Common/ProcedureRequest.class
+
+Procedure.jar: Server/Common/Procedure.java
+	@echo "Compiling TCP procedure"
+	javac Server/Common/Procedure.java
+	jar cvf Procedure.jar Server/Common/Procedure.class
 
 compile-server-rmi: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 	javac Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java

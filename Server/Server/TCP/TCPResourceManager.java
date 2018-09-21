@@ -6,7 +6,8 @@
 package Server.TCP;
 
 import Server.Common.ResourceManager;
-import Server.Common.MethodLambda;
+import Server.Common.Procedure;
+import Server.Common.ProcedureRequest;
 // import Server.Interface.IResourceManager;
 
 import java.net.*;
@@ -51,11 +52,10 @@ public class TCPResourceManager extends ResourceManager
         clientSocket = serverSocket.accept();
         out = new ObjectOutputStream(clientSocket.getOutputStream());
         in = new ObjectInputStream(clientSocket.getInputStream());
-        MethodLambda greeting = (MethodLambda) in.readObject();
+        ProcedureRequest procedure = (ProcedureRequest) in.readObject();
 
-        greeting.callMethod();
-        // greeting.callMethod();
-
+        System.out.println("Received a procedure request");
+        System.out.println(procedure.toString());
     }
 
     public void stop() throws IOException {

@@ -1,7 +1,8 @@
 package Client;
 
 // import Server.Interface.*;
-import Server.Common.MethodLambda;
+import Server.Common.Procedure;
+import Server.Common.ProcedureRequest;
 
 import java.io.*;
 import java.net.*;
@@ -31,13 +32,9 @@ public class TCPClient
             TCPClient client = new TCPClient();
             client.connectServer("127.0.0.1", 6666);
 
-            // MethodLambda helloWorld = () -> {
-            //     System.out.println("hello world from a lambda!");
-            // };
-            
-            MethodLambda helloWorld = new MethodLambda();
+            ProcedureRequest addFlight = new ProcedureRequest(Procedure.AddFlight);
 
-            client.callMethod(helloWorld);
+            client.executeProcedure(addFlight);
             client.stopConnection();
         } 
         catch (Exception e) {    
@@ -59,9 +56,9 @@ public class TCPClient
         in = new ObjectInputStream(clientSocket.getInputStream());
     }
 
-    public void callMethod(MethodLambda method) throws IOException
+    public void executeProcedure(ProcedureRequest procedure) throws IOException
     {
-        out.writeObject(method);
+        out.writeObject(procedure);
     }
 
     public void stopConnection() throws IOException
