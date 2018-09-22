@@ -35,6 +35,10 @@ public class ProcedureRequest implements Serializable {
         this.procedure = procedure; 
     }
 
+    public Procedure getProcedure() {
+        return this.procedure;
+    }
+
     public int getResourceID() {
         return this.resourceID;
     }
