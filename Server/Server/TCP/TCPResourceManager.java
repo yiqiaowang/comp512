@@ -56,6 +56,8 @@ public class TCPResourceManager extends ResourceManager
 
         System.out.println("Received a procedure request");
         System.out.println(procedure.getProcedure());
+
+        out.writeObject(procedure);
     }
 
     public void stop() throws IOException {

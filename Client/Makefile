@@ -17,12 +17,16 @@ FORCE: ;
 ../Server/Procedure.jar: ../Server/Server/Common/Procedure.java
 	make -C ../Server/ Procedure.jar
 
-compile-client: ../Server/RMIInterface.jar ../Server/ProcedureRequest.jar ../Server/Procedure.jar
-	javac -cp ../Server/RMIInterface.jar:../Server/ProcedureRequest.jar:../Server/Procedure.jar Client/*.java
+../Server/ClientCommunicationManager.jar: ../Server/Server/Common/ClientCommunicationManager.java
+	make -C ../Server/ ClientCommunicationManager.jar
+
+compile-client: ../Server/RMIInterface.jar ../Server/ProcedureRequest.jar ../Server/Procedure.jar ../Server/ClientCommunicationManager.jar
+	javac -cp ../Server/RMIInterface.jar:../Server/ProcedureRequest.jar:../Server/Procedure.jar:../Server/ClientCommunicationManager.jar Client/*.java
 
 clean:
 	rm -f Client/*.class
 	rm -f ../Server/RMIInterface.jar
 	rm -f ../Server/ProcedureRequest.jar
 	rm -f ../Server/Procedure.jar
+	rm -f ../Server/ClientCommunicationManager.jar
 	rm -f java.policy

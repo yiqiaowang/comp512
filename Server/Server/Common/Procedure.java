@@ -7,6 +7,7 @@ public enum Procedure implements Serializable {
     AddCars,
     AddRooms,
     AddCustomer,
+    AddCustomerID,
     DeleteFlight,
     DeleteCars,
     DeleteRooms,

@@ -1,7 +1,5 @@
 package Server.Common;
 
-import Server.Common.Procedure;
-
 import java.io.Serializable;
 import java.util.Vector;
 
@@ -17,13 +15,14 @@ public class ProcedureRequest implements Serializable {
     private Procedure procedure; 
 
     // Request ID, see <xid>
-    private int id;
+    private int id = 0;
 
     // Method call parameters
     private int resourceID;
     private int resourceAmount;
     private int resourcePrice;
     private String location;
+    private int reserveID;
 
     // Use in the bundle procedure
     private Vector<String> resourceIDs;
@@ -33,6 +32,14 @@ public class ProcedureRequest implements Serializable {
         
     public ProcedureRequest(Procedure procedure) {
         this.procedure = procedure; 
+    }
+
+    public int getReserveID() {
+        return this.reserveID;
+    }
+
+    public int getXID() {
+        return this.id;
     }
 
     public Procedure getProcedure() {
@@ -67,6 +74,10 @@ public class ProcedureRequest implements Serializable {
         return this.requireRoom;
     }
 
+    public void setXID(int id) {
+        this.id = id;
+    }
+
     public void setResourceID(int id) {
         this.resourceID = id;
     }
@@ -91,8 +102,12 @@ public class ProcedureRequest implements Serializable {
         this.requireCar = require;
     }
 
-    public void requiresRoom(boolean require) {
+    public void setRequireRoom(boolean require) {
         this.requireRoom = require;
+    }
+
+    public void setReserveID(int id) {
+        this.reserveID = id;
     }
 
 }

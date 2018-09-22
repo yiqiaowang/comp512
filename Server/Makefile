@@ -23,6 +23,11 @@ Procedure.jar: Server/Common/Procedure.java
 	javac Server/Common/Procedure.java
 	jar cvf Procedure.jar Server/Common/Procedure.class
 
+ClientCommunicationManager.jar: Server/Common/Procedure.java
+	@echo "Compiling Client Communication Manager"
+	javac Server/Common/ClientCommunicationManager.java
+	jar cvf Procedure.jar Server/Common/ClientCommunicationManager.class
+
 compile-server-rmi: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 	javac Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 

@@ -1,8 +1,10 @@
 package Client;
 
 // import Server.Interface.*;
-import Server.Common.Procedure;
-import Server.Common.ProcedureRequest;
+// import Server.Common.Procedure;
+// import Server.Common.ProcedureRequest;
+//
+import Server.Common.ClientCommunicationManager;
 
 import java.io.*;
 import java.net.*;
@@ -10,10 +12,8 @@ import java.util.*;
 
 public class TCPClient extends Client
 {
-    private TCPCommunicationManager communicationManager;
-    
-    private String server = "localhost";
-    private int port = 6666;
+    private static String server = "localhost";
+    private static int port = 6666;
 
     // TCP client related members
     private Socket clientSocket;
@@ -30,7 +30,7 @@ public class TCPClient extends Client
 
         // Setup communication Manager
         try {
-            TCPClient client = new TCPClient(server, port);
+            TCPClient client = new TCPClient();
             client.connectServer();
             client.start();
         } catch (Exception e) {    
@@ -41,14 +41,16 @@ public class TCPClient extends Client
 
     }
 
-    public TCPClient(String server, int port) {
+    public TCPClient() {
         super();
-        this.server = server;
-        this.port = port;
+    }
+    
+    public void connectServer() throws IOException, UnknownHostException {
+        this.communicationManager = new ClientCommunicationManager(this.server, this.port);
     }
 
-    public void connectServer() throws IOException, UnknownHostException {
-        this.communicationManager = new TCPCommunicationManager(this.server, this.port);
+    public void connectServer(String server, int port) throws IOException, UnknownHostException {
+        this.communicationManager = new ClientCommunicationManager(server, port);
     }
 
     public void stopConnection() throws IOException {

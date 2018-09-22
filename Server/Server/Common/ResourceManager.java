@@ -12,6 +12,8 @@ import java.rmi.RemoteException;
 
 public class ResourceManager implements IResourceManager
 {
+        // TODO Add the ServerCommunication Manager Layer
+        
 	protected String m_name = "";
 	protected final RMHashMap m_data = new RMHashMap();
 
