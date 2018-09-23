@@ -1,9 +1,5 @@
 package Client;
 
-// import Server.Interface.*;
-// import Server.Common.Procedure;
-// import Server.Common.ProcedureRequest;
-//
 import Server.Common.ClientCommunicationManager;
 
 import java.io.*;
@@ -14,11 +10,6 @@ public class TCPClient extends Client
 {
     private static String server = "localhost";
     private static int port = 6666;
-
-    // TCP client related members
-    private Socket clientSocket;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
 
     public static void main(String args[])
     {	
@@ -46,11 +37,12 @@ public class TCPClient extends Client
     }
     
     public void connectServer() throws IOException, UnknownHostException {
-        this.communicationManager = new ClientCommunicationManager(this.server, this.port);
+        connectServer(TCPClient.server, TCPClient.port);
     }
 
     public void connectServer(String server, int port) throws IOException, UnknownHostException {
-        this.communicationManager = new ClientCommunicationManager(server, port);
+        this.communicationManager = new ClientCommunicationManager(new Socket(server, port));
+        this.communicationManager.setupStreams();
     }
 
     public void stopConnection() throws IOException {

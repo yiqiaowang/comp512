@@ -30,6 +30,8 @@ public class ProcedureRequest implements Serializable {
     private boolean requireRoom;
 
         
+    public ProcedureRequest() {};
+
     public ProcedureRequest(Procedure procedure) {
         this.procedure = procedure; 
     }

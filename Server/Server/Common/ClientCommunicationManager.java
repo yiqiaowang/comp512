@@ -6,20 +6,26 @@ import java.util.*;
 
 public class ClientCommunicationManager {
     
-    private Socket clientSocket;
+    private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
-    public ClientCommunicationManager(String server, int port) throws IOException {
-        clientSocket = new Socket(server, port);
-        out = new ObjectOutputStream(clientSocket.getOutputStream());
-        in = new ObjectInputStream(clientSocket.getInputStream());
+    private String server;
+    private int port;
+
+    public ClientCommunicationManager(Socket socket) {
+        this.socket = socket;
+    }
+
+    public void setupStreams() throws IOException {
+        out = new ObjectOutputStream(this.socket.getOutputStream());
+        in = new ObjectInputStream(this.socket.getInputStream());
     }
 
     public void stopConnection() throws IOException {
         in.close();
         out.close();
-        clientSocket.close();
+        this.socket.close();
     }
 
     private ProcedureResponse executeProcedure(ProcedureRequest request) throws IOException, ClassNotFoundException {

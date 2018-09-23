@@ -9,6 +9,8 @@ public class ProcedureResponse implements Serializable {
     private boolean booleanResponse = false;
     private Procedure procedure;
 
+    public ProcedureResponse() { }
+
     public ProcedureResponse(Procedure procedure) {
         this.procedure = procedure;
     }

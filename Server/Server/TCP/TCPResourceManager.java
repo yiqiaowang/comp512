@@ -8,7 +8,6 @@ package Server.TCP;
 import Server.Common.ResourceManager;
 import Server.Common.Procedure;
 import Server.Common.ProcedureRequest;
-// import Server.Interface.IResourceManager;
 
 import java.net.*;
 import java.io.*;
@@ -55,7 +54,7 @@ public class TCPResourceManager extends ResourceManager
         ProcedureRequest procedure = (ProcedureRequest) in.readObject();
 
         System.out.println("Received a procedure request");
-        System.out.println(procedure.getProcedure());
+        // System.out.println(procedure.getProcedure());
 
         out.writeObject(procedure);
     }
