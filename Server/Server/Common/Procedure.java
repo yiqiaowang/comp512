@@ -22,5 +22,6 @@ public enum Procedure implements Serializable {
     ReserveFlight,
     ReserveCar,
     ReserveRoom,
-    Bundle
+    Bundle,
+    Error
 }

@@ -256,6 +256,8 @@ public class TCPResourceManager extends ResourceManager
             case Bundle:
                 response = new ProcedureResponse(procedure);
                 break;
+            default:
+                response = new ProcedureResponse(Procedure.Error);
         }
 
         return response;
