@@ -29,16 +29,19 @@ public class TCPResourceManager extends ResourceManager
 
     public static void main(String args[])
     {
-        // Create the TCP server entry
         try {
             // Create a new Server object
             TCPResourceManager server = new TCPResourceManager();
             server.start(6666);
             server.acceptConnection();
             server.setupStreams();
-            ProcedureRequest request = server.receiveRequest();
-            ProcedureResponse response = server.executeRequest(request);
-            server.sendResponse(response);
+
+            // Handle Requests
+            while (true) {
+                ProcedureRequest request = server.receiveRequest();
+                ProcedureResponse response = server.executeRequest(request);
+                server.sendResponse(response);
+            }
         }
         catch (Exception e) {
             System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");

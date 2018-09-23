@@ -29,15 +29,9 @@ public class ClientCommunicationManager {
     }
 
     private ProcedureResponse executeProcedure(ProcedureRequest request) throws IOException, ClassNotFoundException {
-         out.writeObject(request);
-         // BLOCKING PROCEDURE CALL
-         ProcedureRequest ack = (ProcedureRequest) in.readObject();
-         // if (ack.somethign...) {
-         //     return true;
-         // } else {
-         //     return false;
-         // }
-         return new ProcedureResponse(ack.getProcedure());
+        out.writeObject(request);
+        ProcedureResponse response = (ProcedureResponse) in.readObject();
+        return response;
     };
 
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) throws IOException, ClassNotFoundException {
