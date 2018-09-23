@@ -54,7 +54,7 @@ public class TCPResourceManager extends ResourceManager
         ProcedureRequest procedure = (ProcedureRequest) in.readObject();
 
         System.out.println("Received a procedure request");
-        // System.out.println(procedure.getProcedure());
+        System.out.println(procedure.getProcedure());
 
         out.writeObject(procedure);
     }

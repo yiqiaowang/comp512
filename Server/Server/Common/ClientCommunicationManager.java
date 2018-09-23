@@ -32,8 +32,6 @@ public class ClientCommunicationManager {
          out.writeObject(request);
          // BLOCKING PROCEDURE CALL
          ProcedureRequest ack = (ProcedureRequest) in.readObject();
-         System.out.println("Got something back!!!!");
-         System.out.println(ack.toString());
          // if (ack.somethign...) {
          //     return true;
          // } else {

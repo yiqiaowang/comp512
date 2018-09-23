@@ -18,6 +18,11 @@ ProcedureRequest.jar: Server/Common/ProcedureRequest.java
 	javac Server/Common/ProcedureRequest.java
 	jar cvf ProcedureRequest.jar Server/Common/ProcedureRequest.class
 
+ProcedureResponse.jar: Server/Common/ProcedureResponse.java
+	@echo "Compiling TCP procedure response"
+	javac Server/Common/ProcedureResponse.java
+	jar cvf ProcedureResponse.jar Server/Common/ProcedureResponse.class
+
 Procedure.jar: Server/Common/Procedure.java
 	@echo "Compiling TCP procedure"
 	javac Server/Common/Procedure.java
@@ -26,7 +31,7 @@ Procedure.jar: Server/Common/Procedure.java
 ClientCommunicationManager.jar: Server/Common/Procedure.java
 	@echo "Compiling Client Communication Manager"
 	javac Server/Common/ClientCommunicationManager.java
-	jar cvf Procedure.jar Server/Common/ClientCommunicationManager.class
+	jar cvf ClientCommunicationManager.jar Server/Common/ClientCommunicationManager.class
 
 compile-server-rmi: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 	javac Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java

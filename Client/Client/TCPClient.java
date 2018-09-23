@@ -1,5 +1,7 @@
 package Client;
 
+import Server.Common.ProcedureRequest;
+import Server.Common.Procedure;
 import Server.Common.ClientCommunicationManager;
 
 import java.io.*;

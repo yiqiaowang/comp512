@@ -1,6 +1,5 @@
 package Client;
 
-import Server.Interface.*;
 import Server.Common.ClientCommunicationManager;
 
 import java.util.*;
