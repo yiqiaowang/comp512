@@ -23,5 +23,9 @@ public enum Procedure implements Serializable {
     ReserveCar,
     ReserveRoom,
     Bundle,
-    Error
+    
+    // Meta functions
+    Error,
+    RegisterResourceManager,
+    RemoveResourceManager
 }
