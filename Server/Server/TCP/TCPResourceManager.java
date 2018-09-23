@@ -9,6 +9,9 @@ import Server.Common.ResourceManager;
 import Server.Common.Procedure;
 import Server.Common.ProcedureRequest;
 import Server.Common.ProcedureResponse;
+import Server.Common.Car;
+import Server.Common.Flight;
+import Server.Common.Room;
 
 import java.net.*;
 import java.io.*;
@@ -223,7 +226,7 @@ public class TCPResourceManager extends ResourceManager
                         reserveItem(
                             request.getXID(),
                             request.getResourceID(),
-                            Flight.getkey(request.getReserveID()),
+                            Flight.getKey(request.getReserveID()),
                             String.valueOf(request.getReserveID())
                             )
                         );

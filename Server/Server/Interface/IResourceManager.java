@@ -1,8 +1,5 @@
 package Server.Interface;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-
 import java.util.*;
 
 /** 
@@ -21,7 +18,7 @@ import java.util.*;
  * has succeeded.
  */
 
-public interface IResourceManager extends Remote 
+public interface IResourceManager
 {
     /**
      * Add seats to a flight.
@@ -33,8 +30,7 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) 
-	throws RemoteException; 
+    public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice);
     
     /**
      * Add car at a location.
@@ -44,8 +40,7 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean addCars(int id, String location, int numCars, int price) 
-	throws RemoteException; 
+    public boolean addCars(int id, String location, int numCars, int price);
    
     /**
      * Add room at a location.
@@ -55,24 +50,21 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean addRooms(int id, String location, int numRooms, int price) 
-	throws RemoteException; 			    
-			    
+    public boolean addRooms(int id, String location, int numRooms, int price);
+
     /**
      * Add customer.
      *
      * @return Unique customer identifier
      */
-    public int newCustomer(int id) 
-	throws RemoteException; 
+    public int newCustomer(int id);
     
     /**
      * Add customer with id.
      *
      * @return Success
      */
-    public boolean newCustomer(int id, int cid)
-        throws RemoteException;
+    public boolean newCustomer(int id, int cid);
 
     /**
      * Delete the flight.
@@ -82,8 +74,7 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */   
-    public boolean deleteFlight(int id, int flightNum) 
-	throws RemoteException; 
+    public boolean deleteFlight(int id, int flightNum) ; 
     
     /**
      * Delete all cars at a location.
@@ -92,8 +83,7 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */		    
-    public boolean deleteCars(int id, String location) 
-	throws RemoteException; 
+    public boolean deleteCars(int id, String location) ; 
 
     /**
      * Delete all rooms at a location.
@@ -102,110 +92,96 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean deleteRooms(int id, String location) 
-	throws RemoteException; 
+    public boolean deleteRooms(int id, String location) ; 
     
     /**
      * Delete a customer and associated reservations.
      *
      * @return Success
      */
-    public boolean deleteCustomer(int id, int customerID) 
-	throws RemoteException; 
+    public boolean deleteCustomer(int id, int customerID) ; 
 
     /**
      * Query the status of a flight.
      *
      * @return Number of empty seats
      */
-    public int queryFlight(int id, int flightNumber) 
-	throws RemoteException; 
+    public int queryFlight(int id, int flightNumber) ; 
 
     /**
      * Query the status of a car location.
      *
      * @return Number of available cars at this location
      */
-    public int queryCars(int id, String location) 
-	throws RemoteException; 
+    public int queryCars(int id, String location) ; 
 
     /**
      * Query the status of a room location.
      *
      * @return Number of available rooms at this location
      */
-    public int queryRooms(int id, String location) 
-	throws RemoteException; 
+    public int queryRooms(int id, String location) ; 
 
     /**
      * Query the customer reservations.
      *
      * @return A formatted bill for the customer
      */
-    public String queryCustomerInfo(int id, int customerID) 
-	throws RemoteException; 
+    public String queryCustomerInfo(int id, int customerID) ; 
     
     /**
      * Query the status of a flight.
      *
      * @return Price of a seat in this flight
      */
-    public int queryFlightPrice(int id, int flightNumber) 
-	throws RemoteException; 
+    public int queryFlightPrice(int id, int flightNumber) ; 
 
     /**
      * Query the status of a car location.
      *
      * @return Price of car
      */
-    public int queryCarsPrice(int id, String location) 
-	throws RemoteException; 
+    public int queryCarsPrice(int id, String location) ; 
 
     /**
      * Query the status of a room location.
      *
      * @return Price of a room
      */
-    public int queryRoomsPrice(int id, String location) 
-	throws RemoteException; 
+    public int queryRoomsPrice(int id, String location) ; 
 
     /**
      * Reserve a seat on this flight.
      *
      * @return Success
      */
-    public boolean reserveFlight(int id, int customerID, int flightNumber) 
-	throws RemoteException; 
+    public boolean reserveFlight(int id, int customerID, int flightNumber) ; 
 
     /**
      * Reserve a car at this location.
      *
      * @return Success
      */
-    public boolean reserveCar(int id, int customerID, String location) 
-	throws RemoteException; 
+    public boolean reserveCar(int id, int customerID, String location) ; 
 
     /**
      * Reserve a room at this location.
      *
      * @return Success
      */
-    public boolean reserveRoom(int id, int customerID, String location) 
-	throws RemoteException; 
+    public boolean reserveRoom(int id, int customerID, String location) ; 
 
     /**
      * Reserve a bundle for the trip.
      *
      * @return Success
      */
-    public boolean bundle(int id, int customerID, Vector<String> flightNumbers, String location, boolean car, boolean room)
-	throws RemoteException; 
+    public boolean bundle(int id, int customerID, Vector<String> flightNumbers, String location, boolean car, boolean room); 
 
     /**
      * Convenience for probing the resource manager.
      *
      * @return Name
      */
-    public String getName()
-        throws RemoteException;
+    public String getName();
 }
