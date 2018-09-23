@@ -1,4 +1,5 @@
-all: java.policy compile-server-rmi compile-server-tcp
+#all: java.policy compile-server-rmi compile-server-tcp
+all: java.policy compile-server-tcp
 
 java.policy: FORCE
 	@echo "Creating server java policy"
@@ -36,8 +37,8 @@ ClientCommunicationManager.jar: Server/Common/Procedure.java
 compile-server-rmi: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 	javac Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 
-compile-server-tcp: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java Procedure.jar
-	javac Server/TCP/*.java Server/Interface/IResourceManager.java Server/Common/*.java
+compile-server-tcp: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java Procedure.jar ProcedureResponse.jar
+	javac -cp :. Server/TCP/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 
 clean:
 	rm -f Server/Interface/*.class Server/Common/*.class Server/RMI/*.class

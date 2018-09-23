@@ -8,6 +8,7 @@ package Server.TCP;
 import Server.Common.ResourceManager;
 import Server.Common.Procedure;
 import Server.Common.ProcedureRequest;
+import Server.Common.ProcedureResponse;
 
 import java.net.*;
 import java.io.*;
@@ -30,6 +31,11 @@ public class TCPResourceManager extends ResourceManager
             // Create a new Server object
             TCPResourceManager server = new TCPResourceManager();
             server.start(6666);
+            server.acceptConnection();
+            server.setupStreams();
+            ProcedureRequest request = server.receiveRequest();
+            ProcedureResponse response = server.executeRequest(request);
+            server.sendResponse(response);
         }
         catch (Exception e) {
             System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
@@ -45,18 +51,215 @@ public class TCPResourceManager extends ResourceManager
     }
 
     public void start(int port) throws IOException, ClassNotFoundException {
-        System.out.println("Started TCP server");
+        this.serverSocket = new ServerSocket(port);
+    }
 
-        serverSocket = new ServerSocket(port);
-        clientSocket = serverSocket.accept();
-        out = new ObjectOutputStream(clientSocket.getOutputStream());
-        in = new ObjectInputStream(clientSocket.getInputStream());
-        ProcedureRequest procedure = (ProcedureRequest) in.readObject();
+    public void acceptConnection() throws IOException {
+        this.clientSocket = this.serverSocket.accept();
+    }
 
-        System.out.println("Received a procedure request");
-        System.out.println(procedure.getProcedure());
+    public void setupStreams() throws IOException {
+        this.out = new ObjectOutputStream(this.clientSocket.getOutputStream());
+        this.in = new ObjectInputStream(this.clientSocket.getInputStream());
+    }
 
-        out.writeObject(procedure);
+    public ProcedureRequest receiveRequest() throws IOException, ClassNotFoundException {
+        return (ProcedureRequest) this.in.readObject();
+    }
+
+    public ProcedureResponse executeRequest(ProcedureRequest request) {
+        Procedure procedure = request.getProcedure();  
+        ProcedureResponse response;
+        
+        switch (procedure) {
+            case AddFlight:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        addFlight(
+                            request.getXID(),
+                            request.getResourceID(),
+                            request.getResourceAmount(),
+                            request.getResourcePrice()
+                            )
+                        );
+                break;
+            case AddCars:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        addCars(
+                            request.getXID(),
+                            request.getLocation(),
+                            request.getResourceAmount(),
+                            request.getResourcePrice()
+                            )
+                        );
+                break;
+            case AddRooms:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        addRooms(
+                            request.getXID(),
+                            request.getLocation(),
+                            request.getResourceAmount(),
+                            request.getResourcePrice()
+                            )
+                        );
+                break;
+            case AddCustomer:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse( newCustomer( request.getXID()));
+                break;
+            case AddCustomerID:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        newCustomer(
+                            request.getXID(),
+                            request.getResourceID()
+                            )
+                        );
+                break;
+            case DeleteFlight:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        deleteFlight(
+                            request.getXID(),
+                            request.getResourceID()
+                            )
+                        );
+                break;
+            case DeleteCars:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        deleteCars(
+                            request.getXID(),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case DeleteRooms:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        deleteRooms(
+                            request.getXID(),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case DeleteCustomer:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        deleteFlight(
+                            request.getXID(),
+                            request.getResourceID()
+                            )
+                        );
+                break;
+            case QueryFlight:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        queryFlight(
+                            request.getXID(),
+                            request.getResourceID()
+                            )
+                        );
+                break;
+            case QueryCars:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        queryCars(
+                            request.getXID(),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case QueryRooms:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        queryRooms(
+                            request.getXID(),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case QueryCustomer:
+                response = new ProcedureResponse(procedure);
+                response.setStringResponse(
+                        queryCustomerInfo(
+                            request.getXID(),
+                            request.getResourceID()
+                            )
+                        );
+                break;
+            case QueryFlightPrice:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        queryFlightPrice(
+                            request.getXID(),
+                            request.getResourceID()
+                            )
+                        );
+                break;
+            case QueryCarsPrice:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        queryCarsPrice(
+                            request.getXID(),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case QueryRoomsPrice:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        queryRoomsPrice(
+                            request.getXID(),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case ReserveFlight:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        reserveItem(
+                            request.getXID(),
+                            request.getResourceID(),
+                            Flight.getkey(request.getReserveID()),
+                            String.valueOf(request.getReserveID())
+                            )
+                        );
+                break;
+            case ReserveCar:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        reserveItem(
+                            request.getXID(),
+                            request.getResourceID(),
+                            Car.getKey(request.getLocation()),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case ReserveRoom:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        reserveItem(
+                            request.getXID(),
+                            request.getResourceID(),
+                            Room.getKey(request.getLocation()),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case Bundle:
+                response = new ProcedureResponse(procedure);
+                break;
+        }
+
+        return response;
+    }
+
+    public void sendResponse(ProcedureResponse response) throws IOException {
+        this.out.writeObject(response);
     }
 
     public void stop() throws IOException {
