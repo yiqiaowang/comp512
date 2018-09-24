@@ -23,6 +23,10 @@ public class TCPResourceManager extends ResourceManager
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
+    public TCPResourceManager(String name) {
+        super(name);
+    }
+
     public void start(String server, int port) throws IOException, ClassNotFoundException {
         this.socket = new Socket(server, port);
     }

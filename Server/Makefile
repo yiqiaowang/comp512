@@ -34,10 +34,7 @@ ClientCommunicationManager.jar: Server/Common/Procedure.java
 	javac Server/Common/ClientCommunicationManager.java
 	jar cvf ClientCommunicationManager.jar Server/Common/ClientCommunicationManager.class
 
-compile-server-rmi: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
-	javac Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
-
-compile-server-tcp: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java Procedure.jar ProcedureResponse.jar
+compile-server-tcp: Server/Interface/IResourceManager.java Server/Common/*.java Procedure.jar ProcedureResponse.jar
 	javac -cp :. Server/TCP/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 
 clean:

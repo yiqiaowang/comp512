@@ -17,16 +17,12 @@ import java.net.*;
 import java.io.*;
 
 
-public class FlightResourceManager extends ResourceManager 
+public class FlightResourceManager extends TCPResourceManager 
 {
     private static String managerName = "FlightResourceManager";
     private static String middlewareServer = "localhost";
     private static int middlewarePort = 6666;
     private static int managerID = 1;
-    
-    private Socket clientSocket;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
 
     public static void main(String args[])
     {
@@ -57,6 +53,10 @@ public class FlightResourceManager extends ResourceManager
         {
             System.setSecurityManager(new SecurityManager());
         }
+    }
+
+    public void start() throws IOException, ClassNotFoundException {
+        this.socket = start(this.middlewareServer, this.middlewarePort);
     }
 
     public void registerMiddleware() {
