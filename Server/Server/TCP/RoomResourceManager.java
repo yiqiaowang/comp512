@@ -19,10 +19,11 @@ import java.io.*;
 
 public class RoomResourceManager extends TCPResourceManager 
 {
-
-    private static String s_serverName = "TCPServer";
+    private static String managerName = "RoomResourceManager";
+    private static String middlewareServer = "localhost";
+    private static int middlewarePort = 6666;
+    private static int managerID = 3;
     
-    private ServerSocket serverSocket;
     private Socket clientSocket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
@@ -31,16 +32,18 @@ public class RoomResourceManager extends TCPResourceManager
     {
         try {
             // Create a new Server object
-            TCPResourceManager server = new TCPResourceManager();
-            server.start(6666);
-            server.acceptConnection();
-            server.setupStreams();
+            RoomResourceManager manager = new RoomResourceManager();
+            
+            // Register with middleware
+            manager.start();
+            manager.setupStreams();
+            manager.registerMiddleware();
 
             // Handle Requests
             while (true) {
-                ProcedureRequest request = server.receiveRequest();
-                ProcedureResponse response = server.executeRequest(request);
-                server.sendResponse(response);
+                ProcedureRequest request = manager.receiveRequest();
+                ProcedureResponse response = manager.executeRequest(request);
+                manager.sendResponse(response);
             }
         }
         catch (Exception e) {
@@ -54,5 +57,19 @@ public class RoomResourceManager extends TCPResourceManager
         {
             System.setSecurityManager(new SecurityManager());
         }
+    }
+
+    public void registerMiddleware() {
+        registerMiddleware(RoomResourceManager.middlewareServer, RoomResourceManager.middlewarePort);
+    }
+
+    public void registerMiddleware(String server, int port) {
+        ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
+        request.setLocation(server);
+        requset.setResourceID(port);
+        request.setReserveID(RoomResourceManager.managerID);
+        out.writeObject(request);
+        ProcedureResponse response = (ProcedureResponse) in.readObject();
+        // can check for success response here
     }
 }

@@ -18,10 +18,11 @@ import java.io.*;
 
 public class CarResourceManager extends TCPResourceManager 
 {
-
-    private static String s_serverName = "TCPServer";
+    private static String managerName = "CarResourceManager";
+    private static String middlewareServer = "localhost";
+    private static int middlewarePort = 6666;
+    private static int managerID = 2;
     
-    private ServerSocket serverSocket;
     private Socket clientSocket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
@@ -30,16 +31,18 @@ public class CarResourceManager extends TCPResourceManager
     {
         try {
             // Create a new Server object
-            TCPResourceManager server = new TCPResourceManager();
-            server.start(6666);
-            server.acceptConnection();
-            server.setupStreams();
+            CarResourceManager manager = new CarResourceManager();
+            
+            // Register with middleware
+            manager.start();
+            manager.setupStreams();
+            manager.registerMiddleware();
 
             // Handle Requests
             while (true) {
-                ProcedureRequest request = server.receiveRequest();
-                ProcedureResponse response = server.executeRequest(request);
-                server.sendResponse(response);
+                ProcedureRequest request = manager.receiveRequest();
+                ProcedureResponse response = manager.executeRequest(request);
+                manager.sendResponse(response);
             }
         }
         catch (Exception e) {
@@ -53,5 +56,19 @@ public class CarResourceManager extends TCPResourceManager
         {
             System.setSecurityManager(new SecurityManager());
         }
+    }
+
+    public void registerMiddleware() {
+        registerMiddleware(CarResourceManager.middlewareServer, CarResourceManager.middlewarePort);
+    }
+
+    public void registerMiddleware(String server, int port) {
+        ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
+        request.setLocation(server);
+        requset.setResourceID(port);
+        request.setReserveID(CarResourceManager.managerID);
+        out.writeObject(request);
+        ProcedureResponse response = (ProcedureResponse) in.readObject();
+        // can check for success response here
     }
 }

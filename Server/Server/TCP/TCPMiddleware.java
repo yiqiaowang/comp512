@@ -25,7 +25,10 @@ import java.io.*;
 public class TCPMiddleware
 {
 
-    private static String s_serverName = "TCPMiddleware";
+    private static String serverName = "TCPMiddleware";
+
+    private static int middlewarePort = 6666;
+    private ServerSocket middlewareSocket;
 
     // Client
     private static int clientPort = 6666;

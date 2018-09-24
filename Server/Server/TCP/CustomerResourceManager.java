@@ -17,12 +17,14 @@ import java.net.*;
 import java.io.*;
 
 
-public class TCPResourceManager extends ResourceManager 
+public class CustomerResourceManager extends TCPResourceManager 
 {
 
-    private static String s_serverName = "TCPServer";
+    private static String managerName = "CustomerResourceManager";
+    private static String middlewareServer = "localhost";
+    private static int middlewarePort = 6666;
+    private static int managerID = 4;
     
-    private ServerSocket serverSocket;
     private Socket clientSocket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
@@ -31,16 +33,18 @@ public class TCPResourceManager extends ResourceManager
     {
         try {
             // Create a new Server object
-            TCPResourceManager server = new TCPResourceManager();
-            server.start(6666);
-            server.acceptConnection();
-            server.setupStreams();
+            CustomerResourceManager manager = new CustomerResourceManager();
+            
+            // Register with middleware
+            manager.start();
+            manager.setupStreams();
+            manager.registerMiddleware();
 
             // Handle Requests
             while (true) {
-                ProcedureRequest request = server.receiveRequest();
-                ProcedureResponse response = server.executeRequest(request);
-                server.sendResponse(response);
+                ProcedureRequest request = manager.receiveRequest();
+                ProcedureResponse response = manager.executeRequest(request);
+                manager.sendResponse(response);
             }
         }
         catch (Exception e) {
@@ -54,5 +58,19 @@ public class TCPResourceManager extends ResourceManager
         {
             System.setSecurityManager(new SecurityManager());
         }
+    }
+
+    public void registerMiddleware() {
+        registerMiddleware(CustomerResourceManager.middlewareServer, CustomerResourceManager.middlewarePort);
+    }
+
+    public void registerMiddleware(String server, int port) {
+        ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
+        request.setLocation(server);
+        requset.setResourceID(port);
+        request.setReserveID(CustomerResourceManager.managerID);
+        out.writeObject(request);
+        ProcedureResponse response = (ProcedureResponse) in.readObject();
+        // can check for success response here
     }
 }

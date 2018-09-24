@@ -19,54 +19,17 @@ import java.io.*;
 
 public class TCPResourceManager extends ResourceManager 
 {
-
-    private static String s_serverName = "TCPServer";
-    
-    private ServerSocket serverSocket;
-    private Socket clientSocket;
+    private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
-    public static void main(String args[])
-    {
-        try {
-            // Create a new Server object
-            TCPResourceManager server = new TCPResourceManager();
-            server.start(6666);
-            server.acceptConnection();
-            server.setupStreams();
-
-            // Handle Requests
-            while (true) {
-                ProcedureRequest request = server.receiveRequest();
-                ProcedureResponse response = server.executeRequest(request);
-                server.sendResponse(response);
-            }
-        }
-        catch (Exception e) {
-            System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        // Create and install a security manager
-        if (System.getSecurityManager() == null)
-        {
-            System.setSecurityManager(new SecurityManager());
-        }
-    }
-
-    public void start(int port) throws IOException, ClassNotFoundException {
-        this.serverSocket = new ServerSocket(port);
-    }
-
-    public void acceptConnection() throws IOException {
-        this.clientSocket = this.serverSocket.accept();
+    public void start(String server, int port) throws IOException, ClassNotFoundException {
+        this.socket = new Socket(server, port);
     }
 
     public void setupStreams() throws IOException {
-        this.out = new ObjectOutputStream(this.clientSocket.getOutputStream());
-        this.in = new ObjectInputStream(this.clientSocket.getInputStream());
+        this.out = new ObjectOutputStream(this.socket.getOutputStream());
+        this.in = new ObjectInputStream(this.socket.getInputStream());
     }
 
     public ProcedureRequest receiveRequest() throws IOException, ClassNotFoundException {
@@ -273,12 +236,6 @@ public class TCPResourceManager extends ResourceManager
     public void stop() throws IOException {
         in.close();
         out.close();
-        clientSocket.close();
-        serverSocket.close();
-    }
-
-    public TCPResourceManager()
-    {
-        super(s_serverName);
+        socket.close();
     }
 }
