@@ -7,18 +7,16 @@ import java.net.*;
 import java.io.*;
 
 public class ResourceManagerStub {
-    private Socket socket;
+    // private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
-
-    public ResourceManagerStub(String server, int port) throws IOException, UnknownHostException {
-        this.socket = new Socket(server, port);
-        this.out = new ObjectOutputStream(this.socket.getOutputStream());
-        this.in = new ObjectInputStream(this.socket.getInputStream());
+    public ResourceManagerStub(ObjectOutputStream out, ObjectInputStream in) {
+        this.out = out;
+        this.in = in;
     }
 
-    public ProcedureResponse executeProcedure(ProcedureRequest request) throws IOException, ClassNotFoundException {
+    public ProcedureResponse executeRemoteProcedure(ProcedureRequest request) throws IOException, ClassNotFoundException {
         this.out.writeObject(request);
         return (ProcedureResponse) this.in.readObject();
     }

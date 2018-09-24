@@ -27,6 +27,24 @@ public class MiddlewareWorker implements Runnable {
         this.middleware = middleware;
     }
 
+    private void handleRegistration(ProcedureRequest request) {
+        ResourceManagerStub stub = new ResourceManagerStub(this.out, this.in); 
+        switch (request.getReserveID()) {
+            case 1:
+                this.middleware.registerFlightManagerStub(stub);
+                break;
+            case 2:
+                this.middleware.registerCarManagerStub(stub);
+                break;
+            case 3:
+                this.middleware.registerRoomManagerStub(stub);
+                break;
+            case 4:
+                this.middleware.registerCustomerManagerStub(stub);
+                break;
+        }
+    }
+
     public void run() {
         System.out.println("Launched Thread");
         // Read the initial request and determine if this is a consumer or a resource manager 
@@ -36,15 +54,15 @@ public class MiddlewareWorker implements Runnable {
 
             // Handle resource manager registration
             if (request.getProcedure() == Procedure.RegisterResourceManager) {
-                // this.middleware.registerResourceManager(request); 
                 System.out.println("Launched thread to register resource manager ");
+                handleRegistration(request);
             }
 
             // Handle consumer
             if (request.getProcedure() != Procedure.RemoveResourceManager) {
+                System.out.println("Launched thread to handle consumer");
                 // ProcedureResponse response = this.middleware.executeRequest(request);  
                 // this.out.writeObject(response);
-                System.out.println("Launched thread to handle consumer");
             }
             
         } catch(Exception e){

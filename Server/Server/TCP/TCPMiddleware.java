@@ -79,228 +79,217 @@ public class TCPMiddleware
         return this.middlewareSocket.accept(); 
     }
 
-    public void registerResourceManager(ProcedureRequest request) throws IOException {
-        if (request.getProcedure() == Procedure.RegisterResourceManager) {
-            switch ( request.getReserveID() ) {
-                case 1:
-                    this.flightManagerStub = new ResourceManagerStub(
-                            request.getLocation(),
-                            request.getResourceID()
-                            ); 
-                    break;
-                case 2:
-                    this.carManagerStub = new ResourceManagerStub(
-                            request.getLocation(),
-                            request.getResourceID()
-                            ); 
-                    break;
-                case 3:
-                    this.roomManagerStub = new ResourceManagerStub(
-                            request.getLocation(),
-                            request.getResourceID()
-                            ); 
-                    break;
-                case 4:
-                    this.customerManagerStub = new ResourceManagerStub(
-                            request.getLocation(),
-                            request.getResourceID()
-                            ); 
-                    break;
-            }
-        }
-    };
+    public void registerCarManagerStub(ResourceManagerStub stub) {
+        this.carManagerStub = stub;
+    } 
 
-    // public ProcedureResponse executeRequest(ProcedureRequest request) {
-    //     Procedure procedure = request.getProcedure();  
-    //     ProcedureResponse response;
+    public void registerFlightManagerStub(ResourceManagerStub stub) {
+        this.flightManagerStub = stub;
+    } 
+
+    public void registerRoomManagerStub(ResourceManagerStub stub) {
+        this.roomManagerStub = stub;
+    } 
+
+    public void registerCustomerManagerStub(ResourceManagerStub stub) {
+        this.customerManagerStub = stub;
+    } 
+
+    public ProcedureResponse executeRequest(ProcedureRequest request) {
+        Procedure procedure = request.getProcedure();  
+        ProcedureResponse response;
         
-    //     switch (procedure) {
-    //         case AddFlight:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     addFlight(
-    //                         request.getXID(),
-    //                         request.getResourceID(),
-    //                         request.getResourceAmount(),
-    //                         request.getResourcePrice()
-    //                         )
-    //                     );
-    //             break;
-    //         case AddCars:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     addCars(
-    //                         request.getXID(),
-    //                         request.getLocation(),
-    //                         request.getResourceAmount(),
-    //                         request.getResourcePrice()
-    //                         )
-    //                     );
-    //             break;
-    //         case AddRooms:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     addRooms(
-    //                         request.getXID(),
-    //                         request.getLocation(),
-    //                         request.getResourceAmount(),
-    //                         request.getResourcePrice()
-    //                         )
-    //                     );
-    //             break;
-    //         case AddCustomer:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setIntResponse( newCustomer( request.getXID()));
-    //             break;
-    //         case AddCustomerID:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     newCustomer(
-    //                         request.getXID(),
-    //                         request.getResourceID()
-    //                         )
-    //                     );
-    //             break;
-    //         case DeleteFlight:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     deleteFlight(
-    //                         request.getXID(),
-    //                         request.getResourceID()
-    //                         )
-    //                     );
-    //             break;
-    //         case DeleteCars: response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     deleteCars(
-    //                         request.getXID(),
-    //                         request.getLocation()
-    //                         )
-    //                     );
-    //             break;
-    //         case DeleteRooms:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     deleteRooms(
-    //                         request.getXID(),
-    //                         request.getLocation()
-    //                         )
-    //                     );
-    //             break;
-    //         case DeleteCustomer:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     deleteFlight(
-    //                         request.getXID(),
-    //                         request.getResourceID()
-    //                         )
-    //                     );
-    //             break;
-    //         case QueryFlight:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setIntResponse(
-    //                     queryFlight(
-    //                         request.getXID(),
-    //                         request.getResourceID()
-    //                         )
-    //                     );
-    //             break;
-    //         case QueryCars:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setIntResponse(
-    //                     queryCars(
-    //                         request.getXID(),
-    //                         request.getLocation()
-    //                         )
-    //                     );
-    //             break;
-    //         case QueryRooms:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setIntResponse(
-    //                     queryRooms(
-    //                         request.getXID(),
-    //                         request.getLocation()
-    //                         )
-    //                     );
-    //             break;
-    //         case QueryCustomer:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setStringResponse(
-    //                     queryCustomerInfo(
-    //                         request.getXID(),
-    //                         request.getResourceID()
-    //                         )
-    //                     );
-    //             break;
-    //         case QueryFlightPrice:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setIntResponse(
-    //                     queryFlightPrice(
-    //                         request.getXID(),
-    //                         request.getResourceID()
-    //                         )
-    //                     );
-    //             break;
-    //         case QueryCarsPrice:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setIntResponse(
-    //                     queryCarsPrice(
-    //                         request.getXID(),
-    //                         request.getLocation()
-    //                         )
-    //                     );
-    //             break;
-    //         case QueryRoomsPrice:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setIntResponse(
-    //                     queryRoomsPrice(
-    //                         request.getXID(),
-    //                         request.getLocation()
-    //                         )
-    //                     );
-    //             break;
-    //         case ReserveFlight:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     reserveItem(
-    //                         request.getXID(),
-    //                         request.getResourceID(),
-    //                         Flight.getKey(request.getReserveID()),
-    //                         String.valueOf(request.getReserveID())
-    //                         )
-    //                     );
-    //             break;
-    //         case ReserveCar:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     reserveItem(
-    //                         request.getXID(),
-    //                         request.getResourceID(),
-    //                         Car.getKey(request.getLocation()),
-    //                         request.getLocation()
-    //                         )
-    //                     );
-    //             break;
-    //         case ReserveRoom:
-    //             response = new ProcedureResponse(procedure);
-    //             response.setBooleanResponse(
-    //                     reserveItem(
-    //                         request.getXID(),
-    //                         request.getResourceID(),
-    //                         Room.getKey(request.getLocation()),
-    //                         request.getLocation()
-    //                         )
-    //                     );
-    //             break;
-    //         case Bundle:
-    //             response = new ProcedureResponse(procedure);
-    //             break;
-    //         default:
-    //             response = new ProcedureResponse(Procedure.Error);
-    //     }
+        switch (procedure) {
+            case AddFlight:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.flightManagerStub.executeRemoteProcedure(addFlight(
+                            request.getXID(),
+                            request.getResourceID(),
+                            request.getResourceAmount(),
+                            request.getResourcePrice()
+                            ))
+                        );
+                break;
+            case AddCars:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.carManagerStub.executeRemoteProcedure(addCars(
+                            request.getXID(),
+                            request.getLocation(),
+                            request.getResourceAmount(),
+                            request.getResourcePrice()
+                            ))
+                        );
+                break;
+            case AddRooms:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.roomManagerStub.executeRemoteProcedure(addRooms(
+                            request.getXID(),
+                            request.getLocation(),
+                            request.getResourceAmount(),
+                            request.getResourcePrice()
+                            ))
+                        );
+                break;
+            case AddCustomer:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        this.customerManagerStub.executeRemoteProcedure(newCustomer(
+                            request.getXID()
+                            ))
+                        );
+                break;
+            case AddCustomerID:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.customerManagerStub.executeRemoteProcedure(newCustomer(
+                            request.getXID(),
+                            request.getResourceID()
+                            ))
+                        );
+                break;
+            case DeleteFlight:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.flightManagerStub.executeRemoteProcedure(deleteFlight(
+                            request.getXID(),
+                            request.getResourceID()
+                            ))
+                        );
+                break;
+            case DeleteCars: response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.carManagerStub.executeRemoteProcedure(deleteCars(
+                            request.getXID(),
+                            request.getLocation()
+                            ))
+                        );
+                break;
+            case DeleteRooms:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.roomManagerStub.executeRemoteProcedure(deleteRooms(
+                            request.getXID(),
+                            request.getLocation()
+                            ))
+                        );
+                break;
+            case DeleteCustomer:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.customerManagerStub.executeRemoteProcedure(deleteFlight(
+                            request.getXID(),
+                            request.getResourceID()
+                            ))
+                        );
+                break;
+            case QueryFlight:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        this.flightManagerStub.executeRemoteProcedure(queryFlight(
+                            request.getXID(),
+                            request.getResourceID()
+                            ))
+                        );
+                break;
+            case QueryCars:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        this.carManagerStub.executeRemoteProcedure(queryCars(
+                            request.getXID(),
+                            request.getLocation()
+                            ))
+                        );
+                break;
+            case QueryRooms:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        this.roomManagerStub.executeRemoteProcedure(queryRooms(
+                            request.getXID(),
+                            request.getLocation()
+                            ))
+                        );
+                break;
+            case QueryCustomer:
+                response = new ProcedureResponse(procedure);
+                response.setStringResponse(
+                        this.customerManagerStub.executeRemoteProcedure(queryCustomerInfo(
+                            request.getXID(),
+                            request.getResourceID()
+                            ))
+                        );
+                break;
+            case QueryFlightPrice:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        this.flightManagerStub.executeRemoteProcedure(queryFlightPrice(
+                            request.getXID(),
+                            request.getResourceID()
+                            ))
+                        );
+                break;
+            case QueryCarsPrice:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        this.carManagerStub.executeRemoteProcedure(queryCarsPrice(
+                            request.getXID(),
+                            request.getLocation()
+                            ))
+                        );
+                break;
+            case QueryRoomsPrice:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        this.roomManagerStub.executeRemoteProcedure(queryRoomsPrice(
+                            request.getXID(),
+                            request.getLocation()
+                            ))
+                        );
+                break;
+            case ReserveFlight:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.flightManagerStub.executeRemoteProcedure(reserveItem(
+                            request.getXID(),
+                            request.getResourceID(),
+                            Flight.getKey(request.getReserveID()),
+                            String.valueOf(request.getReserveID())
+                            ))
+                        );
+                break;
+            case ReserveCar:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.carManagerStub.executeRemoteProcedure(reserveItem(
+                            request.getXID(),
+                            request.getResourceID(),
+                            Car.getKey(request.getLocation()),
+                            request.getLocation()
+                            ))
+                        );
+                break;
+            case ReserveRoom:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        this.roomManagerStub.executeRemoteProcedure(reserveItem(
+                            request.getXID(),
+                            request.getResourceID(),
+                            Room.getKey(request.getLocation()),
+                            request.getLocation()
+                            ))
+                        );
+                break;
+            case Bundle:
+                response = new ProcedureResponse(procedure);
+                break;
+            default:
+                response = new ProcedureResponse(Procedure.Error);
+        }
 
-    //     return response;
-    // }
+        return response;
+    }
 
     public void start() throws IOException {
         this.middlewareSocket = new ServerSocket(TCPMiddleware.middlewarePort);
