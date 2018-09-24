@@ -95,191 +95,67 @@ public class TCPMiddleware
         this.customerManagerStub = stub;
     } 
 
-    public ProcedureResponse executeRequest(ProcedureRequest request) {
+    public ProcedureResponse executeRequest(ProcedureRequest request) throws IOException, ClassNotFoundException {
         Procedure procedure = request.getProcedure();  
         ProcedureResponse response;
         
         switch (procedure) {
             case AddFlight:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.flightManagerStub.executeRemoteProcedure(addFlight(
-                            request.getXID(),
-                            request.getResourceID(),
-                            request.getResourceAmount(),
-                            request.getResourcePrice()
-                            ))
-                        );
+                response = this.flightManagerStub.executeRemoteProcedure(request);
                 break;
             case AddCars:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.carManagerStub.executeRemoteProcedure(addCars(
-                            request.getXID(),
-                            request.getLocation(),
-                            request.getResourceAmount(),
-                            request.getResourcePrice()
-                            ))
-                        );
+                response = this.carManagerStub.executeRemoteProcedure(request);
                 break;
             case AddRooms:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.roomManagerStub.executeRemoteProcedure(addRooms(
-                            request.getXID(),
-                            request.getLocation(),
-                            request.getResourceAmount(),
-                            request.getResourcePrice()
-                            ))
-                        );
+                response = this.roomManagerStub.executeRemoteProcedure(request);
                 break;
             case AddCustomer:
-                response = new ProcedureResponse(procedure);
-                response.setIntResponse(
-                        this.customerManagerStub.executeRemoteProcedure(newCustomer(
-                            request.getXID()
-                            ))
-                        );
+                response = this.customerManagerStub.executeRemoteProcedure(request);
                 break;
             case AddCustomerID:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.customerManagerStub.executeRemoteProcedure(newCustomer(
-                            request.getXID(),
-                            request.getResourceID()
-                            ))
-                        );
+                response = this.customerManagerStub.executeRemoteProcedure(request);
                 break;
             case DeleteFlight:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.flightManagerStub.executeRemoteProcedure(deleteFlight(
-                            request.getXID(),
-                            request.getResourceID()
-                            ))
-                        );
+                response = this.flightManagerStub.executeRemoteProcedure(request);
                 break;
-            case DeleteCars: response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.carManagerStub.executeRemoteProcedure(deleteCars(
-                            request.getXID(),
-                            request.getLocation()
-                            ))
-                        );
+            case DeleteCars:
+                response = this.carManagerStub.executeRemoteProcedure(request);
                 break;
             case DeleteRooms:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.roomManagerStub.executeRemoteProcedure(deleteRooms(
-                            request.getXID(),
-                            request.getLocation()
-                            ))
-                        );
+                response = this.roomManagerStub.executeRemoteProcedure(request);
                 break;
             case DeleteCustomer:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.customerManagerStub.executeRemoteProcedure(deleteFlight(
-                            request.getXID(),
-                            request.getResourceID()
-                            ))
-                        );
+                response = this.customerManagerStub.executeRemoteProcedure(request);
                 break;
             case QueryFlight:
-                response = new ProcedureResponse(procedure);
-                response.setIntResponse(
-                        this.flightManagerStub.executeRemoteProcedure(queryFlight(
-                            request.getXID(),
-                            request.getResourceID()
-                            ))
-                        );
+                response = this.flightManagerStub.executeRemoteProcedure(request);
                 break;
             case QueryCars:
-                response = new ProcedureResponse(procedure);
-                response.setIntResponse(
-                        this.carManagerStub.executeRemoteProcedure(queryCars(
-                            request.getXID(),
-                            request.getLocation()
-                            ))
-                        );
+                response = this.carManagerStub.executeRemoteProcedure(request);
                 break;
             case QueryRooms:
-                response = new ProcedureResponse(procedure);
-                response.setIntResponse(
-                        this.roomManagerStub.executeRemoteProcedure(queryRooms(
-                            request.getXID(),
-                            request.getLocation()
-                            ))
-                        );
+                response = this.roomManagerStub.executeRemoteProcedure(request);
                 break;
             case QueryCustomer:
-                response = new ProcedureResponse(procedure);
-                response.setStringResponse(
-                        this.customerManagerStub.executeRemoteProcedure(queryCustomerInfo(
-                            request.getXID(),
-                            request.getResourceID()
-                            ))
-                        );
+                response = this.customerManagerStub.executeRemoteProcedure(request);
                 break;
             case QueryFlightPrice:
-                response = new ProcedureResponse(procedure);
-                response.setIntResponse(
-                        this.flightManagerStub.executeRemoteProcedure(queryFlightPrice(
-                            request.getXID(),
-                            request.getResourceID()
-                            ))
-                        );
+                response = this.flightManagerStub.executeRemoteProcedure(request);
                 break;
             case QueryCarsPrice:
-                response = new ProcedureResponse(procedure);
-                response.setIntResponse(
-                        this.carManagerStub.executeRemoteProcedure(queryCarsPrice(
-                            request.getXID(),
-                            request.getLocation()
-                            ))
-                        );
+                response = this.carManagerStub.executeRemoteProcedure(request);
                 break;
             case QueryRoomsPrice:
-                response = new ProcedureResponse(procedure);
-                response.setIntResponse(
-                        this.roomManagerStub.executeRemoteProcedure(queryRoomsPrice(
-                            request.getXID(),
-                            request.getLocation()
-                            ))
-                        );
+                response = this.roomManagerStub.executeRemoteProcedure(request);
                 break;
             case ReserveFlight:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.flightManagerStub.executeRemoteProcedure(reserveItem(
-                            request.getXID(),
-                            request.getResourceID(),
-                            Flight.getKey(request.getReserveID()),
-                            String.valueOf(request.getReserveID())
-                            ))
-                        );
+                response = this.flightManagerStub.executeRemoteProcedure(request);
                 break;
             case ReserveCar:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.carManagerStub.executeRemoteProcedure(reserveItem(
-                            request.getXID(),
-                            request.getResourceID(),
-                            Car.getKey(request.getLocation()),
-                            request.getLocation()
-                            ))
-                        );
+                response = this.carManagerStub.executeRemoteProcedure(request);
                 break;
             case ReserveRoom:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        this.roomManagerStub.executeRemoteProcedure(reserveItem(
-                            request.getXID(),
-                            request.getResourceID(),
-                            Room.getKey(request.getLocation()),
-                            request.getLocation()
-                            ))
-                        );
+                response = this.roomManagerStub.executeRemoteProcedure(request);
                 break;
             case Bundle:
                 response = new ProcedureResponse(procedure);

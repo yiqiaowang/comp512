@@ -31,10 +31,10 @@ public class CarResourceManager extends TCPResourceManager
     {
         try {
             // Create a new Server object
-            CarResourceManager manager = new CarResourceManager();
+            CarResourceManager manager = new CarResourceManager(CarResourceManager.managerName);
             
             // Register with middleware
-            manager.start();
+            manager.start(CarResourceManager.middlewareServer,CarResourceManager.middlewarePort);
             manager.setupStreams();
             manager.registerMiddleware();
 
@@ -58,17 +58,18 @@ public class CarResourceManager extends TCPResourceManager
         }
     }
 
-    public void registerMiddleware() {
-        registerMiddleware(CarResourceManager.middlewareServer, CarResourceManager.middlewarePort);
-    }
-
-    public void registerMiddleware(String server, int port) {
+    public void registerMiddleware() throws IOException, ClassNotFoundException {
         ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
-        request.setLocation(server);
-        requset.setResourceID(port);
+        // request.setLocation(server);
+        // requset.setResourceID(port);
         request.setReserveID(CarResourceManager.managerID);
         out.writeObject(request);
         ProcedureResponse response = (ProcedureResponse) in.readObject();
+        System.out.println(response.getProcedure());
         // can check for success response here
+    }
+
+    public CarResourceManager(String name){
+        super(name);
     }
 }

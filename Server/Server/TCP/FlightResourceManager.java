@@ -28,10 +28,10 @@ public class FlightResourceManager extends TCPResourceManager
     {
         try {
             // Create a new Server object
-            FlightResourceManager manager = new FlightResourceManager();
+            FlightResourceManager manager = new FlightResourceManager(FlightResourceManager.managerName);
             
             // Register with middleware
-            manager.start();
+            manager.start(FlightResourceManager.middlewareServer, FlightResourceManager.middlewarePort);
             manager.setupStreams();
             manager.registerMiddleware();
 
@@ -55,21 +55,18 @@ public class FlightResourceManager extends TCPResourceManager
         }
     }
 
-    public void start() throws IOException, ClassNotFoundException {
-        this.socket = start(this.middlewareServer, this.middlewarePort);
-    }
-
-    public void registerMiddleware() {
-        registerMiddleware(FlightResourceManager.middlewareServer, FlightResourceManager.middlewarePort);
-    }
-
-    public void registerMiddleware(String server, int port) {
+    public void registerMiddleware() throws IOException, ClassNotFoundException {
         ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
-        request.setLocation(server);
-        requset.setResourceID(port);
+        // request.setLocation(server);
+        // requset.setResourceID(port);
         request.setReserveID(FlightResourceManager.managerID);
         out.writeObject(request);
         ProcedureResponse response = (ProcedureResponse) in.readObject();
+        System.out.println(response.getProcedure());
         // can check for success response here
+    }
+
+    public FlightResourceManager(String name) {
+        super(name);
     }
 }

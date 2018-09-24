@@ -20,8 +20,8 @@ import java.io.*;
 public class TCPResourceManager extends ResourceManager 
 {
     private Socket socket;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
+    protected ObjectOutputStream out;
+    protected ObjectInputStream in;
 
     public TCPResourceManager(String name) {
         super(name);

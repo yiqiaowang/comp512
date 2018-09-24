@@ -33,10 +33,10 @@ public class CustomerResourceManager extends TCPResourceManager
     {
         try {
             // Create a new Server object
-            CustomerResourceManager manager = new CustomerResourceManager();
+            CustomerResourceManager manager = new CustomerResourceManager(CustomerResourceManager.managerName);
             
             // Register with middleware
-            manager.start();
+            manager.start(CustomerResourceManager.middlewareServer, CustomerResourceManager.middlewarePort);
             manager.setupStreams();
             manager.registerMiddleware();
 
@@ -60,17 +60,18 @@ public class CustomerResourceManager extends TCPResourceManager
         }
     }
 
-    public void registerMiddleware() {
-        registerMiddleware(CustomerResourceManager.middlewareServer, CustomerResourceManager.middlewarePort);
-    }
-
-    public void registerMiddleware(String server, int port) {
+    public void registerMiddleware() throws IOException, ClassNotFoundException {
         ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
-        request.setLocation(server);
-        requset.setResourceID(port);
+        // request.setLocation(server);
+        // requset.setResourceID(port);
         request.setReserveID(CustomerResourceManager.managerID);
         out.writeObject(request);
         ProcedureResponse response = (ProcedureResponse) in.readObject();
+        System.out.println(response.getProcedure());
         // can check for success response here
+    }
+
+    public CustomerResourceManager(String name){
+        super( name );
     }
 }

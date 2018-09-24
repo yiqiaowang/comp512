@@ -56,6 +56,8 @@ public class MiddlewareWorker implements Runnable {
             if (request.getProcedure() == Procedure.RegisterResourceManager) {
                 System.out.println("Launched thread to register resource manager ");
                 handleRegistration(request);
+                this.out.writeObject(new ProcedureResponse(Procedure.RegisterAcknowledge));
+                System.out.println("Sent register acknowledgement");
             }
 
             // Handle consumer

@@ -7,7 +7,6 @@ import java.net.*;
 import java.io.*;
 
 public class ResourceManagerStub {
-    // private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
 

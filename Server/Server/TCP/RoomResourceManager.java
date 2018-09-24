@@ -32,10 +32,10 @@ public class RoomResourceManager extends TCPResourceManager
     {
         try {
             // Create a new Server object
-            RoomResourceManager manager = new RoomResourceManager();
+            RoomResourceManager manager = new RoomResourceManager(RoomResourceManager.managerName);
             
             // Register with middleware
-            manager.start();
+            manager.start(RoomResourceManager.middlewareServer, RoomResourceManager.middlewarePort);
             manager.setupStreams();
             manager.registerMiddleware();
 
@@ -59,17 +59,18 @@ public class RoomResourceManager extends TCPResourceManager
         }
     }
 
-    public void registerMiddleware() {
-        registerMiddleware(RoomResourceManager.middlewareServer, RoomResourceManager.middlewarePort);
-    }
-
-    public void registerMiddleware(String server, int port) {
+    public void registerMiddleware() throws IOException, ClassNotFoundException {
         ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
-        request.setLocation(server);
-        requset.setResourceID(port);
+        // request.setLocation(server);
+        // requset.setResourceID(port);
         request.setReserveID(RoomResourceManager.managerID);
         out.writeObject(request);
         ProcedureResponse response = (ProcedureResponse) in.readObject();
+        System.out.println(response.getProcedure());
         // can check for success response here
+    }
+
+    public RoomResourceManager(String name) {
+        super(name);
     }
 }

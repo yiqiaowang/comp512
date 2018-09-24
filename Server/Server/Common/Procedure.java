@@ -27,5 +27,6 @@ public enum Procedure implements Serializable {
     // Meta functions
     Error,
     RegisterResourceManager,
+    RegisterAcknowledge,
     RemoveResourceManager
 }
