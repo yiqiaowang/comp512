@@ -25,10 +25,6 @@ public class CustomerResourceManager extends TCPResourceManager
     private static int middlewarePort = 6666;
     private static int managerID = 4;
     
-    private Socket clientSocket;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
-
     public static void main(String args[])
     {
         try {

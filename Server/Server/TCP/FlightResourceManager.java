@@ -60,8 +60,8 @@ public class FlightResourceManager extends TCPResourceManager
         // request.setLocation(server);
         // requset.setResourceID(port);
         request.setReserveID(FlightResourceManager.managerID);
-        out.writeObject(request);
-        ProcedureResponse response = (ProcedureResponse) in.readObject();
+        this.out.writeObject(request);
+        ProcedureResponse response = (ProcedureResponse) this.in.readObject();
         System.out.println(response.getProcedure());
         // can check for success response here
     }

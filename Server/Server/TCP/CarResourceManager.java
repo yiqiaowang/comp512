@@ -22,10 +22,6 @@ public class CarResourceManager extends TCPResourceManager
     private static String middlewareServer = "localhost";
     private static int middlewarePort = 6666;
     private static int managerID = 2;
-    
-    private Socket clientSocket;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
 
     public static void main(String args[])
     {
@@ -60,8 +56,6 @@ public class CarResourceManager extends TCPResourceManager
 
     public void registerMiddleware() throws IOException, ClassNotFoundException {
         ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
-        // request.setLocation(server);
-        // requset.setResourceID(port);
         request.setReserveID(CarResourceManager.managerID);
         out.writeObject(request);
         ProcedureResponse response = (ProcedureResponse) in.readObject();

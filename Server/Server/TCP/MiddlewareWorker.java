@@ -50,6 +50,7 @@ public class MiddlewareWorker implements Runnable {
         // Read the initial request and determine if this is a consumer or a resource manager 
 
         try {
+            // Initial request
             ProcedureRequest request = (ProcedureRequest) this.in.readObject();
 
             // Handle resource manager registration
@@ -61,12 +62,19 @@ public class MiddlewareWorker implements Runnable {
             }
 
             // Handle consumer
-            if (request.getProcedure() != Procedure.RemoveResourceManager) {
+            else if (request.getProcedure() != Procedure.RemoveResourceManager) {
                 System.out.println("Launched thread to handle consumer");
-                // ProcedureResponse response = this.middleware.executeRequest(request);  
-                // this.out.writeObject(response);
+
+                ProcedureResponse response = this.middleware.executeRequest(request);  
+                this.out.writeObject(response);
+
+                // Continue handling requests
+                while (true) {
+                    request = (ProcedureRequest) this.in.readObject();
+                    response = this.middleware.executeRequest(request);  
+                    this.out.writeObject(response);
+                }
             }
-            
         } catch(Exception e){
             System.out.println("Something bad happened in a middleware worker thread!!!");
             e.printStackTrace();
