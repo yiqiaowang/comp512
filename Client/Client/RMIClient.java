@@ -1,14 +1,11 @@
 package Client;
 
-import Server.Interface.*;
+import Server.Interface.IResourceManager;
 
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.RemoteException;
-import java.rmi.NotBoundException;
-
-import java.util.*;
-import java.io.*;
 
 public class RMIClient extends Client
 {
