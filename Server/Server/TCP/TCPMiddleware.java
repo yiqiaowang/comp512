@@ -97,7 +97,7 @@ public class TCPMiddleware
 
     public ProcedureResponse executeRequest(ProcedureRequest request) throws IOException, ClassNotFoundException {
         Procedure procedure = request.getProcedure();  
-        ProcedureResponse response;
+        ProcedureResponse response = new ProcedureResponse(Procedure.Error);
         
         switch (procedure) {
             case AddFlight:
@@ -149,13 +149,85 @@ public class TCPMiddleware
                 response = this.roomManagerStub.executeRemoteProcedure(request);
                 break;
             case ReserveFlight:
-                response = this.flightManagerStub.executeRemoteProcedure(request);
+                request.setProcedure(Procedure.DecrementFlightsAvailable);
+
+                // Sorta sketchy workaround atm
+                response.setBooleanResponse(false);
+
+                int flightPrice = this.flightManagerStub.executeRemoteProcedure(request).getIntResponse();
+    
+                if (flightPrice != -1) {
+                    request.setProcedure(Procedure.AddFlightReservation);
+                    request.setResourcePrice(flightPrice);
+                    response = this.customerManagerStub.executeRemoteProcedure(request);
+
+                    if (!response.getBooleanResponse()) {
+                        // Roll back        
+                        request.setProcedure(Procedure.IncrementFlightsAvailable);
+                        boolean rollbackSuccess = this.flightManagerStub.executeRemoteProcedure(request).getBooleanResponse();  
+
+
+                        // set response as failed
+                        response.setBooleanResponse(false);
+    
+                        // Failed rollback :(
+                        if (! rollbackSuccess){
+                            System.out.println("Something very bad happened. Failed to roll back flights!");
+                        }
+                    }
+                }
                 break;
             case ReserveCar:
-                response = this.carManagerStub.executeRemoteProcedure(request);
+                request.setProcedure(Procedure.DecrementCarsAvailable);
+
+                response.setBooleanResponse(false);
+                int carPrice = this.carManagerStub.executeRemoteProcedure(request).getIntResponse();
+    
+                if (carPrice != -1) {
+                    request.setProcedure(Procedure.AddCarReservation);
+                    request.setResourcePrice(carPrice);
+                    response = this.customerManagerStub.executeRemoteProcedure(request);
+
+                    if (!response.getBooleanResponse()) {
+                        // Roll back        
+                        request.setProcedure(Procedure.IncrementCarsAvailable);
+                        boolean rollbackSuccess = this.carManagerStub.executeRemoteProcedure(request).getBooleanResponse();  
+
+
+                        // set response as failed
+                        response.setBooleanResponse(false);
+    
+                        // Failed rollback :(
+                        if (! rollbackSuccess){
+                            System.out.println("Something very bad happened. Failed to roll back cars!");
+                        }
+                    }
+                }
                 break;
             case ReserveRoom:
-                response = this.roomManagerStub.executeRemoteProcedure(request);
+                request.setProcedure(Procedure.DecrementRoomsAvailable);
+                int roomPrice = this.roomManagerStub.executeRemoteProcedure(request).getIntResponse();
+                response.setBooleanResponse(false);
+    
+                if (roomPrice != -1) {
+                    request.setProcedure(Procedure.AddRoomReservation);
+                    request.setResourcePrice(roomPrice);
+                    response = this.customerManagerStub.executeRemoteProcedure(request);
+
+                    if (!response.getBooleanResponse()) {
+                        // Roll back        
+                        request.setProcedure(Procedure.IncrementRoomsAvailable);
+                        boolean rollbackSuccess = this.roomManagerStub.executeRemoteProcedure(request).getBooleanResponse();  
+
+                        // set response as failed
+                        response.setBooleanResponse(false);
+    
+                        // Failed rollback :(
+                        if (! rollbackSuccess){
+                            System.out.println("Something very bad happened. Failed to roll back rooms!");
+                        }
+                    }
+                }
                 break;
             case Bundle:
                 response = new ProcedureResponse(procedure);

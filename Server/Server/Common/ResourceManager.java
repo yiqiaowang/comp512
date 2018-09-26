@@ -11,8 +11,6 @@ import java.util.*;
 
 public class ResourceManager implements IResourceManager
 {
-        // TODO Add the ServerCommunication Manager Layer
-        
 	protected String m_name = "";
 	protected final RMHashMap m_data = new RMHashMap();
 
@@ -104,44 +102,67 @@ public class ResourceManager implements IResourceManager
 		return value;        
 	}
 
-	// Reserve an item
-	protected boolean reserveItem(int xid, int customerID, String key, String location)
-	{
-		Trace.info("RM::reserveItem(" + xid + ", customer=" + customerID + ", " + key + ", " + location + ") called" );        
-		// Read customer object if it exists (and read lock it)
-		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
-		if (customer == null)
-		{
-			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ")  failed--customer doesn't exist");
-			return false;
-		} 
+        // TODO: decide on how to return failed/unavailable flights
+        protected int decrementItemsAvailable(int xid, String key, String location) {
+            ReservableItem item = (ReservableItem)readData(xid, key);
+            if (item == null)
+            {
+                Trace.warn("RM::decrementItemsAvailable(" + xid + ", " + key + ", " + location + ") failed--item doesn't exist");
+                return -1;
+            }
+            else if (item.getCount() == 0)
+            {
+                Trace.warn("RM::decrementItemsAvailable(" + xid + ", " + key + ", " + location + ") failed--No more items");
+                return -1;
+            }
+            else
+            {            
+                // Decrease the number of available items in the storage
+                item.setCount(item.getCount() - 1);
+                item.setReserved(item.getReserved() + 1);
+                writeData(xid, item.getKey(), item);
 
-		// Check if the item is available
-		ReservableItem item = (ReservableItem)readData(xid, key);
-		if (item == null)
-		{
-			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") failed--item doesn't exist");
-			return false;
-		}
-		else if (item.getCount() == 0)
-		{
-			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") failed--No more items");
-			return false;
-		}
-		else
-		{            
-			customer.reserve(key, location, item.getPrice());        
-			writeData(xid, customer.getKey(), customer);
+                Trace.info("RM::decrementItemsAvailable(" + xid + ", " + key + ", " + location + ") succeeded");
+                return item.getPrice();
+            }        
+        }
 
-			// Decrease the number of available items in the storage
-			item.setCount(item.getCount() - 1);
-			item.setReserved(item.getReserved() + 1);
-			writeData(xid, item.getKey(), item);
+        protected boolean incrementItemsAvailable(int xid, String key, String location) {
+            ReservableItem item = (ReservableItem)readData(xid, key);
+            if (item == null)
+            {
+                Trace.warn("RM::incrementItemsAvailable(" + xid + ", " + key + ", " + location + ") failed--item doesn't exist");
+                return false;
+            }
+            else
+            {            
+                // Decrease the number of available items in the storage
+                item.setCount(item.getCount() + 1);
+                item.setReserved(item.getReserved() - 1);
+                writeData(xid, item.getKey(), item);
 
-			Trace.info("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") succeeded");
-			return true;
-		}        
-	}
+                Trace.info("RM::incrementItemsAvailable(" + xid + ", " + key + ", " + location + ") succeeded");
+                return true;
+            }        
+        }
+
+        protected boolean addCustomerReservation(int xid, int customerID, String key, String location, int amount) {
+            // Read customer object if it exists (and read lock it)
+            Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
+            if (customer == null)
+            {
+		Trace.warn("RM::addCustomerReservation(" + xid + ", " + customerID + ", " + key + ", " + location +  ", " + amount + ")  failed--customer doesn't exist");
+                return false;
+            }
+            else
+            {
+                customer.reserve(key, location, amount);        
+                writeData(xid, customer.getKey(), customer);
+                Trace.info("RM::addCustomerReservation(" + xid + ", " + customerID + ", " + key + ", " + location + ", " + amount + ") succeeded");
+                return true;
+            }
+
+        }
 
 	// Create a new flight, or add seats to existing flight
 	// NOTE: if flightPrice <= 0 and the flight already exists, it maintains its current price
@@ -359,19 +380,22 @@ public class ResourceManager implements IResourceManager
 	// Adds flight reservation to this customer
 	public boolean reserveFlight(int xid, int customerID, int flightNum) 
 	{
-		return reserveItem(xid, customerID, Flight.getKey(flightNum), String.valueOf(flightNum));
+            return false;
+		// return reserveItem(xid, customerID, Flight.getKey(flightNum), String.valueOf(flightNum));
 	}
 
 	// Adds car reservation to this customer
 	public boolean reserveCar(int xid, int customerID, String location) 
 	{
-		return reserveItem(xid, customerID, Car.getKey(location), location);
+            return false;
+		// return reserveItem(xid, customerID, Car.getKey(location), location);
 	}
 
 	// Adds room reservation to this customer
 	public boolean reserveRoom(int xid, int customerID, String location) 
 	{
-		return reserveItem(xid, customerID, Room.getKey(location), location);
+            return false;
+		// return reserveItem(xid, customerID, Room.getKey(location), location);
 	}
 
 	// Reserve bundle 

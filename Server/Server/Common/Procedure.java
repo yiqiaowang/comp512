@@ -28,5 +28,14 @@ public enum Procedure implements Serializable {
     Error,
     RegisterResourceManager,
     RegisterAcknowledge,
-    RemoveResourceManager
+    RemoveResourceManager,
+    DecrementFlightsAvailable,
+    IncrementFlightsAvailable,
+    DecrementCarsAvailable,
+    IncrementCarsAvailable,
+    DecrementRoomsAvailable,
+    IncrementRoomsAvailable,
+    AddCarReservation,
+    AddRoomReservation,
+    AddFlightReservation
 }

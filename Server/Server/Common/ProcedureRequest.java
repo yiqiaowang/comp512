@@ -112,4 +112,8 @@ public class ProcedureRequest implements Serializable {
         this.reserveID = id;
     }
 
+    public void setProcedure(Procedure procedure) {
+        this.procedure = procedure;
+    }
+
 }

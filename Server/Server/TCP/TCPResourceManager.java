@@ -190,36 +190,133 @@ public class TCPResourceManager extends ResourceManager
                             )
                         );
                 break;
-            case ReserveFlight:
+            // case ReserveFlight:
+            //     response = new ProcedureResponse(procedure);
+            //     response.setBooleanResponse(
+            //             reserveItem(
+            //                 request.getXID(),
+            //                 request.getResourceID(),
+            //                 Flight.getKey(request.getReserveID()),
+            //                 String.valueOf(request.getReserveID())
+            //                 )
+            //             );
+            //     break;
+            // case ReserveCar:
+            //     response = new ProcedureResponse(procedure);
+            //     response.setBooleanResponse(
+            //             reserveItem(
+            //                 request.getXID(),
+            //                 request.getResourceID(),
+            //                 Car.getKey(request.getLocation()),
+            //                 request.getLocation()
+            //                 )
+            //             );
+            //     break;
+            // case ReserveRoom:
+            //     response = new ProcedureResponse(procedure);
+            //     response.setBooleanResponse(
+            //             reserveItem(
+            //                 request.getXID(),
+            //                 request.getResourceID(),
+            //                 Room.getKey(request.getLocation()),
+            //                 request.getLocation()
+            //                 )
+            //             );
+            //     break;
+
+            case DecrementFlightsAvailable:
                 response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        reserveItem(
+                response.setIntResponse(
+                        decrementItemsAvailable(
                             request.getXID(),
-                            request.getResourceID(),
                             Flight.getKey(request.getReserveID()),
                             String.valueOf(request.getReserveID())
                             )
                         );
                 break;
-            case ReserveCar:
+            case IncrementFlightsAvailable:
                 response = new ProcedureResponse(procedure);
                 response.setBooleanResponse(
-                        reserveItem(
+                        incrementItemsAvailable(
                             request.getXID(),
-                            request.getResourceID(),
+                            Flight.getKey(request.getReserveID()),
+                            String.valueOf(request.getReserveID())
+                            )
+                        );
+                break;
+            case DecrementRoomsAvailable:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        decrementItemsAvailable(
+                            request.getXID(),
+                            Room.getKey(request.getLocation()),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case IncrementRoomsAvailable:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        incrementItemsAvailable(
+                            request.getXID(),
+                            Room.getKey(request.getLocation()),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case DecrementCarsAvailable:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        decrementItemsAvailable(
+                            request.getXID(),
                             Car.getKey(request.getLocation()),
                             request.getLocation()
                             )
                         );
                 break;
-            case ReserveRoom:
+            case IncrementCarsAvailable:
                 response = new ProcedureResponse(procedure);
                 response.setBooleanResponse(
-                        reserveItem(
+                        incrementItemsAvailable(
+                            request.getXID(),
+                            Car.getKey(request.getLocation()),
+                            request.getLocation()
+                            )
+                        );
+                break;
+            case AddRoomReservation:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        addCustomerReservation(
                             request.getXID(),
                             request.getResourceID(),
                             Room.getKey(request.getLocation()),
-                            request.getLocation()
+                            request.getLocation(),
+                            request.getResourcePrice()
+                            )
+                        );
+                break;
+            case AddCarReservation:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        addCustomerReservation(
+                            request.getXID(),
+                            request.getResourceID(),
+                            Car.getKey(request.getLocation()),
+                            request.getLocation(),
+                            request.getResourcePrice()
+                            )
+                        );
+                break;
+            case AddFlightReservation:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        addCustomerReservation(
+                            request.getXID(),
+                            request.getResourceID(),
+                            Flight.getKey(request.getReserveID()),
+                            String.valueOf(request.getReserveID()),
+                            request.getResourcePrice()
                             )
                         );
                 break;
