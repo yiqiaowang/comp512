@@ -21,7 +21,8 @@ import Server.Common.Room;
 import java.net.*;
 import java.io.*;
 import java.util.Vector;
-
+import java.util.HashMap;
+import java.util.Map;
 
 public class TCPMiddleware
 {
@@ -169,15 +170,57 @@ public class TCPMiddleware
     }
 
     private ProcedureResponse reserveBundle(ProcedureRequest request) throws IOException, ClassNotFoundException {
-        // TODO: use a loop and track the flights already processed. Then needs a hashmap to store the prices
+        Map<String, Integer> flightPriceMap = new HashMap<>();
+        Vector<String> flightIDs = request.getResourceIDs();
+        ProcedureRequest subReq = new ProcedureRequest();
+        subReq.setXID(request.getXID());
+
+        ProcedureRequest rollback = new ProcedureRequest();
+        ProcedureResponse response = new ProcedureResponse(Procedure.Error);
+        response.setBooleanResponse(false);
+
+        // Figure out prices for flights
+        subReq.setProcedure(Procedure.DecrementFlightsAvailable);
+        for (String flight : flightIDs) {
+            subReq.setReserveID(Integer.parseInt(flight));
+            int price = this.flightManagerStub.executeRemoteProcedure(request).getIntResponse();
+
+            if (price == -1) {
+                // Rollback and return failed response
+                ProcedureRequest rollback = new ProcedureRequest(Procedure.BatchIncrementFlightsAvailable);
+                rollback.setResourceIDs(new Vector<>(flightPriceMap.keySet()));
+
+                int rollbackSuccess = this.flightManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
+                
+                if (! rollbackSuccess) {
+                    System.out.println("Something bad happened, could not roll back"); 
+                }
+
+                return response; 
+            } else {
+                flightPriceMap.put(flight, Integer.valueOf(price));
+            }
+        }
         
-        // request.setProcedure(Procedure.BatchDecrementFlightsAvailable);
-        // int totalFlightPrice = this.flightManagerStub.executeRemoteProcedure(request).getIntResponse();
 
         // Query for car price if necessary
         if (request.getRequireCar()) {
             request.setProcedure(Procedure.DecrementCarsAvailable);
             int carPrice = this.carManagerStub.executeRemoteProcedure(request).getIntResponse();
+
+            // Rollback
+            if (carPrice == -1) {
+                // Flights
+                rollback.setProcedure(Procedure.BatchIncrementFlightsAvailable);
+                rollback.setResourceIDs(new Vector<>(flightPriceMap.keySet()));
+
+                boolean rollbackSuccess = this.flightManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
+                
+                if (! rollbackSuccess) {
+                    System.out.println("Something bad happened, could not roll back"); 
+                }
+                return response;
+            }
         } else {
             int carPrice = 0;
         }
@@ -186,20 +229,38 @@ public class TCPMiddleware
         if (request.getRequireRoom()) {
             request.setProcedure(Procedure.DecrementRoomsAvailable);
             int roomPrice = this.roomManagerStub.executeRemoteProcedure(request).getIntResponse();
+
+            // Roll back
+            // Car if needed
+            if ( carPrice > 0 ) {
+                subReq.setProcedure(Procedure.IncrementCarsAvailable); 
+                subReq.setLocation(request.getLocation());
+                rollbackSuccess = this.carManagerStub.executeRemoteProcedure(subReq).getBooleanResponse();
+
+                if (!rollbackSuccess){
+                    System.out.println("Something bad happened, could not roll back"); 
+                }
+                return response;
+            }
+
+            // Flights
+                rollback.setProcedure(Procedure.BatchIncrementFlightsAvailable);
+                rollback.setResourceIDs(new Vector<>(flightPriceMap.keySet()));
+
+                boolean rollbackSuccess = this.flightManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
+                
+                if (! rollbackSuccess) {
+                    System.out.println("Something bad happened, could not roll back"); 
+                }
+                return response;
         } else {
             int roomPrice = 0;
         }
 
 
         // Calculate total customer bill
-        // TODO, complete once we know the level of fault tolerence we need
-        ProcedureRequest subReq = new ProcedureRequest();
-        Vector<String> flightIDs = request.getResourceIDs();
-        for (String flight : flightIDs ) {
-            subReq.setProcedure(Procedure.AddFlightReservation);
-            subReq.setResourceID(request.getResourceID());
-            subReq.setReserveID(Integer.parseInt(flight));
-        }
+        
+        // Flights
     }
 
     private ProcedureResponse reserveItem(ProcedureRequest request, ResourceManagerStub stub, Procedure decrementProcedure, Procedure clientProcedure, Procedure incrementProcedure) throws IOException, ClassNotFoundException {
