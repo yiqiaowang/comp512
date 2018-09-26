@@ -284,6 +284,24 @@ public class TCPResourceManager extends ResourceManager
                             )
                         );
                 break;
+            case BatchDecrementFlightsAvailable:
+                response = new ProcedureResponse(procedure);
+                response.setIntResponse(
+                        batchDecrementFlightsAvailable(
+                            request.getXID(),
+                            request.getResourceIDs()
+                            )
+                        );
+                break;
+            case BatchIncrementFlightsAvailable:
+                response = new ProcedureResponse(procedure);
+                response.setBooleanResponse(
+                        batchIncrementFlightsAvailable(
+                            request.getXID(),
+                            request.getResourceIDs()
+                            )
+                        );
+                break;
             case AddRoomReservation:
                 response = new ProcedureResponse(procedure);
                 response.setBooleanResponse(

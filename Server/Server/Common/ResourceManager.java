@@ -127,6 +127,50 @@ public class ResourceManager implements IResourceManager
             }        
         }
 
+        // m_data is locked
+        protected int batchDecrementFlightsAvailable(int xid, Vector<String> flightIDs) {
+            synchronized (this.m_data) {
+                // Ensure that the flights are all available
+                for (String flight : flightIDs) {
+                    int available = queryFlight(xid, Integer.parseInt(flight));
+                    if (available <= 0) {
+                        Trace.warn("RM::batchDecrementFlightsAvailable(" + xid + ", " + flight + ") failed--No more items");
+                        return -1;
+                    }
+                }
+                
+                int price = 0;
+                // Decrement each flight and record its price
+                for (String flight : flightIDs) {
+                    ReservableItem item = (ReservableItem)readData(xid, Flight.getKey(Integer.parseInt(flight)));
+                    item.setCount(item.getCount() - 1);
+                    item.setReserved(item.getReserved() + 1);
+                    writeData(xid, item.getKey(), item);
+                    price += item.getPrice();
+                }
+                Trace.info("RM::batchDecrementFlightsAvailable(" + xid + ", " + flightIDs + ") succeeded");
+                return price;
+            }
+        }
+
+        protected boolean batchIncrementFlightsAvailable(int xid, Vector<String> flightIDs) {
+            synchronized (this.m_data) {
+                // Decrement each flight and record its price
+                for (String flight : flightIDs) {
+                    ReservableItem item = (ReservableItem)readData(xid, Flight.getKey(Integer.parseInt(flight)));
+                    if (item == null) {
+                        Trace.warn("RM::batchIncrementFlightsAvailable(" + xid + ", " + flight + ") failed--item doesn't exist");
+                        return false;
+                    }
+                    item.setCount(item.getCount() + 1);
+                    item.setReserved(item.getReserved() - 1);
+                    writeData(xid, item.getKey(), item);
+                }
+                Trace.info("RM::batchIncrementFlightsAvailable(" + xid + ", " + flightIDs + ") succeeded");
+                return true;
+            }
+        }
+
         protected boolean incrementItemsAvailable(int xid, String key, String location) {
             ReservableItem item = (ReservableItem)readData(xid, key);
             if (item == null)

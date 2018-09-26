@@ -1,8 +1,7 @@
 package Server.Common;
 
 import java.io.Serializable;
-import java.util.Vector;
-
+import java.util.Vector; 
 
 public class ProcedureRequest implements Serializable {
     private static final long serialVersionUID = 1;

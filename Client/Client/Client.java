@@ -392,8 +392,9 @@ public abstract class Client
                              {
                                  System.out.println("-Flight Number: " + arguments.elementAt(3+i));
                              }
-                             System.out.println("-Car Location: " + arguments.elementAt(arguments.size()-2));
-                             System.out.println("-Room Location: " + arguments.elementAt(arguments.size()-1));
+                             System.out.println("-Location: " + arguments.elementAt(arguments.size()-3));
+                             System.out.println("-Car? : " + arguments.elementAt(arguments.size()-2));
+                             System.out.println("-Room? : " + arguments.elementAt(arguments.size()-1));
 
                              int id = toInt(arguments.elementAt(1));
                              int customerID = toInt(arguments.elementAt(2));
@@ -402,7 +403,7 @@ public abstract class Client
                              {
                                  flightNumbers.addElement(arguments.elementAt(3+i));
                              }
-                             String location = arguments.elementAt(arguments.size()-2);
+                             String location = arguments.elementAt(arguments.size()-3);
                              boolean car = toBoolean(arguments.elementAt(arguments.size()-2));
                              boolean room = toBoolean(arguments.elementAt(arguments.size()-1));
 

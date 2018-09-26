@@ -37,5 +37,7 @@ public enum Procedure implements Serializable {
     IncrementRoomsAvailable,
     AddCarReservation,
     AddRoomReservation,
-    AddFlightReservation
+    AddFlightReservation,
+    BatchDecrementFlightsAvailable,
+    BatchIncrementFlightsAvailable
 }
