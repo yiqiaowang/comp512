@@ -39,6 +39,7 @@ public class CustomerResourceManager extends TCPResourceManager
             // Handle Requests
             while (true) {
                 ProcedureRequest request = manager.receiveRequest();
+                System.out.println("Received call for procedure: " + request.getProcedure());
                 ProcedureResponse response = manager.executeRequest(request);
                 manager.sendResponse(response);
             }

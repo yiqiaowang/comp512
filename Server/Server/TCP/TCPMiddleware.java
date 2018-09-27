@@ -170,10 +170,6 @@ public class TCPMiddleware
     }
 
     private ProcedureResponse reserveBundle(ProcedureRequest request) throws IOException, ClassNotFoundException {
-        Map<String, Integer> flightPriceMap = new HashMap<>();
-        Vector<String> flightIDs = request.getResourceIDs();
-        ProcedureRequest subReq = new ProcedureRequest();
-        subReq.setXID(request.getXID());
         int roomPrice = 0;
         int carPrice = 0;
 
@@ -181,14 +177,19 @@ public class TCPMiddleware
         response.setBooleanResponse(false);
 
         // Figure out prices for flights
+        Map<String, Integer> flightPriceMap = new HashMap<>();
+        Vector<String> flightIDs = request.getResourceIDs();
+
+        ProcedureRequest subReq = new ProcedureRequest();
+        subReq.setXID(request.getXID());
         subReq.setProcedure(Procedure.DecrementFlightsAvailable);
+
         for (String flight : flightIDs) {
             subReq.setReserveID(Integer.parseInt(flight));
             int price = this.flightManagerStub.executeRemoteProcedure(subReq).getIntResponse();
 
             if (price == -1) {
-                // Rollback and return failed response
-                this.bundleRollback(subReq.getXID(), new Vector<>(flightPriceMap.keySet()), request.getLocation(), false, false);
+                System.out.println("Something bad happened. Could not book flight in bundle!!!");
                 return response; 
             } else {
                 flightPriceMap.put(flight, Integer.valueOf(price));
@@ -202,10 +203,8 @@ public class TCPMiddleware
             request.setProcedure(Procedure.DecrementCarsAvailable);
             carPrice = this.carManagerStub.executeRemoteProcedure(request).getIntResponse();
 
-            // Rollback
             if (carPrice == -1) {
-                // Flights
-                this.bundleRollback(request.getXID(), new Vector<>(flightPriceMap.keySet()), request.getLocation(), false, false);
+                System.out.println("Something bad happened. Could not book car in bundle!!!");
                 return response;
             }
         }
@@ -217,48 +216,48 @@ public class TCPMiddleware
             roomPrice = this.roomManagerStub.executeRemoteProcedure(request).getIntResponse();
 
             if (roomPrice == -1) {
-                // Rollback as needed
-                this.bundleRollback(request.getXID(), new Vector<>(flightPriceMap.keySet()), request.getLocation(), true, false);
+                System.out.println("Something bad happened. Could not book addRooms in bundle!!!");
                 return response;
             }
 
         }
 
         // Calculate total customer bill
-        // TODO: handle failures
-        subReq.setResourceID(request.getResourceID());
+        ProcedureRequest customerReq = new ProcedureRequest();
+        customerReq.setXID(request.getXID());
+        customerReq.setResourceID(request.getResourceID());
 
         if (carPrice > 0) {
             System.out.println("Booking car for: " + carPrice);
 
-            subReq.setProcedure(Procedure.AddCarReservation);
-            subReq.setLocation(request.getLocation());
-            subReq.setResourcePrice(carPrice);
+            customerReq.setProcedure(Procedure.AddCarReservation);
+            customerReq.setLocation(request.getLocation());
+            customerReq.setResourcePrice(carPrice);
 
-            System.out.println("Subreq procedure is: " + subReq.getProcedure());
-            response = this.customerManagerStub.executeRemoteProcedure(subReq);
+            System.out.println("Subreq procedure is: " + customerReq.getProcedure());
+            this.customerManagerStub.executeRemoteProcedure(customerReq);
         }
 
         if (roomPrice > 0) {
             System.out.println("Booking room for: " + roomPrice);
 
-            subReq.setProcedure(Procedure.AddRoomReservation);
-            subReq.setLocation(request.getLocation());
-            subReq.setResourcePrice(roomPrice);
+            customerReq.setProcedure(Procedure.AddRoomReservation);
+            customerReq.setLocation(request.getLocation());
+            customerReq.setResourcePrice(roomPrice);
 
-            System.out.println("Subreq procedure is: " + subReq.getProcedure());
-            response = this.customerManagerStub.executeRemoteProcedure(subReq);
+            System.out.println("Subreq procedure is: " + customerReq.getProcedure());
+            this.customerManagerStub.executeRemoteProcedure(subReq);
         }
 
         for (String flight : flightPriceMap.keySet()) {
             System.out.println("Booking flight: " + flight);
 
-            subReq.setProcedure(Procedure.AddFlightReservation);
-            subReq.setReserveID(Integer.parseInt(flight));
-            subReq.setResourcePrice(flightPriceMap.get(flight));
+            customerReq.setProcedure(Procedure.AddFlightReservation);
+            customerReq.setReserveID(Integer.parseInt(flight));
+            customerReq.setResourcePrice(flightPriceMap.get(flight));
 
-            System.out.println("Subreq procedure is: " + subReq.getProcedure());
-            response = this.customerManagerStub.executeRemoteProcedure(subReq);
+            System.out.println("Customer Request is: " + customerReq.toString());
+            this.customerManagerStub.executeRemoteProcedure(customerReq);
         }
 
 

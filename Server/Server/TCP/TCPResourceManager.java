@@ -190,40 +190,6 @@ public class TCPResourceManager extends ResourceManager
                             )
                         );
                 break;
-            // case ReserveFlight:
-            //     response = new ProcedureResponse(procedure);
-            //     response.setBooleanResponse(
-            //             reserveItem(
-            //                 request.getXID(),
-            //                 request.getResourceID(),
-            //                 Flight.getKey(request.getReserveID()),
-            //                 String.valueOf(request.getReserveID())
-            //                 )
-            //             );
-            //     break;
-            // case ReserveCar:
-            //     response = new ProcedureResponse(procedure);
-            //     response.setBooleanResponse(
-            //             reserveItem(
-            //                 request.getXID(),
-            //                 request.getResourceID(),
-            //                 Car.getKey(request.getLocation()),
-            //                 request.getLocation()
-            //                 )
-            //             );
-            //     break;
-            // case ReserveRoom:
-            //     response = new ProcedureResponse(procedure);
-            //     response.setBooleanResponse(
-            //             reserveItem(
-            //                 request.getXID(),
-            //                 request.getResourceID(),
-            //                 Room.getKey(request.getLocation()),
-            //                 request.getLocation()
-            //                 )
-            //             );
-            //     break;
-
             case DecrementFlightsAvailable:
                 response = new ProcedureResponse(procedure);
                 response.setIntResponse(
@@ -284,24 +250,6 @@ public class TCPResourceManager extends ResourceManager
                             )
                         );
                 break;
-            case BatchDecrementFlightsAvailable:
-                response = new ProcedureResponse(procedure);
-                response.setIntResponse(
-                        batchDecrementFlightsAvailable(
-                            request.getXID(),
-                            request.getResourceIDs()
-                            )
-                        );
-                break;
-            case BatchIncrementFlightsAvailable:
-                response = new ProcedureResponse(procedure);
-                response.setBooleanResponse(
-                        batchIncrementFlightsAvailable(
-                            request.getXID(),
-                            request.getResourceIDs()
-                            )
-                        );
-                break;
             case AddRoomReservation:
                 response = new ProcedureResponse(procedure);
                 response.setBooleanResponse(
@@ -315,6 +263,7 @@ public class TCPResourceManager extends ResourceManager
                         );
                 break;
             case AddCarReservation:
+                System.out.println("Adding car reservation >>>> ");
                 response = new ProcedureResponse(procedure);
                 response.setBooleanResponse(
                         addCustomerReservation(
@@ -327,6 +276,7 @@ public class TCPResourceManager extends ResourceManager
                         );
                 break;
             case AddFlightReservation:
+                System.out.println("Adding flight reservation >>>> ");
                 response = new ProcedureResponse(procedure);
                 response.setBooleanResponse(
                         addCustomerReservation(
