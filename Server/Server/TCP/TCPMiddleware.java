@@ -223,43 +223,51 @@ public class TCPMiddleware
         }
 
         // Calculate total customer bill
-        ProcedureRequest customerReq = new ProcedureRequest();
-        customerReq.setXID(request.getXID());
-        customerReq.setResourceID(request.getResourceID());
 
         if (carPrice > 0) {
+            ProcedureRequest carReq = new ProcedureRequest();
+            carReq.setXID(request.getXID());
+            carReq.setResourceID(request.getResourceID());
+
             System.out.println("Booking car for: " + carPrice);
 
-            customerReq.setProcedure(Procedure.AddCarReservation);
-            customerReq.setLocation(request.getLocation());
-            customerReq.setResourcePrice(carPrice);
+            carReq.setProcedure(Procedure.AddCarReservation);
+            carReq.setLocation(request.getLocation());
+            carReq.setResourcePrice(carPrice);
 
-            System.out.println("Subreq procedure is: " + customerReq.getProcedure());
-            this.customerManagerStub.executeRemoteProcedure(customerReq);
+            System.out.println("Subreq procedure is: " + carReq.getProcedure());
+            this.customerManagerStub.executeRemoteProcedure(carReq);
         }
 
         if (roomPrice > 0) {
+            ProcedureRequest roomReq = new ProcedureRequest();
+            roomReq.setXID(request.getXID());
+            roomReq.setResourceID(request.getResourceID());
+
             System.out.println("Booking room for: " + roomPrice);
 
-            customerReq.setProcedure(Procedure.AddRoomReservation);
-            customerReq.setLocation(request.getLocation());
-            customerReq.setResourcePrice(roomPrice);
+            roomReq.setProcedure(Procedure.AddRoomReservation);
+            roomReq.setLocation(request.getLocation());
+            roomReq.setResourcePrice(roomPrice);
 
-            System.out.println("Subreq procedure is: " + customerReq.getProcedure());
-            this.customerManagerStub.executeRemoteProcedure(subReq);
+            System.out.println("Subreq procedure is: " + roomReq.getProcedure());
+            this.customerManagerStub.executeRemoteProcedure(roomReq);
         }
+
+        ProcedureRequest flightReq = new ProcedureRequest();
+        flightReq.setXID(request.getXID());
+        flightReq.setResourceID(request.getResourceID());
 
         for (String flight : flightPriceMap.keySet()) {
             System.out.println("Booking flight: " + flight);
 
-            customerReq.setProcedure(Procedure.AddFlightReservation);
-            customerReq.setReserveID(Integer.parseInt(flight));
-            customerReq.setResourcePrice(flightPriceMap.get(flight));
+            flightReq.setProcedure(Procedure.AddFlightReservation);
+            flightReq.setReserveID(Integer.parseInt(flight));
+            flightReq.setResourcePrice(flightPriceMap.get(flight));
 
-            System.out.println("Customer Request is: " + customerReq.toString());
-            this.customerManagerStub.executeRemoteProcedure(customerReq);
+            System.out.println("Customer Request is: " + flightReq.toString());
+            this.customerManagerStub.executeRemoteProcedure(flightReq);
         }
-
 
         response.setBooleanResponse(true);
         return response;
