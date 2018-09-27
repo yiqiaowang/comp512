@@ -23,6 +23,16 @@ public class CustomerResourceManager extends TCPResourceManager
     public static void main(String args[])
     {
         try {
+            if (args.length > 0) {
+                middlewareServer = args[0];
+            }
+            if (args.length > 1) {
+                middlewarePort = Integer.parseInt(args[1]);
+            }
+            if (args.length > 2) {
+                System.err.println((char)27 + "[31;1mResourceManager exception: " + (char)27 + "[0mUsage: java Server.TCP.<ResourceManager> [server_hostname [server_port]]");
+                System.exit(1);
+            }
             // Create a new Server object
             CustomerResourceManager manager = new CustomerResourceManager(CustomerResourceManager.managerName);
             

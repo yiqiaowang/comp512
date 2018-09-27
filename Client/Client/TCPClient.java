@@ -10,11 +10,22 @@ import java.util.*;
 
 public class TCPClient extends Client
 {
-    private static String server = "localhost";
-    private static int port = 6666;
+    private static String middlewareServer = "localhost";
+    private static int middlewarePort = 6666;
 
     public static void main(String args[])
     {	
+        if (args.length > 0) {
+            middlewareServer = args[0];
+        }
+        if (args.length > 1) {
+            middlewarePort = Integer.parseInt(args[1]);
+        }
+        if (args.length > 2) {
+            System.err.println((char)27 + "[31;1mClient exception: " + (char)27 + "[0mUsage: java client.TCPClient [server_hostname [server_port]]");
+            System.exit(1);
+        }
+
         // Set the security policy
         if (System.getSecurityManager() == null)
         {
@@ -39,7 +50,7 @@ public class TCPClient extends Client
     }
     
     public void connectServer() throws IOException, UnknownHostException {
-        connectServer(TCPClient.server, TCPClient.port);
+        connectServer(TCPClient.middlewareServer, TCPClient.middlewarePort);
     }
 
     public void connectServer(String server, int port) throws IOException, UnknownHostException {
@@ -47,7 +58,7 @@ public class TCPClient extends Client
         this.communicationManager.setupStreams();
     }
 
-    public void stopConnection() throws IOException {
+    public void disconnectServer() throws IOException {
         this.communicationManager.stopConnection();
     }
 }

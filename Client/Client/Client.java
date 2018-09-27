@@ -20,6 +20,7 @@ public abstract class Client
     }
 
     public abstract void connectServer() throws IOException, UnknownHostException ;
+    public abstract void disconnectServer() throws IOException;
 
     public void start()
     {
@@ -431,8 +432,8 @@ public abstract class Client
             }
             case Quit:
                          checkArgumentsCount(1, arguments.size());
-
                          System.out.println("Quitting client");
+                         disconnectServer();
                          System.exit(0);
         }
     }
