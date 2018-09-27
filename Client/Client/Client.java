@@ -407,6 +407,8 @@ public abstract class Client
                              boolean car = toBoolean(arguments.elementAt(arguments.size()-2));
                              boolean room = toBoolean(arguments.elementAt(arguments.size()-1));
 
+
+
                              if (communicationManager.bundle(id, customerID, flightNumbers, location, car, room)) {
                                  System.out.println("Bundle Reserved");
                              } else {

@@ -174,28 +174,21 @@ public class TCPMiddleware
         Vector<String> flightIDs = request.getResourceIDs();
         ProcedureRequest subReq = new ProcedureRequest();
         subReq.setXID(request.getXID());
+        int roomPrice = 0;
+        int carPrice = 0;
 
-        ProcedureRequest rollback = new ProcedureRequest();
-        ProcedureResponse response = new ProcedureResponse(Procedure.Error);
+        ProcedureResponse response = new ProcedureResponse(request.getProcedure());
         response.setBooleanResponse(false);
 
         // Figure out prices for flights
         subReq.setProcedure(Procedure.DecrementFlightsAvailable);
         for (String flight : flightIDs) {
             subReq.setReserveID(Integer.parseInt(flight));
-            int price = this.flightManagerStub.executeRemoteProcedure(request).getIntResponse();
+            int price = this.flightManagerStub.executeRemoteProcedure(subReq).getIntResponse();
 
             if (price == -1) {
                 // Rollback and return failed response
-                ProcedureRequest rollback = new ProcedureRequest(Procedure.BatchIncrementFlightsAvailable);
-                rollback.setResourceIDs(new Vector<>(flightPriceMap.keySet()));
-
-                int rollbackSuccess = this.flightManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
-                
-                if (! rollbackSuccess) {
-                    System.out.println("Something bad happened, could not roll back"); 
-                }
-
+                this.bundleRollback(subReq.getXID(), new Vector<>(flightPriceMap.keySet()), request.getLocation(), false, false);
                 return response; 
             } else {
                 flightPriceMap.put(flight, Integer.valueOf(price));
@@ -205,62 +198,113 @@ public class TCPMiddleware
 
         // Query for car price if necessary
         if (request.getRequireCar()) {
+            System.out.println("Bundle requires car");
             request.setProcedure(Procedure.DecrementCarsAvailable);
-            int carPrice = this.carManagerStub.executeRemoteProcedure(request).getIntResponse();
+            carPrice = this.carManagerStub.executeRemoteProcedure(request).getIntResponse();
 
             // Rollback
             if (carPrice == -1) {
                 // Flights
-                rollback.setProcedure(Procedure.BatchIncrementFlightsAvailable);
-                rollback.setResourceIDs(new Vector<>(flightPriceMap.keySet()));
-
-                boolean rollbackSuccess = this.flightManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
-                
-                if (! rollbackSuccess) {
-                    System.out.println("Something bad happened, could not roll back"); 
-                }
+                this.bundleRollback(request.getXID(), new Vector<>(flightPriceMap.keySet()), request.getLocation(), false, false);
                 return response;
             }
-        } else {
-            int carPrice = 0;
         }
 
-        // Query for car price if necessary
+        // Query for room price
         if (request.getRequireRoom()) {
+            System.out.println("Bundle requires room");
             request.setProcedure(Procedure.DecrementRoomsAvailable);
-            int roomPrice = this.roomManagerStub.executeRemoteProcedure(request).getIntResponse();
+            roomPrice = this.roomManagerStub.executeRemoteProcedure(request).getIntResponse();
 
-            // Roll back
-            // Car if needed
-            if ( carPrice > 0 ) {
-                subReq.setProcedure(Procedure.IncrementCarsAvailable); 
-                subReq.setLocation(request.getLocation());
-                rollbackSuccess = this.carManagerStub.executeRemoteProcedure(subReq).getBooleanResponse();
-
-                if (!rollbackSuccess){
-                    System.out.println("Something bad happened, could not roll back"); 
-                }
+            if (roomPrice == -1) {
+                // Rollback as needed
+                this.bundleRollback(request.getXID(), new Vector<>(flightPriceMap.keySet()), request.getLocation(), true, false);
                 return response;
             }
 
-            // Flights
-                rollback.setProcedure(Procedure.BatchIncrementFlightsAvailable);
-                rollback.setResourceIDs(new Vector<>(flightPriceMap.keySet()));
-
-                boolean rollbackSuccess = this.flightManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
-                
-                if (! rollbackSuccess) {
-                    System.out.println("Something bad happened, could not roll back"); 
-                }
-                return response;
-        } else {
-            int roomPrice = 0;
         }
-
 
         // Calculate total customer bill
-        
+        // TODO: handle failures
+        subReq.setResourceID(request.getResourceID());
+
+        if (carPrice > 0) {
+            System.out.println("Booking car for: " + carPrice);
+
+            subReq.setProcedure(Procedure.AddCarReservation);
+            subReq.setLocation(request.getLocation());
+            subReq.setResourcePrice(carPrice);
+
+            System.out.println("Subreq procedure is: " + subReq.getProcedure());
+            response = this.customerManagerStub.executeRemoteProcedure(subReq);
+        }
+
+        if (roomPrice > 0) {
+            System.out.println("Booking room for: " + roomPrice);
+
+            subReq.setProcedure(Procedure.AddRoomReservation);
+            subReq.setLocation(request.getLocation());
+            subReq.setResourcePrice(roomPrice);
+
+            System.out.println("Subreq procedure is: " + subReq.getProcedure());
+            response = this.customerManagerStub.executeRemoteProcedure(subReq);
+        }
+
+        for (String flight : flightPriceMap.keySet()) {
+            System.out.println("Booking flight: " + flight);
+
+            subReq.setProcedure(Procedure.AddFlightReservation);
+            subReq.setReserveID(Integer.parseInt(flight));
+            subReq.setResourcePrice(flightPriceMap.get(flight));
+
+            System.out.println("Subreq procedure is: " + subReq.getProcedure());
+            response = this.customerManagerStub.executeRemoteProcedure(subReq);
+        }
+
+
+        response.setBooleanResponse(true);
+        return response;
+    }
+
+    private boolean bundleRollback(int xid, Vector<String> flightIDs, String location, boolean car, boolean room) throws IOException, ClassNotFoundException {
+        ProcedureRequest rollback = new ProcedureRequest();
+        boolean rollbackSuccess;
+        rollback.setXID(xid);
+
+        if ( car ) {
+            rollback.setProcedure(Procedure.IncrementCarsAvailable); 
+            rollback.setLocation(location);
+            rollbackSuccess = this.carManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
+
+            if (!rollbackSuccess){
+                System.out.println("Something bad happened, could not roll back"); 
+                return false;
+            }
+        }
+
+        if ( room ) {
+            rollback.setProcedure(Procedure.IncrementRoomsAvailable); 
+            rollback.setLocation(location);
+            rollbackSuccess = this.roomManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
+
+            if (!rollbackSuccess){
+                System.out.println("Something bad happened, could not roll back"); 
+                return false;
+            }
+        }
+
         // Flights
+        rollback.setProcedure(Procedure.BatchIncrementFlightsAvailable);
+        rollback.setResourceIDs(flightIDs);
+
+        rollbackSuccess = this.flightManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
+
+        if (! rollbackSuccess) {
+            System.out.println("Something bad happened, could not roll back"); 
+            return false;
+        }
+
+        return true;
     }
 
     private ProcedureResponse reserveItem(ProcedureRequest request, ResourceManagerStub stub, Procedure decrementProcedure, Procedure clientProcedure, Procedure incrementProcedure) throws IOException, ClassNotFoundException {
