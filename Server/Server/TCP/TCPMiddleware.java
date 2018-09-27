@@ -273,47 +273,6 @@ public class TCPMiddleware
         return response;
     }
 
-    private boolean bundleRollback(int xid, Vector<String> flightIDs, String location, boolean car, boolean room) throws IOException, ClassNotFoundException {
-        ProcedureRequest rollback = new ProcedureRequest();
-        boolean rollbackSuccess;
-        rollback.setXID(xid);
-
-        if ( car ) {
-            rollback.setProcedure(Procedure.IncrementCarsAvailable); 
-            rollback.setLocation(location);
-            rollbackSuccess = this.carManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
-
-            if (!rollbackSuccess){
-                System.out.println("Something bad happened, could not roll back"); 
-                return false;
-            }
-        }
-
-        if ( room ) {
-            rollback.setProcedure(Procedure.IncrementRoomsAvailable); 
-            rollback.setLocation(location);
-            rollbackSuccess = this.roomManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
-
-            if (!rollbackSuccess){
-                System.out.println("Something bad happened, could not roll back"); 
-                return false;
-            }
-        }
-
-        // Flights
-        rollback.setProcedure(Procedure.BatchIncrementFlightsAvailable);
-        rollback.setResourceIDs(flightIDs);
-
-        rollbackSuccess = this.flightManagerStub.executeRemoteProcedure(rollback).getBooleanResponse();
-
-        if (! rollbackSuccess) {
-            System.out.println("Something bad happened, could not roll back"); 
-            return false;
-        }
-
-        return true;
-    }
-
     private ProcedureResponse reserveItem(ProcedureRequest request, ResourceManagerStub stub, Procedure decrementProcedure, Procedure clientProcedure, Procedure incrementProcedure) throws IOException, ClassNotFoundException {
         request.setProcedure(decrementProcedure);
         int price = stub.executeRemoteProcedure(request).getIntResponse();
@@ -326,6 +285,7 @@ public class TCPMiddleware
             response = this.customerManagerStub.executeRemoteProcedure(request);
 
             if (!response.getBooleanResponse()) {
+                System.out.println("Could not update customer bill. Rolling back...");
                 // Roll back        
                 request.setProcedure(incrementProcedure);
                 boolean rollbackSuccess = stub.executeRemoteProcedure(request).getBooleanResponse();  
@@ -337,6 +297,8 @@ public class TCPMiddleware
                 if (! rollbackSuccess){
                     System.out.println("Something very bad happened. Failed to roll back!");
                 }
+
+                System.out.println("Rollback successfull");
             }
         }
         return response;

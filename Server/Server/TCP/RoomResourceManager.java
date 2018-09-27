@@ -1,8 +1,3 @@
-// -------------------------------
-// adapted from Kevin T. Manley
-// CSE 593
-// -------------------------------
-
 package Server.TCP;
 
 import Server.Common.ResourceManager;
@@ -57,13 +52,10 @@ public class RoomResourceManager extends TCPResourceManager
 
     public void registerMiddleware() throws IOException, ClassNotFoundException {
         ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
-        // request.setLocation(server);
-        // requset.setResourceID(port);
         request.setReserveID(RoomResourceManager.managerID);
         out.writeObject(request);
         ProcedureResponse response = (ProcedureResponse) in.readObject();
         System.out.println(response.getProcedure());
-        // can check for success response here
     }
 
     public RoomResourceManager(String name) {

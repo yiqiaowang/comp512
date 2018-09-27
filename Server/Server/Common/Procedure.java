@@ -24,11 +24,12 @@ public enum Procedure implements Serializable {
     ReserveRoom,
     Bundle,
     
-    // Meta functions
+    /* Meta functions */
     Error,
     RegisterResourceManager,
     RegisterAcknowledge,
-    RemoveResourceManager,
+
+    // Following are used to implement Bundle
     DecrementFlightsAvailable,
     IncrementFlightsAvailable,
     DecrementCarsAvailable,
@@ -37,7 +38,5 @@ public enum Procedure implements Serializable {
     IncrementRoomsAvailable,
     AddCarReservation,
     AddRoomReservation,
-    AddFlightReservation,
-    BatchDecrementFlightsAvailable,
-    BatchIncrementFlightsAvailable
+    AddFlightReservation
 }

@@ -1,8 +1,3 @@
-// -------------------------------
-// adapted from Kevin T. Manley
-// CSE 593
-// -------------------------------
-
 package Server.TCP;
 
 import Server.Common.ResourceManager;
@@ -39,7 +34,6 @@ public class CustomerResourceManager extends TCPResourceManager
             // Handle Requests
             while (true) {
                 ProcedureRequest request = manager.receiveRequest();
-                System.out.println("Received call for procedure: " + request.getProcedure());
                 ProcedureResponse response = manager.executeRequest(request);
                 manager.sendResponse(response);
             }
@@ -59,13 +53,10 @@ public class CustomerResourceManager extends TCPResourceManager
 
     public void registerMiddleware() throws IOException, ClassNotFoundException {
         ProcedureRequest request = new ProcedureRequest(Procedure.RegisterResourceManager);
-        // request.setLocation(server);
-        // requset.setResourceID(port);
         request.setReserveID(CustomerResourceManager.managerID);
         out.writeObject(request);
         ProcedureResponse response = (ProcedureResponse) in.readObject();
         System.out.println(response.getProcedure());
-        // can check for success response here
     }
 
     public CustomerResourceManager(String name){

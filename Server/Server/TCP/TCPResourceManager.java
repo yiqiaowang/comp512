@@ -1,8 +1,3 @@
-// -------------------------------
-// adapted from Kevin T. Manley
-// CSE 593
-// -------------------------------
-
 package Server.TCP;
 
 import Server.Common.ResourceManager;
@@ -263,7 +258,6 @@ public class TCPResourceManager extends ResourceManager
                         );
                 break;
             case AddCarReservation:
-                System.out.println("Adding car reservation >>>> ");
                 response = new ProcedureResponse(procedure);
                 response.setBooleanResponse(
                         addCustomerReservation(
@@ -276,7 +270,6 @@ public class TCPResourceManager extends ResourceManager
                         );
                 break;
             case AddFlightReservation:
-                System.out.println("Adding flight reservation >>>> ");
                 response = new ProcedureResponse(procedure);
                 response.setBooleanResponse(
                         addCustomerReservation(
@@ -289,12 +282,12 @@ public class TCPResourceManager extends ResourceManager
                         );
                 break;
             case Bundle:
+                System.out.println("The bundle procedure shouldn't be called directly on the TCPResourceManager");
                 response = new ProcedureResponse(procedure);
                 break;
             default:
                 response = new ProcedureResponse(Procedure.Error);
         }
-
         return response;
     }
 

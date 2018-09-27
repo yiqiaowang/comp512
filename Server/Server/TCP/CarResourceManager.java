@@ -1,8 +1,3 @@
-// -------------------------------
-// adapted from Kevin T. Manley
-// CSE 593
-// -------------------------------
-
 package Server.TCP;
 
 import Server.Common.Procedure;
@@ -60,7 +55,6 @@ public class CarResourceManager extends TCPResourceManager
         out.writeObject(request);
         ProcedureResponse response = (ProcedureResponse) in.readObject();
         System.out.println(response.getProcedure());
-        // can check for success response here
     }
 
     public CarResourceManager(String name){
