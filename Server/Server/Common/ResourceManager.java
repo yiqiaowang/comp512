@@ -102,7 +102,6 @@ public class ResourceManager implements IResourceManager
 		return value;        
 	}
 
-        // TODO: decide on how to return failed/unavailable flights
         protected int decrementItemsAvailable(int xid, String key, String location) {
             ReservableItem item = (ReservableItem)readData(xid, key);
             if (item == null)
@@ -125,50 +124,6 @@ public class ResourceManager implements IResourceManager
                 Trace.info("RM::decrementItemsAvailable(" + xid + ", " + key + ", " + location + ") succeeded");
                 return item.getPrice();
             }        
-        }
-
-        // m_data is locked
-        protected int batchDecrementFlightsAvailable(int xid, Vector<String> flightIDs) {
-            synchronized (this.m_data) {
-                // Ensure that the flights are all available
-                for (String flight : flightIDs) {
-                    int available = queryFlight(xid, Integer.parseInt(flight));
-                    if (available <= 0) {
-                        Trace.warn("RM::batchDecrementFlightsAvailable(" + xid + ", " + flight + ") failed--No more items");
-                        return -1;
-                    }
-                }
-                
-                int price = 0;
-                // Decrement each flight and record its price
-                for (String flight : flightIDs) {
-                    ReservableItem item = (ReservableItem)readData(xid, Flight.getKey(Integer.parseInt(flight)));
-                    item.setCount(item.getCount() - 1);
-                    item.setReserved(item.getReserved() + 1);
-                    writeData(xid, item.getKey(), item);
-                    price += item.getPrice();
-                }
-                Trace.info("RM::batchDecrementFlightsAvailable(" + xid + ", " + flightIDs + ") succeeded");
-                return price;
-            }
-        }
-
-        protected boolean batchIncrementFlightsAvailable(int xid, Vector<String> flightIDs) {
-            synchronized (this.m_data) {
-                // Decrement each flight and record its price
-                for (String flight : flightIDs) {
-                    ReservableItem item = (ReservableItem)readData(xid, Flight.getKey(Integer.parseInt(flight)));
-                    if (item == null) {
-                        Trace.warn("RM::batchIncrementFlightsAvailable(" + xid + ", " + flight + ") failed--item doesn't exist");
-                        return false;
-                    }
-                    item.setCount(item.getCount() + 1);
-                    item.setReserved(item.getReserved() - 1);
-                    writeData(xid, item.getKey(), item);
-                }
-                Trace.info("RM::batchIncrementFlightsAvailable(" + xid + ", " + flightIDs + ") succeeded");
-                return true;
-            }
         }
 
         protected boolean incrementItemsAvailable(int xid, String key, String location) {
@@ -425,27 +380,24 @@ public class ResourceManager implements IResourceManager
 	public boolean reserveFlight(int xid, int customerID, int flightNum) 
 	{
             return false;
-		// return reserveItem(xid, customerID, Flight.getKey(flightNum), String.valueOf(flightNum));
 	}
 
 	// Adds car reservation to this customer
 	public boolean reserveCar(int xid, int customerID, String location) 
 	{
             return false;
-		// return reserveItem(xid, customerID, Car.getKey(location), location);
 	}
 
 	// Adds room reservation to this customer
 	public boolean reserveRoom(int xid, int customerID, String location) 
 	{
             return false;
-		// return reserveItem(xid, customerID, Room.getKey(location), location);
 	}
 
 	// Reserve bundle 
 	public boolean bundle(int xid, int customerId, Vector<String> flightNumbers, String location, boolean car, boolean room) 
 	{
-		return false;
+            return false;
 	}
 
 	public String getName() 

@@ -18,7 +18,7 @@ public class MiddlewareWorker implements Runnable {
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    private TCPMiddleware middleware; // Shared amongst threads???
+    private TCPMiddleware middleware;
 
     public MiddlewareWorker(Socket socket, TCPMiddleware middleware) throws IOException {
         this.socket = socket;
@@ -29,42 +29,40 @@ public class MiddlewareWorker implements Runnable {
 
     private void handleRegistration(ProcedureRequest request) {
         ResourceManagerStub stub = new ResourceManagerStub(this.out, this.in); 
-        switch (request.getReserveID()) {
-            case 1:
-                this.middleware.registerFlightManagerStub(stub);
-                break;
-            case 2:
-                this.middleware.registerCarManagerStub(stub);
-                break;
-            case 3:
-                this.middleware.registerRoomManagerStub(stub);
-                break;
-            case 4:
-                this.middleware.registerCustomerManagerStub(stub);
-                break;
+        synchronized (middleware) {
+            switch (request.getReserveID()) {
+                case 1:
+                    this.middleware.registerFlightManagerStub(stub);
+                    break;
+                case 2:
+                    this.middleware.registerCarManagerStub(stub);
+                    break;
+                case 3:
+                    this.middleware.registerRoomManagerStub(stub);
+                    break;
+                case 4:
+                    this.middleware.registerCustomerManagerStub(stub);
+                    break;
+            }
         }
     }
 
     public void run() {
-        System.out.println("Launched Thread");
         // Read the initial request and determine if this is a consumer or a resource manager 
-
         try {
             // Initial request
             ProcedureRequest request = (ProcedureRequest) this.in.readObject();
 
             // Handle resource manager registration
             if (request.getProcedure() == Procedure.RegisterResourceManager) {
-                System.out.println("Launched thread to register resource manager ");
+                System.out.println("Launched thread to register resource manager.");
                 handleRegistration(request);
                 this.out.writeObject(new ProcedureResponse(Procedure.RegisterAcknowledge));
-                System.out.println("Sent register acknowledgement");
             }
 
             // Handle consumer
-            else if (request.getProcedure() != Procedure.RemoveResourceManager) {
-                System.out.println("Launched thread to handle consumer");
-
+            else {
+                System.out.println("Launched thread to serve client.");
                 ProcedureResponse response = this.middleware.executeRequest(request);  
                 this.out.writeObject(response);
 

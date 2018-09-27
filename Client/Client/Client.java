@@ -97,6 +97,11 @@ public abstract class Client
                                 int flightSeats = toInt(arguments.elementAt(3));
                                 int flightPrice = toInt(arguments.elementAt(4));
 
+                                if (flightPrice < 0) {
+                                    System.out.println("Price can not be negative");
+                                    break;
+                                }
+
                                 if (communicationManager.addFlight(id, flightNum, flightSeats, flightPrice)) {
                                     System.out.println("Flight added");
                                 } else {
@@ -117,6 +122,11 @@ public abstract class Client
                               int numCars = toInt(arguments.elementAt(3));
                               int price = toInt(arguments.elementAt(4));
 
+                              if (price < 0) {
+                                  System.out.println("Price can not be negative");
+                                  break;
+                              }
+
                               if (communicationManager.addCars(id, location, numCars, price)) {
                                   System.out.println("Cars added");
                               } else {
@@ -136,6 +146,11 @@ public abstract class Client
                                String location = arguments.elementAt(2);
                                int numRooms = toInt(arguments.elementAt(3));
                                int price = toInt(arguments.elementAt(4));
+
+                               if (price < 0) {
+                                   System.out.println("Price can not be negative");
+                                   break;
+                               }
 
                                if (communicationManager.addRooms(id, location, numRooms, price)) {
                                    System.out.println("Rooms added");
