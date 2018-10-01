@@ -15,6 +15,7 @@ import Server.Common.Room;
 
 import java.net.*;
 import java.io.*;
+import java.lang.*;
 
 
 public class FlightResourceManager extends TCPResourceManager 
@@ -48,8 +49,12 @@ public class FlightResourceManager extends TCPResourceManager
             // Handle Requests
             while (true) {
                 ProcedureRequest request = manager.receiveRequest();
-                ProcedureResponse response = manager.executeRequest(request);
-                manager.sendResponse(response);
+                // Run worker thread here...
+                ResourceManagerWorker w = new ResourceManagerWorker(request, manager);
+                Thread t = new Thread(w);
+                t.start();
+
+                // Reply is sent out by the worker thread
             }
         }
         catch (Exception e) {

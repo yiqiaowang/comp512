@@ -13,11 +13,6 @@ import Server.Common.Car;
 import Server.Common.Flight;
 import Server.Common.Room;
 
-// import Server.Common.FlightManagerStub;
-// import Server.Common.CarManagerStub;
-// import Server.Common.RoomManagerStub;
-// import Server.Common.CustomerManagerStub;
-
 import java.net.*;
 import java.io.*;
 import java.util.Vector;
@@ -32,23 +27,11 @@ public class TCPMiddleware
     private static int middlewarePort = 6666;
     private ServerSocket middlewareSocket;
 
-    // Clients of the middleware, includes ResourceManagers and consumers of the service
-    // private static int clientPort = 6666;
-    // private ServerSocket ServerSocket;
-    // private Socket clientSocket;
-    // private ObjectOutputStream clientOut;
-    // private ObjectInputStream clientIn;
-
     // Stubs for the resource managers to register for
     private ResourceManagerStub flightManagerStub;
     private ResourceManagerStub carManagerStub;
     private ResourceManagerStub roomManagerStub;
     private ResourceManagerStub customerManagerStub;
-
-    // NOTE: each stub resource manager needs its own ...
-    // private Socket rmSocket;
-    // private ObjectOutputStream rmOut;
-    // private ObjectInputStream rmIn;
 
     public static void main(String args[])
     {
