@@ -16,15 +16,17 @@ public class RMIMiddleware {
     private static final String s_rmiPrefix = "groupFive_";
     private static final String s_serverName = "Middleware";
     private static final String name = s_rmiPrefix + s_serverName;
+    private static int port;
 
     public static void main(String[] args) throws RemoteException {
         try {
-            Map<Services, IResourceManager> resourceManagers = new HashMap<>();
+            port = Integer.parseInt(args[0]);
 
-            resourceManagers.put(Services.FLIGHTS, hostAndPortToResourceManager(args[0], Services.FLIGHTS.toString()));
-            resourceManagers.put(Services.CARS, hostAndPortToResourceManager(args[1], Services.CARS.toString()));
-            resourceManagers.put(Services.ROOMS, hostAndPortToResourceManager(args[2], Services.ROOMS.toString()));
-            resourceManagers.put(Services.CUSTOMERS, hostAndPortToResourceManager(args[3], Services.CUSTOMERS.toString()));
+            Map<Services, IResourceManager> resourceManagers = new HashMap<>();
+            resourceManagers.put(Services.FLIGHTS, hostAndPortToResourceManager(args[1], Services.FLIGHTS.toString()));
+//            resourceManagers.put(Services.CARS, hostAndPortToResourceManager(args[2], Services.CARS.toString()));
+//            resourceManagers.put(Services.ROOMS, hostAndPortToResourceManager(args[3], Services.ROOMS.toString()));
+//            resourceManagers.put(Services.CUSTOMERS, hostAndPortToResourceManager(args[4], Services.CUSTOMERS.toString()));
 
             IResourceManager middleware = new Middleware(resourceManagers);
 
@@ -36,9 +38,10 @@ public class RMIMiddleware {
             // Bind the remote object's stub in the registry
             Registry l_registry;
             try {
-                l_registry = LocateRegistry.createRegistry(1099);
+                l_registry = LocateRegistry.createRegistry(port);
             } catch (RemoteException e) {
-                l_registry = LocateRegistry.getRegistry(1099);
+                System.out.println("\n\n\n\n\n\nremote exception caught");
+                l_registry = LocateRegistry.getRegistry(port);
             }
             final Registry registry = l_registry;
             registry.rebind(name, resourceManager);
@@ -67,6 +70,7 @@ public class RMIMiddleware {
         String host = separatedHostAndPort[0];
         int port = Integer.parseInt(separatedHostAndPort[1]);
 
+        System.out.println("Hello before host and port connect");
         return RmiResourceManagerFactory.connectServer(host, port, name);
     }
 }
