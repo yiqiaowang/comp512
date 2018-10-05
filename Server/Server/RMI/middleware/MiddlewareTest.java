@@ -115,6 +115,19 @@ public class MiddlewareTest {
 
     @Test
     public void customer() throws RemoteException {
-        resourceManager.queryCustomerInfo(1, 100);
+        String customerInfo = resourceManager.queryCustomerInfo(1, 100);
+        assertEquals("", customerInfo);
+
+        customerInfo = resourceManager.queryCustomerInfo(1, 1234);
+        assertTrue(customerInfo.length() > 0);
+
+        boolean created = resourceManager.newCustomer(1, 1234);
+        assertFalse(created);
+
+        created = resourceManager.newCustomer(1, 100);
+        assertTrue(created);
+
+        boolean deleted = resourceManager.deleteCustomer(1, 100);
+        assertTrue(deleted);
     }
 }
