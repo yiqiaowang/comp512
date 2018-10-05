@@ -8,6 +8,7 @@ package Server.RMI;
 import Server.Common.ResourceManager;
 import Server.Interface.IResourceManager;
 
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -15,14 +16,45 @@ import java.rmi.server.UnicastRemoteObject;
 
 public class RMIResourceManager extends ResourceManager 
 {
-	private static String s_serverName = "Server";
-	private static String s_rmiPrefix = "groupFive_";
+	protected static String s_serverName = "Server";
+	protected static String s_rmiPrefix = "groupFive_";
+	protected static int port = 1099;
+
+
+	private static void connectToMiddleware(String server, int port) {
+		try {
+			boolean first = true;
+			while (true) {
+				try {
+					Registry registry = LocateRegistry.getRegistry(server, port);
+					middleware = (IResourceManager)registry.lookup(s_rmiPrefix + "Middleware");
+					System.out.println("Connected to 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
+					break;
+				}
+				catch (NotBoundException |RemoteException e) {
+					if (first) {
+						System.out.println("Waiting for 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
+						first = false;
+					}
+				}
+				Thread.sleep(500);
+			}
+		}
+		catch (Exception e) {
+			System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
 
 	public static void main(String args[])
 	{
 		if (args.length > 0)
 		{
 			s_serverName = args[0];
+		}
+		if (args.length > 1) {
+			port = Integer.parseInt(args[1]);
 		}
 			
 		// Create the RMI server entry
@@ -36,9 +68,9 @@ public class RMIResourceManager extends ResourceManager
 			// Bind the remote object's stub in the registry
 			Registry l_registry;
 			try {
-				l_registry = LocateRegistry.createRegistry(1099);
+				l_registry = LocateRegistry.createRegistry(port);
 			} catch (RemoteException e) {
-				l_registry = LocateRegistry.getRegistry(1099);
+				l_registry = LocateRegistry.getRegistry(port);
 			}
 			final Registry registry = l_registry;
 			registry.rebind(s_rmiPrefix + s_serverName, resourceManager);
