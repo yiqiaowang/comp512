@@ -15,6 +15,9 @@ public class ResourceManager implements IResourceManager
 	protected String m_name = "";
 	protected final RMHashMap m_data = new RMHashMap();
 
+	protected static IResourceManager middleware;
+
+
 	public ResourceManager(String p_name)
 	{
 		m_name = p_name;
@@ -107,13 +110,13 @@ public class ResourceManager implements IResourceManager
 	protected boolean reserveItem(int xid, int customerID, String key, String location)
 	{
 		Trace.info("RM::reserveItem(" + xid + ", customer=" + customerID + ", " + key + ", " + location + ") called" );        
-		// Read customer object if it exists (and read lock it)
-		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
-		if (customer == null)
-		{
-			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ")  failed--customer doesn't exist");
-			return false;
-		} 
+//		// Read customer object if it exists (and read lock it)
+//		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
+//		if (customer == null)
+//		{
+//			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ")  failed--customer doesn't exist");
+//			return false;
+//		}
 
 		// Check if the item is available
 		ReservableItem item = (ReservableItem)readData(xid, key);
@@ -129,8 +132,8 @@ public class ResourceManager implements IResourceManager
 		}
 		else
 		{            
-			customer.reserve(key, location, item.getPrice());        
-			writeData(xid, customer.getKey(), customer);
+//			customer.reserveCustomer(key, location, item.getPrice());
+//			writeData(xid, customer.getKey(), customer);
 
 			// Decrease the number of available items in the storage
 			item.setCount(item.getCount() - 1);
