@@ -13,7 +13,7 @@ public class BenchmarkWorker implements Runnable {
     private BenchmarkTimer timer = new BenchmarkTimer();
 
     private volatile BenchmarkResult results = new BenchmarkResult();
-    
+
     public BenchmarkWorker(long delay) {
         this.bufferTimeMillis = delay;
         // Create an executable transaction here 
@@ -26,10 +26,10 @@ public class BenchmarkWorker implements Runnable {
     // Implements the buffering delay time.
     private long execute(long target) throws InterruptedException {
         this.timer.init(); 
-        
+
         // Execute client transaction here
         Thread.sleep(200);
-        
+
         long elapsed = this.timer.getElapsedMillis();
         this.results.addResult(elapsed);
         Thread.sleep(this.getBufferMillis((int) (target - elapsed)));
@@ -39,12 +39,11 @@ public class BenchmarkWorker implements Runnable {
     private long getBufferMillis(int delay) throws InterruptedException {
         if (delay < 0) return 0;
         Random rand = new Random();
-        int noise = (System.currentTimeMillis() % 2 == 0) ? 
-            rand.nextInt(delay/10) :
-            -rand.nextInt(delay/10);
-        return delay + noise;
+        int noise = Math.min(rand.nextInt(delay/10), 500);
+        int sign = rand.nextBoolean() ? -1 : 1;
+        return delay + sign * noise;
     }
-    
+
     public BenchmarkResult getResults() {
         return this.results;
     }
@@ -56,5 +55,5 @@ public class BenchmarkWorker implements Runnable {
         } catch(Exception e){
             e.printStackTrace();
         }
-    };
+    }
 }

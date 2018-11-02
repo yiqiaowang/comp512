@@ -54,6 +54,6 @@ public class BenchmarkRunner {
         for (int i = 0; i < BenchmarkRunner.num_of_clients; i++) {
             this.clients.add(new BenchmarkWorker(delay_time_millis));
         }
-    };
+    }
 
 }
