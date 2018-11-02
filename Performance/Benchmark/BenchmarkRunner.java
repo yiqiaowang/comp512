@@ -1,15 +1,18 @@
 package Benchmark;
 
+import java.util.Random;
+
 // Import the client here
 // Import the parametrized transaction type
 
 public class BenchmarkRunner {
 
     private static int num_of_clients = 1;
-    private static int transactions_per_sec = 1;
+    private static float transactions_per_sec = 1.0f;
+    private float delay_time = 1;
 
-    private static void testFunction() throws InterruptedException {
-        Thread.sleep(500);
+    public static void testFunction() throws InterruptedException {
+        BenchmarkRunner.wait(1000);
     }
 
     public static void main(String[] args) {
@@ -18,7 +21,7 @@ public class BenchmarkRunner {
         }
 
         if (args.length > 1) {
-            transactions_per_sec = Integer.parseInt(args[1]); 
+            transactions_per_sec = Float.parseFloat(args[1]); 
         }
 
         if (args.length > 2) {
@@ -27,7 +30,7 @@ public class BenchmarkRunner {
         }
 
         try {
-            BenchmarkRunner.testFunction();
+            BenchmarkRunner runner = new BenchmarkRunner();
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -35,5 +38,8 @@ public class BenchmarkRunner {
         System.out.println("Benchmark Completed");
     }
 
-    public BenchmarkRunner() { };
+    public BenchmarkRunner() {
+        this.delay_time = BenchmarkRunner.num_of_clients / BenchmarkRunner.transactions_per_sec;
+    };
+
 }
