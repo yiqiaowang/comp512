@@ -2,25 +2,17 @@ package Benchmark;
 
 // Import the client here
 // Import the parametrized transaction type
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.runner.Runner;
-import org.openjdk.jmh.runner.RunnerException;
-import org.openjdk.jmh.runner.options.Options;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 public class BenchmarkRunner {
 
     private static int num_of_clients = 1;
     private static int transactions_per_sec = 1;
 
-    @Benchmark @BenchmarkMode(Mode.SampleTime)
-    public void wellHelloThere() {
-        // this method was intentionally left blank.
+    private static void testFunction() throws InterruptedException {
+        Thread.sleep(500);
     }
 
-    public static void main(String[] args) throws RunnerException {
+    public static void main(String[] args) {
         if (args.length > 0) {
             num_of_clients = Integer.parseInt(args[0]); 
         }
@@ -34,13 +26,13 @@ public class BenchmarkRunner {
             System.exit(1);
         }
 
+        try {
+            BenchmarkRunner.testFunction();
+        } catch(Exception e){
+            e.printStackTrace();
+        }
 
-        Options opt = new OptionsBuilder()
-                .include(BenchmarkRunner.class.getSimpleName())
-                .forks(1)
-                .build();
-
-        new Runner(opt).run();
+        System.out.println("Benchmark Completed");
     }
 
     public BenchmarkRunner() { };

@@ -1,1 +1,1 @@
-java Performance.BenchmarkRunner $1 $2
+java Benchmark.BenchmarkRunner $1 $2
