@@ -1,7 +1,6 @@
 package Benchmark;
 
-import java.util.Random;
-
+import java.util.ArrayList;
 // Import the client here
 // Import the parametrized transaction type
 
@@ -9,11 +8,8 @@ public class BenchmarkRunner {
 
     private static int num_of_clients = 1;
     private static float transactions_per_sec = 1.0f;
+    private ArrayList<BenchmarkWorker> clients = new ArrayList<>();
     private float delay_time = 1;
-
-    public static void testFunction() throws InterruptedException {
-        BenchmarkRunner.wait(1000);
-    }
 
     public static void main(String[] args) {
         if (args.length > 0) {
@@ -31,15 +27,33 @@ public class BenchmarkRunner {
 
         try {
             BenchmarkRunner runner = new BenchmarkRunner();
+            ArrayList<Thread> clientThreads = new ArrayList<>();
+
+            // Launch clients
+            for (BenchmarkWorker client : runner.clients) {
+                Thread t = new Thread(client);
+                clientThreads.add(t);
+                t.start();
+            }
+
+            // Wait until all clients finish
+            for (Thread thread : clientThreads) {
+                thread.join();
+            }
+
+            System.out.println("Benchmark Completed");
         } catch(Exception e){
             e.printStackTrace();
         }
-
-        System.out.println("Benchmark Completed");
     }
 
     public BenchmarkRunner() {
         this.delay_time = BenchmarkRunner.num_of_clients / BenchmarkRunner.transactions_per_sec;
+        long delay_time_millis = (long) (this.delay_time * 1000);
+        // Initialize ArrayList of clients 
+        for (int i = 0; i < BenchmarkRunner.num_of_clients; i++) {
+            this.clients.add(new BenchmarkWorker(delay_time_millis));
+        }
     };
 
 }
