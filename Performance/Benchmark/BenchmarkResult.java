@@ -9,6 +9,14 @@ public class BenchmarkResult {
         return this.results;
     }
 
+    public float getAverage() {
+        long t = 0;
+        for (long result : this.results) {
+            t += result; 
+        }
+        return t / this.results.size();
+    }
+
     public void addResult(long result) {
         this.results.add(result);
     }  

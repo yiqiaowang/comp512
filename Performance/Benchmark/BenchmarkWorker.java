@@ -8,14 +8,16 @@ public class BenchmarkWorker implements Runnable {
 
     // Need to store the delay buffering time to acheive desired load 
     private long bufferTimeMillis;
+    private int iterations;
     // Need to store an executable transaction here
     // Need to store a client
     private BenchmarkTimer timer = new BenchmarkTimer();
 
     private volatile BenchmarkResult results = new BenchmarkResult();
 
-    public BenchmarkWorker(long delay) {
+    public BenchmarkWorker(int iterations, long delay) {
         this.bufferTimeMillis = delay;
+        this.iterations = iterations;
         // Create an executable transaction here 
         // Create a client here
         //
@@ -24,7 +26,7 @@ public class BenchmarkWorker implements Runnable {
 
     // Execute the transaction every `target' milliseconds.
     // Implements the buffering delay time.
-    private long execute(long target) throws InterruptedException {
+    private void execute(long target) throws InterruptedException {
         this.timer.init(); 
 
         // Execute client transaction here
@@ -33,25 +35,27 @@ public class BenchmarkWorker implements Runnable {
         long elapsed = this.timer.getElapsedMillis();
         this.results.addResult(elapsed);
         Thread.sleep(this.getBufferMillis((int) (target - elapsed)));
-        return this.timer.getElapsedMillis();
     }
 
-    private long getBufferMillis(int delay) throws InterruptedException {
-        if (delay < 0) return 0;
+    private long getBufferMillis(int bufferMillis) throws InterruptedException {
+        if (bufferMillis < 0) return 0;
         Random rand = new Random();
-        int noise = Math.min(rand.nextInt(delay/10), 500);
+        int noise = Math.min(rand.nextInt(bufferMillis/10), 500);
         int sign = rand.nextBoolean() ? -1 : 1;
-        return delay + sign * noise;
+        return bufferMillis + sign * noise;
     }
 
-    public BenchmarkResult getResults() {
+    public BenchmarkResult getResult() {
         return this.results;
     }
 
     public void run() {
         try {
-            long time = this.execute(this.bufferTimeMillis);
-            System.out.println("Worker finished executing in: " + time);
+            int counter = 0;
+            while (counter < this.iterations) {
+                this.execute(this.bufferTimeMillis);
+                counter++;
+            }
         } catch(Exception e){
             e.printStackTrace();
         }

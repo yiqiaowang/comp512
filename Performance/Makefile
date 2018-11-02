@@ -1,6 +1,6 @@
 all: compile-runner
 
-compile-runner: compile-timer compile-worker
+compile-runner: compile-timer compile-worker compile-logger
 	javac Benchmark/BenchmarkRunner.java
 
 compile-timer:
@@ -11,6 +11,9 @@ compile-worker: compile-result
 
 compile-result:
 	javac Benchmark/BenchmarkResult.java
+
+compile-logger:
+	javac Benchmark/BenchmarkLogger.java
 
 clean:
 	rm -f Benchmark/*.class
