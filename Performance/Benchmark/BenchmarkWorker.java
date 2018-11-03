@@ -8,6 +8,7 @@ public class BenchmarkWorker implements Runnable {
 
     // Need to store the delay buffering time to acheive desired load 
     private long bufferTimeMillis;
+    private int warmup = 20;
     private int iterations;
     // Need to store an executable transaction here
     // Need to store a client
@@ -26,14 +27,16 @@ public class BenchmarkWorker implements Runnable {
 
     // Execute the transaction every `target' milliseconds.
     // Implements the buffering delay time.
-    private void execute(long target) throws InterruptedException {
+    private void execute(long target, boolean log) throws InterruptedException {
         this.timer.init(); 
 
         // Execute client transaction here
-        Thread.sleep(200);
+        Thread.sleep(100);
 
         long elapsed = this.timer.getElapsedMillis();
-        this.results.addResult(elapsed);
+        if (log) {
+            this.results.addResult(elapsed);
+        }
         Thread.sleep(this.getBufferMillis((int) (target - elapsed)));
     }
 
@@ -52,8 +55,17 @@ public class BenchmarkWorker implements Runnable {
     public void run() {
         try {
             int counter = 0;
+
+            // Warmup the JVM
+            while (counter < this.warmup) {
+                this.execute(this.bufferTimeMillis, false);
+                counter++;
+            }
+
+            // Perform benchmark
+            counter = 0;
             while (counter < this.iterations) {
-                this.execute(this.bufferTimeMillis);
+                this.execute(this.bufferTimeMillis, true);
                 counter++;
             }
         } catch(Exception e){
