@@ -48,7 +48,7 @@ public class BenchmarkWorker implements Runnable {
         this.iterations = iterations;
         this.client = new RMIClient();
         this.rand = new Random();
-        this.identifier = this.rand.nextInt(10000);
+        this.identifier = this.rand.nextInt(1000000);
         
         // Configure this as well
         this.transaction = new SingleResourceTransaction(
