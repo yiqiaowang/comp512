@@ -35,10 +35,11 @@ public class BenchmarkWorker implements Runnable {
     // ----------------------------------------------- // 
     // ----------------------------------------------- // 
     private long bufferTimeMillis;
-    private int warmup = 20;
     private int iterations;
     private RMIClient client;
     private BenchmarkTimer timer = new BenchmarkTimer();
+    private Random rand;
+    private int identifier;
 
     private volatile BenchmarkResult results = new BenchmarkResult();
 
@@ -46,13 +47,17 @@ public class BenchmarkWorker implements Runnable {
         this.bufferTimeMillis = delay;
         this.iterations = iterations;
         this.client = new RMIClient();
+        this.rand = new Random();
+        this.identifier = this.rand.nextInt(10000);
         
         // Configure this as well
         this.transaction = new SingleResourceTransaction(
+                this.identifier,
                 this.client,
                 this.flight_numbers,
                 this.room_locations,
                 this.car_locations);
+
     };
 
     // Execute the transaction every `target' milliseconds.
@@ -66,15 +71,15 @@ public class BenchmarkWorker implements Runnable {
         long elapsed = this.timer.getElapsedMillis();
         if (log) {
             this.results.addResult(elapsed);
+            System.out.println("Transaction at " + this.identifier + " took " + elapsed + " milliseconds");
         }
         Thread.sleep(this.getBufferMillis((int) (target - elapsed)));
     }
 
     private long getBufferMillis(int bufferMillis) throws InterruptedException {
         if (bufferMillis < 0) return 0;
-        Random rand = new Random();
-        int noise = Math.min(rand.nextInt(bufferMillis/10), 500);
-        int sign = rand.nextBoolean() ? -1 : 1;
+        int noise = Math.min(this.rand.nextInt(bufferMillis/10), 500);
+        int sign = this.rand.nextBoolean() ? -1 : 1;
         return bufferMillis + sign * noise;
     }
 
@@ -85,13 +90,13 @@ public class BenchmarkWorker implements Runnable {
     public void run() {
         try {
             // Setup the customer
-            this.transaction.setupCustomer(1234); // hardcoded customer id
+            this.transaction.setupCustomer();
 
             // Start benchmark
             int counter = 0;
 
-            // Warmup the JVM
-            while (counter < this.warmup) {
+            // Warmup the JVM with 10 iterations
+            while (counter < 10) {
                 this.execute(this.bufferTimeMillis, false);
                 counter++;
             }

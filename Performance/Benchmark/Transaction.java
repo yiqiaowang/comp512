@@ -10,7 +10,7 @@ import java.util.Vector;
 public abstract class Transaction {
     
     public RMIClient client; 
-    public int customer_id;
+    public int identifier;
     public ArrayList<Integer> flight_numbers;
     public ArrayList<String> room_locations;
     public ArrayList<String> car_locations;
@@ -33,22 +33,23 @@ public abstract class Transaction {
         );    
     }
 
-    public void setupCustomer(int id) throws RemoteException, NumberFormatException {
+    public void setupCustomer() throws RemoteException, NumberFormatException {
         Vector<String> args = new Vector(3);
         args.add("setup customerid");
-        args.add("1"); // hard coded xid
-        args.add(String.valueOf(id));
+        args.add(String.valueOf(this.identifier));
+        args.add(String.valueOf(this.identifier));
         
         // TODO PUT BACK WHEN YOU FIGURE OUT HOW TO SETUP RMI SERVER
         // this.client.execute(Command.AddCustomerID, args);
-        this.customer_id = id;
     }
 
     public Transaction(
+            int identifier,
             RMIClient client,
             ArrayList<Integer> flight_numbers,
             ArrayList<String> room_locations,
             ArrayList<String> car_locations) {
+        this.identifier = identifier;
         this.client = client;
         this.flight_numbers = flight_numbers;
         this.room_locations = room_locations;

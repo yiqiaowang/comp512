@@ -25,7 +25,7 @@ public class BenchmarkRunner {
         }
 
         if (args.length > 2) {
-            iterations = Integer.parseInt(args[1]); 
+            iterations = Integer.parseInt(args[2]); 
         }
 
         if (args.length > 3) {
@@ -73,9 +73,13 @@ public class BenchmarkRunner {
         this.results.add(result);
     }
 
+    // The average of the average of all client latency across each iteration
+    // Equal to the average latency across all iterations and all clients
+    // i.e. the average latency of the system
     public float averageResults() {
         float t = 0;
         for (BenchmarkResult result : this.results) {
+            // The average of each client's latency across every iteration
             t += result.getAverage(); 
         }
         return t / results.size();
