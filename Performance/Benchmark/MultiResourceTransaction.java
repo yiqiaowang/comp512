@@ -1,5 +1,72 @@
 package Benchmark;
 
+import java.rmi.ConnectException;
+import java.rmi.RemoteException;
+import java.rmi.ServerException;
+import java.util.ArrayList;
+import java.util.Vector;
+
+import Client.Command;
+import Client.RMIClient;
+
 public class MultiResourceTransaction extends Transaction {
     
+    public Vector<String> reserveFlightArgs(int xid, int customer_id, int flight_num) {
+        Vector<String> args = new Vector(4);
+        args.add("flight");
+        args.add(String.valueOf(xid));
+        args.add(String.valueOf(customer_id));
+        args.add(String.valueOf(flight_num));
+        return args;
+    }
+
+    public Vector<String> reserveLocationArgs(int xid, int customer_id, String location) {
+        Vector<String> args = new Vector(4);
+        args.add("location");
+        args.add(String.valueOf(xid));
+        args.add(String.valueOf(customer_id));
+        args.add(location);
+        return args;
+    } 
+
+    // Reserve 3 flights for now, client.execute is a blocking call
+    public void run() throws InterruptedException, RemoteException, NumberFormatException {
+        for (int i = 0; i < 3; i++) {
+            System.out.println("Reserving flight with " +
+                this.reserveFlightArgs(
+                    1, // Hardcoded transaction ID for now
+                    this.customer_id,
+                    this.getFlightNumber())
+                );
+            Thread.sleep(125);
+        }
+        // this.client.execute(Command.ReserveFlight,
+        //         this.reserveFlightArgs(
+        //             1, // Hardcoded transaction ID for now
+        //             this.customer_id,
+        //             this.getFlightNumber())
+        //         );
+
+        // this.client.execute(Command.ReserveRoom,
+        //         this.reserveLocationArgs(
+        //             1, // Hardcoded transaction ID for now
+        //             this.customer_id,
+        //             this.getRoomLocation())
+        //         );
+
+        // this.client.execute(Command.ReserveCar,
+        //         this.reserveLocationArgs(
+        //             1, // Hardcoded transaction ID for now
+        //             this.customer_id,
+        //             this.getCarLocation())
+        //         );
+    }
+
+    public MultiResourceTransaction(
+            RMIClient client,
+            ArrayList<Integer> flight_numbers,
+            ArrayList<String> hotel_locations,
+            ArrayList<String> car_locations) {
+        super(client, flight_numbers, hotel_locations, car_locations);
+    } 
 }

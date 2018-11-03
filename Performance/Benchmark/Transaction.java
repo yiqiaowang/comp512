@@ -12,7 +12,7 @@ public abstract class Transaction {
     public RMIClient client; 
     public int customer_id;
     public ArrayList<Integer> flight_numbers;
-    public ArrayList<String> hotel_locations;
+    public ArrayList<String> room_locations;
     public ArrayList<String> car_locations;
 
     public int getFlightNumber() {
@@ -27,9 +27,9 @@ public abstract class Transaction {
         );    
     }
 
-    public String getHotelLocation() {
-        return this.hotel_locations.get(
-            (int)(Math.random() * this.hotel_locations.size())
+    public String getRoomLocation() {
+        return this.room_locations.get(
+            (int)(Math.random() * this.room_locations.size())
         );    
     }
 
@@ -47,11 +47,11 @@ public abstract class Transaction {
     public Transaction(
             RMIClient client,
             ArrayList<Integer> flight_numbers,
-            ArrayList<String> hotel_locations,
+            ArrayList<String> room_locations,
             ArrayList<String> car_locations) {
         this.client = client;
         this.flight_numbers = flight_numbers;
-        this.hotel_locations = hotel_locations;
+        this.room_locations = room_locations;
         this.car_locations = car_locations;
     }
 

@@ -24,7 +24,7 @@ public class BenchmarkWorker implements Runnable {
                 "montreal", "los angeles", "new york"
                 ));
 
-    public ArrayList<String> hotel_locations = new ArrayList<>(Arrays.asList(
+    public ArrayList<String> room_locations = new ArrayList<>(Arrays.asList(
                 "montreal", "los angeles", "new york"
                 ));
 
@@ -51,7 +51,7 @@ public class BenchmarkWorker implements Runnable {
         this.transaction = new SingleResourceTransaction(
                 this.client,
                 this.flight_numbers,
-                this.hotel_locations,
+                this.room_locations,
                 this.car_locations);
     };
 
