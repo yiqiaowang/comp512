@@ -37,6 +37,8 @@ public class BenchmarkRunner {
             BenchmarkRunner runner = new BenchmarkRunner();
             ArrayList<Thread> clientThreads = new ArrayList<>();
 
+            // Initialize State
+
             // Launch clients
             for (BenchmarkWorker client : runner.clients) {
                 Thread t = new Thread(client);

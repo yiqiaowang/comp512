@@ -6,14 +6,20 @@ compile-runner: compile-timer compile-worker compile-logger
 compile-timer:
 	javac Benchmark/BenchmarkTimer.java
 
-compile-worker: compile-result
-	javac Benchmark/BenchmarkWorker.java
+compile-worker: compile-result bundle-client
+	javac -cp .:../Client/RMIClient.jar Benchmark/BenchmarkWorker.java
 
 compile-result:
 	javac Benchmark/BenchmarkResult.java
 
 compile-logger:
 	javac Benchmark/BenchmarkLogger.java
+
+compile-client:
+	make -C ../Client/ all
+
+bundle-client: compile-client
+	make -C ../Client/ bundle-client
 
 clean:
 	rm -f Benchmark/*.class
