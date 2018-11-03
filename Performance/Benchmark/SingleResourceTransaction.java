@@ -3,8 +3,8 @@ package Benchmark;
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.ServerException;
-import java.util.Vector;
 import java.util.ArrayList;
+import java.util.Vector;
 
 import Client.Command;
 import Client.RMIClient;
@@ -21,27 +21,36 @@ public class SingleResourceTransaction extends Transaction {
     }
 
     // Reserve 3 flights for now, client.execute is a blocking call
-    public void run() throws RemoteException, NumberFormatException {
-        this.client.execute(Command.ReserveFlight,
+    public void run() throws InterruptedException, RemoteException, NumberFormatException {
+        for (int i = 0; i < 3; i++) {
+            System.out.println("Reserving flight with " +
                 this.reserveFlightArgs(
                     1, // Hardcoded transaction ID for now
                     this.customer_id,
                     this.getFlightNumber())
                 );
+            Thread.sleep(125);
+        }
+        // this.client.execute(Command.ReserveFlight,
+        //         this.reserveFlightArgs(
+        //             1, // Hardcoded transaction ID for now
+        //             this.customer_id,
+        //             this.getFlightNumber())
+        //         );
 
-        this.client.execute(Command.ReserveFlight,
-                this.reserveFlightArgs(
-                    1, // Hardcoded transaction ID for now
-                    this.customer_id,
-                    this.getFlightNumber())
-                );
+        // this.client.execute(Command.ReserveFlight,
+        //         this.reserveFlightArgs(
+        //             1, // Hardcoded transaction ID for now
+        //             this.customer_id,
+        //             this.getFlightNumber())
+        //         );
 
-        this.client.execute(Command.ReserveFlight,
-                this.reserveFlightArgs(
-                    1, // Hardcoded transaction ID for now
-                    this.customer_id,
-                    this.getFlightNumber())
-                );
+        // this.client.execute(Command.ReserveFlight,
+        //         this.reserveFlightArgs(
+        //             1, // Hardcoded transaction ID for now
+        //             this.customer_id,
+        //             this.getFlightNumber())
+        //         );
     }
 
     public SingleResourceTransaction(

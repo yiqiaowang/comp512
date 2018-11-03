@@ -7,8 +7,6 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Vector;
 
-// Import client here
-
 public abstract class Transaction {
     
     public RMIClient client; 
@@ -41,7 +39,8 @@ public abstract class Transaction {
         args.add("1"); // hard coded xid
         args.add(String.valueOf(id));
         
-        this.client.execute(Command.AddCustomerID, args);
+        // TODO PUT BACK WHEN YOU FIGURE OUT HOW TO SETUP RMI SERVER
+        // this.client.execute(Command.AddCustomerID, args);
         this.customer_id = id;
     }
 
@@ -60,5 +59,5 @@ public abstract class Transaction {
         this.client.connectServer();
     }
 
-    public abstract void run() throws RemoteException, NumberFormatException;
+    public abstract void run() throws InterruptedException, RemoteException, NumberFormatException;
 }

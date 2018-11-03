@@ -1,1 +1,1 @@
-java Benchmark.BenchmarkRunner $1 $2
+java -cp .:../Client/RMIClient.jar Benchmark.BenchmarkRunner $1 $2
