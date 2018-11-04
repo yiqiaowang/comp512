@@ -22,35 +22,26 @@ public class SingleResourceTransaction extends Transaction {
 
     // Reserve 3 flights for now, client.execute is a blocking call
     public void run() throws InterruptedException, RemoteException, NumberFormatException {
-        for (int i = 0; i < 3; i++) {
-            System.out.println("Reserving flight with " +
+        this.client.execute(Command.ReserveFlight,
                 this.reserveFlightArgs(
                     this.identifier,
                     this.identifier,
                     this.getFlightNumber())
                 );
-            Thread.sleep(125);
-        }
-        // this.client.execute(Command.ReserveFlight,
-        //         this.reserveFlightArgs(
-        //             this.identifier,
-        //             this.identifier,
-        //             this.getFlightNumber())
-        //         );
 
-        // this.client.execute(Command.ReserveFlight,
-        //         this.reserveFlightArgs(
-        //             this.identifier,
-        //             this.identifier,
-        //             this.getFlightNumber())
-        //         );
+        this.client.execute(Command.ReserveFlight,
+                this.reserveFlightArgs(
+                    this.identifier,
+                    this.identifier,
+                    this.getFlightNumber())
+                );
 
-        // this.client.execute(Command.ReserveFlight,
-        //         this.reserveFlightArgs(
-        //             this.identifier,
-        //             this.identifier,
-        //             this.getFlightNumber())
-        //         );
+        this.client.execute(Command.ReserveFlight,
+                this.reserveFlightArgs(
+                    this.identifier,
+                    this.identifier,
+                    this.getFlightNumber())
+                );
     }
 
     public SingleResourceTransaction(

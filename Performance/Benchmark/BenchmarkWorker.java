@@ -89,7 +89,8 @@ public class BenchmarkWorker implements Runnable {
 
     public void run() {
         try {
-            // Setup the customer
+            // Connect to middleware and connect server
+            this.transaction.connectServer();
             this.transaction.setupCustomer();
 
             // Start benchmark

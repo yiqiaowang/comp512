@@ -15,7 +15,7 @@ compile-client: ../Server/RMIInterface.jar
 	javac -cp ../Server/RMIInterface.jar Client/*.java
 
 bundle-client: compile-client
-	jar cvf RMIClient.jar ./Client/RMIClient.class ./Client/Client.class ./Client/Command.class
+	jar cvf RMIClient.jar ./Client/$(wildcard *.class)
 
 clean:
 	rm -f Client/*.class

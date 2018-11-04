@@ -39,8 +39,7 @@ public abstract class Transaction {
         args.add(String.valueOf(this.identifier));
         args.add(String.valueOf(this.identifier));
         
-        // TODO PUT BACK WHEN YOU FIGURE OUT HOW TO SETUP RMI SERVER
-        // this.client.execute(Command.AddCustomerID, args);
+        this.client.execute(Command.AddCustomerID, args);
     }
 
     public Transaction(
