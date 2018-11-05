@@ -16,15 +16,15 @@ public class BenchmarkWorker implements Runnable {
      * Transaction Parameters
      */
 
-    public ArrayList<Integer> flight_numbers = new ArrayList<>(Arrays.asList(
+    public static ArrayList<Integer> flight_numbers = new ArrayList<>(Arrays.asList(
                 1, 2, 3, 4, 5, 6
                 ));
 
-    public ArrayList<String> car_locations = new ArrayList<>(Arrays.asList(
+    public static ArrayList<String> car_locations = new ArrayList<>(Arrays.asList(
                 "montreal", "los angeles", "new york"
                 ));
 
-    public ArrayList<String> room_locations = new ArrayList<>(Arrays.asList(
+    public static ArrayList<String> room_locations = new ArrayList<>(Arrays.asList(
                 "montreal", "los angeles", "new york"
                 ));
 
@@ -44,6 +44,20 @@ public class BenchmarkWorker implements Runnable {
     private volatile BenchmarkResult results = new BenchmarkResult();
 
     public BenchmarkWorker(int iterations, long delay) {
+        this(iterations,
+                delay,
+                BenchmarkWorker.flight_numbers,
+                BenchmarkWorker.room_locations,
+                BenchmarkWorker.car_locations);
+    };
+
+    public BenchmarkWorker(
+            int iterations,
+            long delay,
+            ArrayList<Integer> flight_numbers,
+            ArrayList<String> room_locations,
+            ArrayList<String> car_locations
+            ) {
         this.bufferTimeMillis = delay;
         this.iterations = iterations;
         this.client = new RMIClient();
@@ -54,10 +68,9 @@ public class BenchmarkWorker implements Runnable {
         this.transaction = new SingleResourceTransaction(
                 this.identifier,
                 this.client,
-                this.flight_numbers,
-                this.room_locations,
-                this.car_locations);
-
+                flight_numbers,
+                room_locations,
+                car_locations);
     };
 
     // Execute the transaction every `target' milliseconds.
