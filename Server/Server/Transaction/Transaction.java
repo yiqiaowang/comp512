@@ -1,9 +1,13 @@
 package Server.Transaction;
 
 import Server.Interface.IResourceManager;
+import Server.RMI.middleware.SupplierWithRemoteException;
 
 import java.rmi.RemoteException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -11,6 +15,8 @@ public class Transaction {
     private final int transactionId;
     private final Map<String, IResourceManager> resourceManagersInvolved = new ConcurrentHashMap<>();
     private final AtomicBoolean isAborted = new AtomicBoolean(false);
+    private final List<SupplierWithRemoteException> operations = new Vector<>();
+    private final List<Object> results = new Vector<>();
 
     Transaction(int transactionId) {
         this.transactionId = transactionId;
@@ -27,17 +33,28 @@ public class Transaction {
         }
     }
 
-
+    public synchronized void addOperation(SupplierWithRemoteException operation) {
+        operations.add(operation);
+    }
 
     public synchronized boolean commit() {
         if (isAborted.get()) return false;
 
-        for (IResourceManager resourceManager : resourceManagersInvolved.values()) {
+        for (SupplierWithRemoteException operation : operations) {
             try {
-                resourceManager.commit(transactionId);
-            } catch(RemoteException e) {
-
+                results.add(operation.operation());
+            } catch (RemoteException | TransactionAbortedException | InvalidTransactionException e) {
+                abort();
+                return false;
             }
+        }
+
+        for (IResourceManager resourceManager : resourceManagersInvolved.values()) {
+            try
+            {
+                resourceManager.commit(transactionId);
+            }
+            catch(RemoteException | InvalidTransactionException ignored) { }
         }
 
         return true;
@@ -54,7 +71,7 @@ public class Transaction {
             catch (RemoteException ignored) {
                 /*
                     If it fails to connect to the resource manager, it will abort after
-                    its time runs out anyways.
+                    it times out anyways.
                  */
             }
         });
@@ -64,6 +81,10 @@ public class Transaction {
 
     public int getTransactionId() {
         return transactionId;
+    }
+
+    public List getResults() {
+        return Collections.unmodifiableList(results);
     }
 
     public boolean isAborted() {

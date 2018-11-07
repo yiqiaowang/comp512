@@ -1,10 +1,12 @@
 package Server.Transaction;
 
+import Server.RMI.middleware.SupplierWithRemoteException;
+
 import java.rmi.RemoteException;
 import java.util.Collections;
 import java.util.List;
 
-public class TransactionOperation implements ITransactionOperation {
+public class TransactionOperation<T> implements SupplierWithRemoteException<T> {
     private final ITransactionOperation operation;
     private final List<ResourceLockRequest> requiredLocks;
 
@@ -13,12 +15,13 @@ public class TransactionOperation implements ITransactionOperation {
         this.operation = operation;
     }
 
-    @Override
-    public void run() throws RemoteException {
-        operation.run();
-    }
 
     public List<ResourceLockRequest> getResourceLockRequests() {
         return requiredLocks;
+    }
+
+    @Override
+    public T operation() throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+        return null;
     }
 }

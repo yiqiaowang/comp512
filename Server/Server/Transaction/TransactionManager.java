@@ -3,8 +3,9 @@ package Server.Transaction;
 import Server.Interface.IResourceManager;
 import Server.LockManager.DeadlockException;
 import Server.LockManager.LockManager;
+import Server.RMI.middleware.SupplierWithRemoteException;
 
-import java.rmi.RemoteException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,6 +16,8 @@ public class TransactionManager {
     private final Map<Integer, Transaction> transactions = new ConcurrentHashMap<>();
     private final AtomicInteger transactionIdGenerator = new AtomicInteger(0);
     private final LockManager lockManager = new LockManager();
+
+    private final Map<Integer, SupplierWithRemoteException> operations = new ConcurrentHashMap<>();
 
 
     public int startTransaction() {
@@ -48,16 +51,44 @@ public class TransactionManager {
         return true;
     }
 
-    public boolean commit(int transactionId) throws RemoteException {
+    public boolean addOperation(int transactionId, List<ResourceLockRequest> resources, SupplierWithRemoteException operation) {
+        Transaction transaction = transactions.get(transactionId);
+        if (transaction == null) return false;
+
+        for (ResourceLockRequest resource : resources) {
+            boolean result = requestLockOnResource(transactionId, resource.getResourceManager(), resource.getResourceName(), resource.getLockType());
+            if (!result) {
+                abort(transactionId);
+                return false;
+            }
+        }
+
+        transaction.addOperation(operation);
+
+        return true;
+    }
+
+
+    /**
+     * Commits the transaction.
+     * @param transactionId The transaction id
+     * @return The list of results for the transaction if successful
+     * @throws InvalidTransactionException if the transaction fails for any reason
+     */
+    public List commit(int transactionId) throws InvalidTransactionException {
         Transaction transaction = transactions.get(transactionId);
 
         if (transaction == null) {
-            return false;
+            throw new InvalidTransactionException(transactionId);
         }
 
         boolean commitResult = transaction.commit();
         transactions.remove(transactionId);
-        return commitResult;
+        if (commitResult) {
+            return transaction.getResults();
+        } else {
+            throw new InvalidTransactionException(transactionId);
+        }
     }
 
     public void abort(int transactionId) {
