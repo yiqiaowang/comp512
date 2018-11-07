@@ -11,8 +11,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 public class RMIMiddleware {
     private static final String s_rmiPrefix = "groupFive_";
@@ -21,8 +19,6 @@ public class RMIMiddleware {
 
 
     public static IResourceManager initializeMiddleware(int port, String[] args) {
-
-        Map<Services, IResourceManager> resourceManagers = new HashMap<>();
         IResourceManager flightsResourceManager = hostAndPortToResourceManager(args[0], Services.FLIGHTS.toString());
         IResourceManager carsResourceManager = hostAndPortToResourceManager(args[1], Services.CARS.toString());
         IResourceManager roomsResourceManager = hostAndPortToResourceManager(args[2], Services.ROOMS.toString());
@@ -44,7 +40,6 @@ public class RMIMiddleware {
             try {
                 l_registry = LocateRegistry.createRegistry(port);
             } catch (RemoteException e) {
-                System.out.println("\n\n\n\n\n\nremote exception caught");
                 l_registry = LocateRegistry.getRegistry(port);
             }
             final Registry registry = l_registry;

@@ -77,7 +77,8 @@ public class RMIResourceManager extends ResourceManager
 
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 				try {
-					registry.unbind(s_rmiPrefix + s_serverName);
+					String registryName = s_rmiPrefix + s_serverName;
+					registry.unbind(registryName);
 					System.out.println("'" + s_serverName + "' resource manager unbound");
 				}
 				catch(Exception e) {
@@ -99,6 +100,8 @@ public class RMIResourceManager extends ResourceManager
 			System.setSecurityManager(new SecurityManager());
 		}
 	}
+
+
 
 	public RMIResourceManager(String name)
 	{

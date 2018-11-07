@@ -4,6 +4,7 @@ import Server.Common.Car;
 import Server.Common.Flight;
 import Server.Common.Room;
 import Server.Interface.IResourceManager;
+import Server.Transaction.TransactionManager;
 
 import java.rmi.RemoteException;
 import java.util.Vector;
@@ -17,6 +18,8 @@ public class Middleware implements IResourceManager {
     private final IResourceManager roomsResourceManager;
 
     private final ICustomerResourceManager customersResourceManager;
+
+    private final TransactionManager transactionManager = new TransactionManager();
 
 
     public Middleware(IResourceManager flightsResourceManager, IResourceManager carsResourceManager, IResourceManager roomsResourceManager, ICustomerResourceManager customersResourceManager) {
@@ -199,6 +202,18 @@ public class Middleware implements IResourceManager {
         }
 
         return true;
+    }
+
+    public int start() {
+        return transactionManager.startTransaction();
+    }
+
+    public void commit(int transactionId) throws RemoteException {
+        transactionManager.commit(transactionId);
+    }
+
+    public void abort(int transactionId) {
+        transactionManager.abort(transactionId);
     }
 
     @Override
