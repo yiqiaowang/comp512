@@ -1,57 +1,65 @@
 package Server.Transaction;
 
-import Server.LockManager.DeadlockException;
-import Server.LockManager.LockManager;
+import Server.Interface.IResourceManager;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Transaction {
     private final int transactionId;
-    private final LockManager lockManager;
-    private final List<ITransactionOperation> transactionOperations = new ArrayList<>();
+    private final Map<String, IResourceManager> resourceManagersInvolved = new ConcurrentHashMap<>();
+    private final AtomicBoolean isAborted = new AtomicBoolean(false);
 
-    private boolean isAborted = false;
-
-    Transaction(int transactionId, LockManager lockManager) {
+    Transaction(int transactionId) {
         this.transactionId = transactionId;
-        this.lockManager = lockManager;
     }
 
-    public boolean addOperation(TransactionOperation transactionOperation) {
-        for (ResourceLockRequest resourceLockRequest: transactionOperation.getResourceLockRequests()) {
+    /**
+     * Adds a resource manager to the list of those that are involved in the transaction.
+     * @param resourceManager The resource manager.
+     * @param resourceName The name of the resource (passed as parameter so as not to have a remote invocation just to get the name).
+     */
+    public void addResourceManager(IResourceManager resourceManager, String resourceName) {
+        if (!isAborted.get()) {
+            resourceManagersInvolved.put(resourceName, resourceManager);
+        }
+    }
+
+
+
+    public synchronized boolean commit() {
+        if (isAborted.get()) return false;
+
+        for (IResourceManager resourceManager : resourceManagersInvolved.values()) {
             try {
-                boolean locked = lockManager.Lock(transactionId, resourceLockRequest.getResourceName(), resourceLockRequest.getLockType());
-                if (!locked) {
-                    abort();
-                    return false;
-                }
-            } catch (DeadlockException e) {
-                abort();
-                return false;
+                resourceManager.commit(transactionId);
+            } catch(RemoteException e) {
+
             }
         }
 
-        transactionOperations.add(transactionOperation);
         return true;
     }
 
-    private void cleanup() {
-        lockManager.UnlockAll(transactionId);
-    }
+    public synchronized void abort() {
+        if (isAborted.get()) return;
 
-    public boolean commit() throws RemoteException {
-        for (ITransactionOperation transactionOperation : transactionOperations) {
-            transactionOperation.run();
-        }
+        resourceManagersInvolved.values().forEach(resourceManager -> {
+            try
+            {
+                resourceManager.abort(transactionId);
+            }
+            catch (RemoteException ignored) {
+                /*
+                    If it fails to connect to the resource manager, it will abort after
+                    its time runs out anyways.
+                 */
+            }
+        });
 
-        return true;
-    }
-
-    public void abort() {
-        cleanup();
-        isAborted = true;
+        isAborted.set(true);
     }
 
     public int getTransactionId() {
@@ -59,6 +67,6 @@ public class Transaction {
     }
 
     public boolean isAborted() {
-        return isAborted;
+        return isAborted.get();
     }
 }

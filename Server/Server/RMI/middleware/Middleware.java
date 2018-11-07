@@ -4,10 +4,13 @@ import Server.Common.Car;
 import Server.Common.Flight;
 import Server.Common.Room;
 import Server.Interface.IResourceManager;
+import Server.LockManager.TransactionLockObject;
 import Server.Transaction.TransactionManager;
 
 import java.rmi.RemoteException;
 import java.util.Vector;
+
+import static Server.Common.Services.FLIGHTS;
 
 public class Middleware implements IResourceManager {
     private static final String name = "Middleware";
@@ -31,9 +34,22 @@ public class Middleware implements IResourceManager {
 
 
 
+
     @Override
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) throws RemoteException {
-        return flightsResourceManager.addFlight(id, flightNum, flightSeats, flightPrice);
+        if (!transactionManager.isOngoingTransaction(id)) return false;
+
+        boolean lockAcquired = transactionManager.requestLockOnResource(id, flightsResourceManager, FLIGHTS.toString(), TransactionLockObject.LockType.LOCK_WRITE);
+        if (!lockAcquired) {
+            return false;
+        }
+
+        boolean flightAddedToTransaction = flightsResourceManager.addFlight(id, flightNum, flightSeats, flightPrice);
+        if (!flightAddedToTransaction) {
+            transactionManager.abort(id);
+        }
+
+        return flightAddedToTransaction;
     }
 
     @Override
@@ -208,8 +224,8 @@ public class Middleware implements IResourceManager {
         return transactionManager.startTransaction();
     }
 
-    public void commit(int transactionId) throws RemoteException {
-        transactionManager.commit(transactionId);
+    public boolean commit(int transactionId) throws RemoteException {
+        return transactionManager.commit(transactionId);
     }
 
     public void abort(int transactionId) {

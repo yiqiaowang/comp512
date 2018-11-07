@@ -208,4 +208,9 @@ public interface IResourceManager extends Remote
      */
     public String getName()
         throws RemoteException;
+
+
+    void abort(int xid) throws RemoteException;
+
+    boolean commit(int xid) throws RemoteException;
 }
