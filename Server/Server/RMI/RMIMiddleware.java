@@ -17,6 +17,10 @@ public class RMIMiddleware {
     private static final String s_serverName = "Middleware";
     private static final String name = s_rmiPrefix + s_serverName;
 
+    private static Thread shutdownHook;
+
+    private static int port;
+
 
     public static IResourceManager initializeMiddleware(int port, String[] args) {
         IResourceManager flightsResourceManager = hostAndPortToResourceManager(args[0], Services.FLIGHTS.toString());
@@ -45,7 +49,7 @@ public class RMIMiddleware {
             final Registry registry = l_registry;
             registry.rebind(name, resourceManager);
 
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            shutdownHook = new Thread(() -> {
                 try {
                     registry.unbind(name);
                     System.out.println("'" + s_serverName + "' resource manager unbound");
@@ -54,7 +58,8 @@ public class RMIMiddleware {
                     System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
                     e.printStackTrace();
                 }
-            }));
+            });
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
 
             return resourceManager;
         }
@@ -66,13 +71,55 @@ public class RMIMiddleware {
         }
     }
 
+    public static boolean shutdown() throws RemoteException {
+        try {
+            if (shutdownHook != null) {
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            }
+        } catch (Exception ignored) {
+
+        }
+
+        Registry registry;
+        try {
+            registry = LocateRegistry.createRegistry(port);
+        } catch (RemoteException e) {
+            registry = LocateRegistry.getRegistry(port);
+        }
+
+        boolean result = true;
+
+        try {
+            registry.unbind(name);
+            System.out.println("'" + s_serverName + "' resource manager unbound");
+        }
+        catch(Exception e) {
+            System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
+            result = false;
+        }
+
+        new Thread(() -> {
+            System.out.println("Preparing to shutdown Middleware");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ignored) {
+
+            }
+            System.exit(0);
+        }).start();
+
+        return result;
+    }
+
     public static void main(String[] args) throws RemoteException {
         if (args.length > 4) {
-            int port = Integer.parseInt(args[0]);
+            port = Integer.parseInt(args[0]);
             initializeMiddleware(port, Arrays.copyOfRange(args, 1, args.length));
         } else {
             System.out.println("Missing parameters");
         }
+
+        System.out.println("Done middleware main()");
     }
 
     private static IResourceManager hostAndPortToResourceManager(String hostAndPort, String name) {

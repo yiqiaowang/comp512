@@ -5,6 +5,7 @@ import Server.Common.Flight;
 import Server.Common.Room;
 import Server.Interface.IResourceManager;
 import Server.Interface.InvalidTransactionException;
+import Server.RMI.RMIMiddleware;
 import Server.Transaction.ResourceLockRequest;
 import Server.Transaction.TransactionManager;
 
@@ -428,5 +429,18 @@ public class Middleware implements IResourceManager {
     @Override
     public boolean commit(int xid) throws RemoteException {
         return transactionManager.commit(xid);
+    }
+
+    @Override
+    public boolean shutdown() throws RemoteException {
+        boolean allShutdown = true;
+
+        for (IResourceManager resourceManager: new IResourceManager[] {flightsResourceManager, carsResourceManager, roomsResourceManager, customersResourceManager}) {
+            allShutdown = resourceManager.shutdown() && allShutdown;
+        }
+
+        allShutdown = RMIMiddleware.shutdown() && allShutdown;
+
+        return allShutdown;
     }
 }

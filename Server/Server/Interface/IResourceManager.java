@@ -209,6 +209,7 @@ public interface IResourceManager extends Remote
     public String getName()
         throws RemoteException;
 
+    boolean shutdown() throws RemoteException;
 
     void abort(int xid) throws RemoteException;
 

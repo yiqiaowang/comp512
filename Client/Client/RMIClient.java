@@ -79,7 +79,7 @@ public class RMIClient extends Client
 						first = false;
 					}
 				}
-				Thread.sleep(500);
+				Thread.sleep(1000);
 			}
 		}
 		catch (Exception e) {

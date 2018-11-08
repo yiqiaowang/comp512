@@ -396,6 +396,11 @@ public class ResourceManager implements IResourceManager
 	}
 
 	@Override
+	public boolean shutdown() throws RemoteException {
+		return false;
+	}
+
+	@Override
 	public void abort(int xid) throws RemoteException {
 		uncommittedTransactions.remove(xid);
 	}

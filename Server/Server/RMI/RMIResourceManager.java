@@ -20,6 +20,8 @@ public class RMIResourceManager extends ResourceManager
 	protected static String s_rmiPrefix = "groupFive_";
 	protected static int port = 1099;
 
+	static Thread shutdownHook;
+
 
 	@Override
 	public void abort(int xid) throws RemoteException {
@@ -29,6 +31,44 @@ public class RMIResourceManager extends ResourceManager
 	@Override
 	public boolean commit(int xid) throws RemoteException {
 		return false;
+	}
+
+	@Override
+	public boolean shutdown() throws RemoteException {
+		try {
+			if (shutdownHook != null) {
+				Runtime.getRuntime().removeShutdownHook(shutdownHook);
+			}
+		} catch (Exception ignored) {
+
+		}
+
+		Registry registry;
+		try {
+			registry = LocateRegistry.createRegistry(port);
+		} catch (RemoteException e) {
+			registry = LocateRegistry.getRegistry(port);
+		}
+
+		boolean result = true;
+
+		try {
+			registry.unbind(s_rmiPrefix + s_serverName);
+		} catch (NotBoundException e) {
+			result = false;
+		}
+
+		new Thread(() -> {
+			System.out.println("Preparing to shutdown " + s_serverName);
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException ignored) {
+
+			}
+			System.exit(0);
+		}).start();
+
+		return result;
 	}
 
 
@@ -48,7 +88,7 @@ public class RMIResourceManager extends ResourceManager
 						first = false;
 					}
 				}
-				Thread.sleep(500);
+				Thread.sleep(1000);
 			}
 		}
 		catch (Exception e) {
@@ -86,7 +126,7 @@ public class RMIResourceManager extends ResourceManager
 			final Registry registry = l_registry;
 			registry.rebind(s_rmiPrefix + s_serverName, resourceManager);
 
-			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			shutdownHook = new Thread(() -> {
 				try {
 					String registryName = s_rmiPrefix + s_serverName;
 					registry.unbind(registryName);
@@ -96,7 +136,9 @@ public class RMIResourceManager extends ResourceManager
 					System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
 					e.printStackTrace();
 				}
-			}));
+			});
+
+			Runtime.getRuntime().addShutdownHook(shutdownHook);
 			System.out.println("'" + s_serverName + "' resource manager server ready and bound to '" + s_rmiPrefix + s_serverName + "'");
 		}
 		catch (Exception e) {

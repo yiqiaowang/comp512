@@ -118,6 +118,20 @@ public abstract class Client
                 }
                 break;
             }
+			case Shutdown:
+			{
+				if (arguments.size() != 1) {
+					System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of shutdown command. Location \"shutdown\"");
+				} else {
+					if (m_resourceManager.shutdown()) {
+						System.out.println("Shutdown successfully");
+					} else {
+						System.out.println("Failed to shutdown servers");
+					}
+				}
+
+				System.exit(0);
+			}
 			case AddFlight: {
 				checkArgumentsCount(5, arguments.size());
 

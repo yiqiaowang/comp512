@@ -11,6 +11,7 @@ import java.rmi.server.UnicastRemoteObject;
 public class CustomerResourceManager extends RMIResourceManager implements ICustomerResourceManager {
     private final String ID;
 
+
     public CustomerResourceManager(String name, String id) {
         super(name);
         ID = id;
@@ -62,7 +63,7 @@ public class CustomerResourceManager extends RMIResourceManager implements ICust
             final Registry registry = l_registry;
             registry.rebind(s_rmiPrefix + s_serverName, resourceManager);
 
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            shutdownHook = new Thread(() -> {
                 try {
                     registry.unbind(s_rmiPrefix + s_serverName);
                     System.out.println("'" + s_serverName + "' resource manager unbound");
@@ -71,7 +72,9 @@ public class CustomerResourceManager extends RMIResourceManager implements ICust
                     System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
                     e.printStackTrace();
                 }
-            }));
+            });
+
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
             System.out.println("'" + s_serverName + "' resource manager server ready and bound to '" + s_rmiPrefix + s_serverName + "'");
         }
         catch (Exception e) {
