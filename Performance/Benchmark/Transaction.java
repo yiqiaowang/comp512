@@ -36,12 +36,20 @@ public abstract class Transaction {
     }
 
     public void setupCustomer() throws RemoteException, NumberFormatException, InvalidTransactionException {
+        Vector<String> t_args = new Vector<>(2);
+        t_args.add("setup transaction");
+        t_args.add(String.valueOf(this.identifier));
+
+
         Vector<String> args = new Vector<>(3);
         args.add("setup customerid");
         args.add(String.valueOf(this.identifier));
         args.add(String.valueOf(this.identifier));
-        
+
+
+        this.client.execute(Command.StartID, t_args); 
         this.client.execute(Command.AddCustomerID, args);
+        this.client.execute(Command.Commit, t_args);
     }
 
     public Transaction(
