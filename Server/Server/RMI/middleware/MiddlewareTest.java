@@ -1,6 +1,7 @@
 package Server.RMI.middleware;
 
 import Server.Interface.IResourceManager;
+import Server.Interface.InvalidTransactionException;
 import Server.RMI.RMIMiddleware;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,7 +16,7 @@ public class MiddlewareTest {
     private static IResourceManager resourceManager = RMIMiddleware.initializeMiddleware(1100, new String[] {"localhost:1090", "localhost:1091", "localhost:1092", "localhost:1093"});
 
     @BeforeClass
-    public static void setup() throws RemoteException {
+    public static void setup() throws RemoteException, InvalidTransactionException {
         resourceManager.newCustomer(1, 1234);
     }
 
@@ -114,7 +115,7 @@ public class MiddlewareTest {
     }
 
     @Test
-    public void customer() throws RemoteException {
+    public void customer() throws RemoteException, InvalidTransactionException {
         String customerInfo = resourceManager.queryCustomerInfo(1, 100);
         assertEquals("", customerInfo);
 

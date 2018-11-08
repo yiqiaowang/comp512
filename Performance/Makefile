@@ -7,7 +7,7 @@ compile-timer:
 	javac Benchmark/BenchmarkTimer.java
 
 compile-worker: compile-result bundle-client
-	javac -cp .:../Client/RMIClient.jar Benchmark/BenchmarkWorker.java
+	javac -cp ".:../Client/RMIClient.jar:../Server/RMIInterface.jar" Benchmark/BenchmarkWorker.java
 
 compile-result:
 	javac Benchmark/BenchmarkResult.java

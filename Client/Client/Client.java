@@ -1,6 +1,7 @@
 package Client;
 
 import Server.Interface.*;
+import Server.Interface.InvalidTransactionException;
 
 import java.util.*;
 import java.io.*;
@@ -67,8 +68,7 @@ public abstract class Client
 		}
 	}
 
-	public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException
-	{
+	public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException, InvalidTransactionException {
 		switch (cmd)
 		{
 			case Help:
@@ -82,6 +82,55 @@ public abstract class Client
 					System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of help command. Location \"help\" or \"help,<CommandName>\"");
 				}
 				break;
+			}
+            case Start:
+            {
+                if (arguments.size() != 1) {
+                    System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of start command. Location \"start\"");
+                } else {
+                    int transactionId = m_resourceManager.start();
+                    System.out.println("Starting transaction #" + transactionId);
+                }
+                break;
+            }
+            case Commit:
+            {
+                if (arguments.size() != 2) {
+                    System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of commit command. Location \"commit,<xid>\"");
+                } else {
+                    int transactionId = toInt(arguments.elementAt(1));
+                    if (m_resourceManager.commit(transactionId)) {
+                        System.out.println("Committed transaction " + transactionId);
+                    } else {
+                        System.out.println("Failed to commit transaction " + transactionId);
+                    }
+                }
+                break;
+            }
+            case Abort:
+            {
+                if (arguments.size() != 2) {
+                    System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of abort command. Location \"abort,<xid>\"");
+                } else {
+                    int transactionId = toInt(arguments.elementAt(1));
+                    m_resourceManager.abort(transactionId);
+                    System.out.println("Aborted transaction " + transactionId);
+                }
+                break;
+            }
+			case Shutdown:
+			{
+				if (arguments.size() != 1) {
+					System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of shutdown command. Location \"shutdown\"");
+				} else {
+					if (m_resourceManager.shutdown()) {
+						System.out.println("Shutdown successfully");
+					} else {
+						System.out.println("Failed to shutdown servers");
+					}
+				}
+
+				System.exit(0);
 			}
 			case AddFlight: {
 				checkArgumentsCount(5, arguments.size());

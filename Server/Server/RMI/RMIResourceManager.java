@@ -20,6 +20,47 @@ public class RMIResourceManager extends ResourceManager
 	protected static String s_rmiPrefix = "groupFive_";
 	protected static int port = 1099;
 
+	static Thread shutdownHook;
+
+
+	@Override
+	public boolean shutdown() throws RemoteException {
+		try {
+			if (shutdownHook != null) {
+				Runtime.getRuntime().removeShutdownHook(shutdownHook);
+			}
+		} catch (Exception ignored) {
+
+		}
+
+		Registry registry;
+		try {
+			registry = LocateRegistry.createRegistry(port);
+		} catch (RemoteException e) {
+			registry = LocateRegistry.getRegistry(port);
+		}
+
+		boolean result = true;
+
+		try {
+			registry.unbind(s_rmiPrefix + s_serverName);
+		} catch (NotBoundException e) {
+			result = false;
+		}
+
+		new Thread(() -> {
+			System.out.println("Preparing to shutdown " + s_serverName);
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException ignored) {
+
+			}
+			System.exit(0);
+		}).start();
+
+		return result;
+	}
+
 
 	private static void connectToMiddleware(String server, int port) {
 		try {
@@ -31,13 +72,13 @@ public class RMIResourceManager extends ResourceManager
 					System.out.println("Connected to 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
 					break;
 				}
-				catch (NotBoundException |RemoteException e) {
+				catch (NotBoundException | RemoteException e) {
 					if (first) {
 						System.out.println("Waiting for 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
 						first = false;
 					}
 				}
-				Thread.sleep(500);
+				Thread.sleep(1000);
 			}
 		}
 		catch (Exception e) {
@@ -75,16 +116,19 @@ public class RMIResourceManager extends ResourceManager
 			final Registry registry = l_registry;
 			registry.rebind(s_rmiPrefix + s_serverName, resourceManager);
 
-			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			shutdownHook = new Thread(() -> {
 				try {
-					registry.unbind(s_rmiPrefix + s_serverName);
+					String registryName = s_rmiPrefix + s_serverName;
+					registry.unbind(registryName);
 					System.out.println("'" + s_serverName + "' resource manager unbound");
 				}
 				catch(Exception e) {
 					System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
 					e.printStackTrace();
 				}
-			}));
+			});
+
+			Runtime.getRuntime().addShutdownHook(shutdownHook);
 			System.out.println("'" + s_serverName + "' resource manager server ready and bound to '" + s_rmiPrefix + s_serverName + "'");
 		}
 		catch (Exception e) {
@@ -99,6 +143,8 @@ public class RMIResourceManager extends ResourceManager
 			System.setSecurityManager(new SecurityManager());
 		}
 	}
+
+
 
 	public RMIResourceManager(String name)
 	{

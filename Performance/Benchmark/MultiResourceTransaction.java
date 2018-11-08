@@ -1,18 +1,15 @@
 package Benchmark;
 
-import java.rmi.ConnectException;
+import Client.RMIClient;
+
 import java.rmi.RemoteException;
-import java.rmi.ServerException;
 import java.util.ArrayList;
 import java.util.Vector;
-
-import Client.Command;
-import Client.RMIClient;
 
 public class MultiResourceTransaction extends Transaction {
     
     public Vector<String> reserveFlightArgs(int xid, int customer_id, int flight_num) {
-        Vector<String> args = new Vector(4);
+        Vector<String> args = new Vector<>(4);
         args.add("flight");
         args.add(String.valueOf(xid));
         args.add(String.valueOf(customer_id));
@@ -21,7 +18,7 @@ public class MultiResourceTransaction extends Transaction {
     }
 
     public Vector<String> reserveLocationArgs(int xid, int customer_id, String location) {
-        Vector<String> args = new Vector(4);
+        Vector<String> args = new Vector<>(4);
         args.add("location");
         args.add(String.valueOf(xid));
         args.add(String.valueOf(customer_id));

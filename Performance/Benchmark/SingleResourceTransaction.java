@@ -1,18 +1,17 @@
 package Benchmark;
 
-import java.rmi.ConnectException;
-import java.rmi.RemoteException;
-import java.rmi.ServerException;
-import java.util.ArrayList;
-import java.util.Vector;
-
 import Client.Command;
 import Client.RMIClient;
+import Server.Interface.InvalidTransactionException;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Vector;
 
 public class SingleResourceTransaction extends Transaction {
 
     public Vector<String> reserveFlightArgs(int xid, int customer_id, int flight_num) {
-        Vector<String> args = new Vector(4);
+        Vector<String> args = new Vector<>(4);
         args.add("reserveFlight");
         args.add(String.valueOf(xid));
         args.add(String.valueOf(customer_id));
@@ -21,7 +20,7 @@ public class SingleResourceTransaction extends Transaction {
     }
 
     // Reserve 3 flights for now, client.execute is a blocking call
-    public void run() throws InterruptedException, RemoteException, NumberFormatException {
+    public void run() throws InterruptedException, RemoteException, NumberFormatException, InvalidTransactionException {
         this.client.execute(Command.ReserveFlight,
                 this.reserveFlightArgs(
                     this.identifier,

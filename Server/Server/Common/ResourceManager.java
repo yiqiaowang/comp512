@@ -9,11 +9,13 @@ import Server.Interface.*;
 
 import java.util.*;
 import java.rmi.RemoteException;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ResourceManager implements IResourceManager
 {
 	protected String m_name = "";
 	protected final RMHashMap m_data = new RMHashMap();
+	protected final Map<Integer, RMHashMap> uncommittedTransactions = new ConcurrentHashMap<>();
 
 	protected static IResourceManager middleware;
 
@@ -26,29 +28,41 @@ public class ResourceManager implements IResourceManager
 	// Reads a data item
 	protected RMItem readData(int xid, String key)
 	{
-		synchronized(m_data) {
-			RMItem item = m_data.get(key);
-			if (item != null) {
-				return (RMItem)item.clone();
+		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> {
+			synchronized (m_data) {
+				return m_data.clone();
 			}
-			return null;
+		});
+
+		RMItem item = transactionData.get(key);
+		if (item != null) {
+			return (RMItem) item.clone();
 		}
+
+		return null;
 	}
 
 	// Writes a data item
 	protected void writeData(int xid, String key, RMItem value)
 	{
-		synchronized(m_data) {
-			m_data.put(key, value);
-		}
+		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> {
+			synchronized (m_data) {
+				return m_data.clone();
+			}
+		});
+		transactionData.put(key, value);
 	}
 
 	// Remove the item out of storage
 	protected void removeData(int xid, String key)
 	{
-		synchronized(m_data) {
-			m_data.remove(key);
-		}
+		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> {
+			synchronized (m_data) {
+				return m_data.clone();
+			}
+		});
+		transactionData.remove(key);
+
 	}
 
 	// Deletes the encar item
@@ -131,7 +145,7 @@ public class ResourceManager implements IResourceManager
 			return false;
 		}
 		else
-		{            
+		{
 //			customer.reserveCustomer(key, location, item.getPrice());
 //			writeData(xid, customer.getKey(), customer);
 
@@ -385,6 +399,40 @@ public class ResourceManager implements IResourceManager
 	public String getName() throws RemoteException
 	{
 		return m_name;
+	}
+
+	@Override
+	public boolean shutdown() throws RemoteException {
+		return false;
+	}
+
+	@Override
+	public void abort(int xid) throws RemoteException {
+		uncommittedTransactions.remove(xid);
+	}
+
+	@Override
+	public int start() throws RemoteException {
+		return -1;
+	}
+
+	@Override
+	public boolean start(int xid) throws RemoteException {
+		return false;
+	}
+
+	@Override
+	public boolean commit(int xid) throws RemoteException {
+		RMHashMap transactionData = uncommittedTransactions.remove(xid);
+		if (transactionData != null) {
+			synchronized (m_data) {
+				m_data.clear();
+				m_data.putAll(transactionData);
+			}
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
  
