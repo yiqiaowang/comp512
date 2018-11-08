@@ -1,7 +1,5 @@
 package Server.Interface;
 
-import Server.Transaction.InvalidTransactionException;
-
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -213,6 +211,8 @@ public interface IResourceManager extends Remote
 
 
     void abort(int xid) throws RemoteException;
+
+    int start() throws RemoteException;
 
     boolean commit(int xid) throws RemoteException;
 }

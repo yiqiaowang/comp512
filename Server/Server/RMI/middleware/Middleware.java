@@ -4,7 +4,7 @@ import Server.Common.Car;
 import Server.Common.Flight;
 import Server.Common.Room;
 import Server.Interface.IResourceManager;
-import Server.Transaction.InvalidTransactionException;
+import Server.Interface.InvalidTransactionException;
 import Server.Transaction.ResourceLockRequest;
 import Server.Transaction.TransactionManager;
 
@@ -40,6 +40,7 @@ public class Middleware implements IResourceManager {
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(FLIGHTS.toString(), flightsResourceManager, LOCK_WRITE));
         if (!locksAcquired) {
+            System.out.println("Failed to acquire the locks");
             throw new InvalidTransactionException(id);
         }
         try {
@@ -412,6 +413,11 @@ public class Middleware implements IResourceManager {
     @Override
     public String getName() throws RemoteException {
         return name;
+    }
+
+    @Override
+    public int start() throws RemoteException {
+        return transactionManager.startTransaction();
     }
 
     @Override

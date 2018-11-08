@@ -139,7 +139,7 @@ public class ResourceManager implements IResourceManager
 			return false;
 		}
 		else
-		{            
+		{
 //			customer.reserveCustomer(key, location, item.getPrice());
 //			writeData(xid, customer.getKey(), customer);
 
@@ -397,12 +397,26 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public void abort(int xid) throws RemoteException {
+		uncommittedTransactions.remove(xid);
+	}
 
+	@Override
+	public int start() throws RemoteException {
+		return -1;
 	}
 
 	@Override
 	public boolean commit(int xid) throws RemoteException {
-		return false;
+		RMHashMap transactionData = uncommittedTransactions.remove(xid);
+		if (transactionData != null) {
+			synchronized (m_data) {
+				m_data.clear();
+				m_data.putAll(transactionData);
+			}
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
  

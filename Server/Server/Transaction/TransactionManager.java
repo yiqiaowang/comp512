@@ -22,7 +22,7 @@ public class TransactionManager {
         return transactionId;
     }
 
-    public boolean requestLocksOnResources(int transactionId,ResourceLockRequest... resourceLockRequests) {
+    public boolean requestLocksOnResources(int transactionId, ResourceLockRequest... resourceLockRequests) {
         Transaction transaction = transactions.get(transactionId);
 
         if (transaction == null) {
@@ -35,10 +35,12 @@ public class TransactionManager {
                 try {
                     boolean lockAcquired = lockManager.Lock(transactionId, resourceLockRequest.getResourceName(), resourceLockRequest.getLockType());
                     if (!lockAcquired) {
+                        System.out.println("Failed to acquire " + resourceLockRequest.getLockType() + " on " + resourceLockRequest.getResourceName());
                         transaction.abort();
                         return false;
                     }
                 } catch (DeadlockException e) {
+                    System.out.println("Failed to acquire " + resourceLockRequest.getLockType() + " on " + resourceLockRequest.getResourceName() + " because of deadlock");
                     transaction.abort();
                     return false;
                 }
@@ -59,6 +61,8 @@ public class TransactionManager {
 
         boolean commitResult = transaction.commit();
         transactions.remove(transactionId);
+        lockManager.UnlockAll(transactionId);
+
         return commitResult;
     }
 
@@ -71,6 +75,7 @@ public class TransactionManager {
 
         transaction.abort();
         transactions.remove(transactionId);
+        lockManager.UnlockAll(transactionId);
     }
 
     public boolean isOngoingTransaction(int transactionId) {
