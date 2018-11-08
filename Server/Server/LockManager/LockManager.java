@@ -9,7 +9,7 @@ import java.util.Vector;
 public class LockManager
 {
 	private static int TABLE_SIZE = 2039;
-	private static int DEADLOCK_TIMEOUT = 50;
+	private static int DEADLOCK_TIMEOUT = 10000;
 
 	private static final TPHashTable lockTable = new TPHashTable(LockManager.TABLE_SIZE);
 	private static final TPHashTable stampTable = new TPHashTable(LockManager.TABLE_SIZE);
