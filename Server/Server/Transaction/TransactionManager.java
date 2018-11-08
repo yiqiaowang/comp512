@@ -4,6 +4,8 @@ import Server.LockManager.DeadlockException;
 import Server.LockManager.LockManager;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,6 +14,32 @@ public class TransactionManager {
     private final Map<Integer, Transaction> transactions = new ConcurrentHashMap<>();
     private final AtomicInteger transactionIdGenerator = new AtomicInteger(0);
     private final LockManager lockManager = new LockManager();
+
+    public TransactionManager() {
+        Thread checkForTimeouts = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+
+                List<Integer> timedOutTransactionIds = new ArrayList<>();
+
+                for (Transaction transaction : transactions.values()) {
+                    if (transaction.checkForTimeout()) {
+                        timedOutTransactionIds.add(transaction.getTransactionId());
+                    }
+                }
+
+                for (Integer timedOutTransactionId : timedOutTransactionIds) {
+                    System.out.println("Transaction " + timedOutTransactionId + " has timed out");
+                    transactions.remove(timedOutTransactionId);
+                }
+            }
+        });
+        checkForTimeouts.start();
+    }
 
 
     public int startTransaction() {
