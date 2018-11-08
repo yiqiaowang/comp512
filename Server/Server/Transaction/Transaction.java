@@ -47,7 +47,6 @@ public class Transaction {
      */
     boolean checkForTimeout() {
         if (isTimedOut()) {
-            abort();
             return true;
         } else {
             return false;

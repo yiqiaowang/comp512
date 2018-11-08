@@ -1,6 +1,6 @@
 package Server.RMI;
 
-import Server.Common.ReservedItem;
+import Server.Common.Customer;
 import Server.RMI.middleware.ICustomerResourceManager;
 
 import java.rmi.RemoteException;
@@ -16,19 +16,18 @@ public class CustomerResourceManager extends RMIResourceManager implements ICust
         ID = id;
     }
 
+
     @Override
     public void reserveCustomer(int xid, int customerID, String itemKey, String location, int price) {
-        String key = itemKey + "-" + customerID;
+        String key = Customer.getKey(customerID);
 
-        ReservedItem reservedItem = (ReservedItem)readData(xid, key);
+        Customer customer = (Customer)readData(xid, key);
 
-        if (reservedItem == null) {
-            reservedItem = new ReservedItem(key, location, 1, price);
-            writeData(xid, key, reservedItem);
-        } else {
-            reservedItem.setCount(reservedItem.getCount() + 1);
-            reservedItem.setPrice(price);
+        if (customer != null) {
+            customer.reserve(itemKey, location, price);
         }
+
+        writeData(xid, key, customer);
     }
 
 

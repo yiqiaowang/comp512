@@ -296,8 +296,9 @@ public class ResourceManager implements IResourceManager
 		else
 		{
 			Trace.info("RM::queryCustomerInfo(" + xid + ", " + customerID + ")");
-			System.out.println(customer.getBill());
-			return customer.getBill();
+			String bill = customer.getBill();
+			System.out.println(bill);
+			return bill;
 		}
 	}
 
@@ -310,6 +311,7 @@ public class ResourceManager implements IResourceManager
 			String.valueOf(Math.round(Math.random() * 100 + 1)));
 		Customer customer = new Customer(cid);
 		writeData(xid, customer.getKey(), customer);
+		System.out.println("Wrote customer to the table");
 		Trace.info("RM::newCustomer(" + cid + ") returns ID=" + cid);
 		return cid;
 	}

@@ -10,10 +10,14 @@ public class ResourceLockRequest {
     private final LockType lockType;
 
 
-    public ResourceLockRequest(String resourceName, IResourceManager resourceManager, LockType lockType) {
+    private ResourceLockRequest(String resourceName, IResourceManager resourceManager, LockType lockType) {
         this.resourceName = resourceName;
         this.resourceManager = resourceManager;
         this.lockType = lockType;
+    }
+
+    public ResourceLockRequest(String nodeName, Object uniqueData, IResourceManager resourceManager, LockType lockType) {
+        this(nodeName + "-" + uniqueData, resourceManager, lockType);
     }
 
     public String getResourceName() {
