@@ -411,6 +411,11 @@ public class ResourceManager implements IResourceManager
 	}
 
 	@Override
+	public boolean start(int xid) throws RemoteException {
+		return false;
+	}
+
+	@Override
 	public boolean commit(int xid) throws RemoteException {
 		RMHashMap transactionData = uncommittedTransactions.remove(xid);
 		if (transactionData != null) {

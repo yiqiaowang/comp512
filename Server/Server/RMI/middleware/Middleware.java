@@ -422,6 +422,11 @@ public class Middleware implements IResourceManager {
     }
 
     @Override
+    public boolean start(int xid) throws RemoteException {
+        return transactionManager.startTransaction(xid);
+    }
+
+    @Override
     public void abort(int xid) throws RemoteException {
         transactionManager.abort(xid);
     }

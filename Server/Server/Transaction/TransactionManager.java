@@ -81,4 +81,14 @@ public class TransactionManager {
     public boolean isOngoingTransaction(int transactionId) {
         return transactions.containsKey(transactionId);
     }
+
+    public boolean startTransaction(int transactionId) {
+        if (!isOngoingTransaction(transactionId)) {
+            Transaction transaction = new Transaction(transactionId);
+            transactions.put(transactionId, transaction);
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
