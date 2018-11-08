@@ -12,6 +12,8 @@ public class Transaction {
     private final Map<String, IResourceManager> resourceManagersInvolved = new ConcurrentHashMap<>();
     private final AtomicBoolean isAborted = new AtomicBoolean(false);
 
+    final Object lock = new Object();
+
     Transaction(int transactionId) {
         this.transactionId = transactionId;
     }
@@ -32,15 +34,17 @@ public class Transaction {
     public synchronized boolean commit() {
         if (isAborted.get()) return false;
 
+        boolean committed = true;
+
         for (IResourceManager resourceManager : resourceManagersInvolved.values()) {
             try {
                 resourceManager.commit(transactionId);
             } catch(RemoteException e) {
-
+                committed = false;
             }
         }
 
-        return true;
+        return committed;
     }
 
     public synchronized void abort() {

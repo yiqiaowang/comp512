@@ -21,6 +21,17 @@ public class RMIResourceManager extends ResourceManager
 	protected static int port = 1099;
 
 
+	@Override
+	public void abort(int xid) throws RemoteException {
+
+	}
+
+	@Override
+	public boolean commit(int xid) throws RemoteException {
+		return false;
+	}
+
+
 	private static void connectToMiddleware(String server, int port) {
 		try {
 			boolean first = true;
@@ -31,7 +42,7 @@ public class RMIResourceManager extends ResourceManager
 					System.out.println("Connected to 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
 					break;
 				}
-				catch (NotBoundException |RemoteException e) {
+				catch (NotBoundException | RemoteException e) {
 					if (first) {
 						System.out.println("Waiting for 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
 						first = false;
