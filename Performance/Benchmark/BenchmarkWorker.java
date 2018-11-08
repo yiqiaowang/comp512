@@ -1,13 +1,12 @@
 package Benchmark;
 
-import java.lang.Runnable;
+import Client.RMIClient;
+import Server.Interface.InvalidTransactionException;
+
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
-import java.rmi.RemoteException;
-
-import Client.RMIClient;
-import Client.Command;
 
 public class BenchmarkWorker implements Runnable {
 
@@ -62,7 +61,7 @@ public class BenchmarkWorker implements Runnable {
 
     // Execute the transaction every `target' milliseconds.
     // Implements the buffering delay time.
-    private void execute(long target, boolean log) throws InterruptedException, RemoteException {
+    private void execute(long target, boolean log) throws InterruptedException, RemoteException, InvalidTransactionException {
         this.timer.init(); 
 
         // Execute client transaction here

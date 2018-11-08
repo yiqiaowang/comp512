@@ -13,10 +13,6 @@ RMIInterface.jar: Server/Interface/*.java
 	javac Server/Interface/*.java
 	jar cvf RMIInterface.jar Server/Interface/*.class
 
-# Exceptions.jar: Server/Interface/InvalidTransactionException.java
-# 	@echo "Compiling Transaction Exceptions"
-# 	javac Server/Interface/InvalidTransactionException.java
-# 	java cvf Exceptions.jar Server/Interface/InvalidTransactionException.class
 
 compile-server-rmi: Server/RMI/*.java Server/Interface/*.java Server/Common/*.java
 	javac Server/RMI/*.java Server/Interface/*.java Server/Common/*.java

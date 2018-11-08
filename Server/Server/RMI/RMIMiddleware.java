@@ -118,8 +118,6 @@ public class RMIMiddleware {
         } else {
             System.out.println("Missing parameters");
         }
-
-        System.out.println("Done middleware main()");
     }
 
     private static IResourceManager hostAndPortToResourceManager(String hostAndPort, String name) {

@@ -2,6 +2,8 @@ package Benchmark;
 
 import Client.Command;
 import Client.RMIClient;
+import Server.Interface.InvalidTransactionException;
+
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -33,8 +35,8 @@ public abstract class Transaction {
         );    
     }
 
-    public void setupCustomer() throws RemoteException, NumberFormatException {
-        Vector<String> args = new Vector(3);
+    public void setupCustomer() throws RemoteException, NumberFormatException, InvalidTransactionException {
+        Vector<String> args = new Vector<>(3);
         args.add("setup customerid");
         args.add(String.valueOf(this.identifier));
         args.add(String.valueOf(this.identifier));
@@ -59,5 +61,5 @@ public abstract class Transaction {
         this.client.connectServer();
     }
 
-    public abstract void run() throws InterruptedException, RemoteException, NumberFormatException;
+    public abstract void run() throws InterruptedException, RemoteException, NumberFormatException, InvalidTransactionException;
 }
