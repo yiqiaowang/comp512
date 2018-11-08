@@ -16,7 +16,8 @@ public class BenchmarkWorker implements Runnable {
      */
 
     public static ArrayList<Integer> flight_numbers = new ArrayList<>(Arrays.asList(
-                1, 2, 3, 4, 5, 6
+                1, 2
+                // 1, 2, 3, 4, 5, 6
                 ));
 
     public static ArrayList<String> car_locations = new ArrayList<>(Arrays.asList(
