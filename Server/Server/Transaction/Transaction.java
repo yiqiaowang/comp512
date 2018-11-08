@@ -78,12 +78,7 @@ public class Transaction {
             {
                 resourceManager.abort(transactionId);
             }
-            catch (RemoteException ignored) {
-                /*
-                    If it fails to connect to the resource manager, it will abort after
-                    its time runs out anyways.
-                 */
-            }
+            catch (RemoteException ignored) { }
         });
 
         isAborted.set(true);
