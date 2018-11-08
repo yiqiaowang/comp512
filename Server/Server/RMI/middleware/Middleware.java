@@ -10,9 +10,7 @@ import Server.Transaction.ResourceLockRequest;
 import Server.Transaction.TransactionManager;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 import static Server.Common.Services.*;
 import static Server.LockManager.TransactionLockObject.LockType.LOCK_READ;
@@ -417,13 +415,19 @@ public class Middleware implements IResourceManager {
             throw new InvalidTransactionException(id);
         }
 
+        Map<String, Integer> flightCounts = new HashMap<>();
+
 
         try {
             for (String flightNumber : flightNumbers) {
                 int numFlightsAvailable = flightsResourceManager.queryFlight(id, Integer.valueOf(flightNumber));
-                if (numFlightsAvailable < 1) {
+                int flightCountForBundle = flightCounts.getOrDefault(flightNumber, 0) + 1;
+
+                if (numFlightsAvailable < flightCountForBundle) {
                     return false;
                 }
+
+                flightCounts.put(flightNumber, flightCountForBundle);
             }
 
             if (car) {

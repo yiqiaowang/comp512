@@ -509,6 +509,16 @@ public abstract class Client
 
 	public static boolean toBoolean(String string)// throws Exception
 	{
-		return Boolean.valueOf(string);
+		if (string == null) {
+			return false;
+		}
+
+		switch (string.trim().toLowerCase()) {
+			case "1": return true;
+			case "true": return true;
+			case "t": return true;
+			case "y": return true;
+			default: return false;
+		}
 	}
 }
