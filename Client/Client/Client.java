@@ -93,6 +93,17 @@ public abstract class Client
                 }
                 break;
             }
+            case StartID:
+            {
+                if (arguments.size() != 2) {
+                    System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of start command. Location \"start,<xid>\"");
+                } else {
+                    int transactionId = toInt(arguments.elementAt(1));
+                    m_resourceManager.start(transactionId);
+                    System.out.println("Starting transaction #" + transactionId);
+                }
+                break;
+            }
             case Commit:
             {
                 if (arguments.size() != 2) {
@@ -498,6 +509,16 @@ public abstract class Client
 
 	public static boolean toBoolean(String string)// throws Exception
 	{
-		return Boolean.valueOf(string);
+		if (string == null) {
+			return false;
+		}
+
+		switch (string.trim().toLowerCase()) {
+			case "1": return true;
+			case "true": return true;
+			case "t": return true;
+			case "y": return true;
+			default: return false;
+		}
 	}
 }

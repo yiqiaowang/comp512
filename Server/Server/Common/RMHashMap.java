@@ -5,10 +5,10 @@
 
 package Server.Common;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 // A specialization of HashMap with some extra diagnostics
-public class RMHashMap extends ConcurrentHashMap<String, RMItem>
+public class RMHashMap extends HashMap<String, RMItem>
 {
 	public RMHashMap() {
 		super();

@@ -1,6 +1,6 @@
 package Server.RMI;
 
-import Server.Common.ReservedItem;
+import Server.Common.Customer;
 import Server.RMI.middleware.ICustomerResourceManager;
 
 import java.rmi.RemoteException;
@@ -11,25 +11,23 @@ import java.rmi.server.UnicastRemoteObject;
 public class CustomerResourceManager extends RMIResourceManager implements ICustomerResourceManager {
     private final String ID;
 
-
     public CustomerResourceManager(String name, String id) {
         super(name);
         ID = id;
     }
 
+
     @Override
-    public void reserveCustomer(int customerID, String itemKey, String location, int price) {
-        String key = itemKey + "-" + customerID;
+    public void reserveCustomer(int xid, int customerID, String itemKey, String location, int price) {
+        String key = Customer.getKey(customerID);
 
-        ReservedItem reservedItem = (ReservedItem)m_data.get(key);
+        Customer customer = (Customer)readData(xid, key);
 
-        if (reservedItem == null) {
-            reservedItem = new ReservedItem(key, location, 1, price);
-            m_data.put(key, reservedItem);
-        } else {
-            reservedItem.setCount(reservedItem.getCount() + 1);
-            reservedItem.setPrice(price);
+        if (customer != null) {
+            customer.reserve(itemKey, location, price);
         }
+
+        writeData(xid, key, customer);
     }
 
 

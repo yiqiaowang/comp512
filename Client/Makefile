@@ -13,7 +13,7 @@ FORCE: ;
 
 
 compile-client: ../Server/RMIInterface.jar
-	javac -cp ../Server/*.jar Client/*.java
+	javac -cp .:../Server/RMIInterface.jar Client/*.java
 
 bundle-client: compile-client
 	jar cvf RMIClient.jar ./Client/$(wildcard *.class)

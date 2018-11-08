@@ -10,6 +10,13 @@ import java.util.Vector;
 
 public class SingleResourceTransaction extends Transaction {
 
+    public Vector<String> transactionArgs(int xid) {
+        Vector<String> args = new Vector<>(2);
+        args.add("transaction control operation");
+        args.add(String.valueOf(xid));
+        return args;
+    }
+
     public Vector<String> reserveFlightArgs(int xid, int customer_id, int flight_num) {
         Vector<String> args = new Vector<>(4);
         args.add("reserveFlight");
@@ -21,25 +28,23 @@ public class SingleResourceTransaction extends Transaction {
 
     // Reserve 3 flights for now, client.execute is a blocking call
     public void run() throws InterruptedException, RemoteException, NumberFormatException, InvalidTransactionException {
-        this.client.execute(Command.ReserveFlight,
-                this.reserveFlightArgs(
-                    this.identifier,
-                    this.identifier,
-                    this.getFlightNumber())
+
+        this.client.execute(Command.StartID,
+                this.transactionArgs(this.identifier)
                 );
 
-        this.client.execute(Command.ReserveFlight,
-                this.reserveFlightArgs(
-                    this.identifier,
-                    this.identifier,
-                    this.getFlightNumber())
-                );
+        for (int i = 0; i < 100; i++) {
+            this.client.execute(Command.ReserveFlight,
+                    this.reserveFlightArgs(
+                        this.identifier,
+                        this.identifier,
+                        this.getFlightNumber())
+                    );
 
-        this.client.execute(Command.ReserveFlight,
-                this.reserveFlightArgs(
-                    this.identifier,
-                    this.identifier,
-                    this.getFlightNumber())
+        }
+
+        this.client.execute(Command.Commit,
+                this.transactionArgs(this.identifier)
                 );
     }
 
@@ -50,5 +55,5 @@ public class SingleResourceTransaction extends Transaction {
             ArrayList<String> hotel_locations,
             ArrayList<String> car_locations) {
         super(identifier, client, flight_numbers, hotel_locations, car_locations);
-    } 
+            } 
 }

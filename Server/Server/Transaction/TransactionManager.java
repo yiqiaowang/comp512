@@ -34,7 +34,7 @@ public class TransactionManager {
 
                 for (Integer timedOutTransactionId : timedOutTransactionIds) {
                     System.out.println("Transaction " + timedOutTransactionId + " has timed out");
-                    transactions.remove(timedOutTransactionId);
+                    abort(timedOutTransactionId);
                 }
             }
         });
@@ -48,6 +48,14 @@ public class TransactionManager {
         transactions.put(transactionId, transaction);
 
         return transactionId;
+    }
+
+    public boolean requestLocksOnResources(int transactionId, List<ResourceLockRequest> resourceLockRequests) {
+        ResourceLockRequest[] requests = new ResourceLockRequest[resourceLockRequests.size()];
+        for (int i = 0; i < resourceLockRequests.size(); i++) {
+            requests[i] = resourceLockRequests.get(i);
+        }
+        return requestLocksOnResources(transactionId, requests);
     }
 
     public boolean requestLocksOnResources(int transactionId, ResourceLockRequest... resourceLockRequests) {
@@ -64,12 +72,12 @@ public class TransactionManager {
                     boolean lockAcquired = lockManager.Lock(transactionId, resourceLockRequest.getResourceName(), resourceLockRequest.getLockType());
                     if (!lockAcquired) {
                         System.out.println("Failed to acquire " + resourceLockRequest.getLockType() + " on " + resourceLockRequest.getResourceName());
-                        transaction.abort();
+                        abort(transactionId);
                         return false;
                     }
                 } catch (DeadlockException e) {
                     System.out.println("Failed to acquire " + resourceLockRequest.getLockType() + " on " + resourceLockRequest.getResourceName() + " because of deadlock");
-                    transaction.abort();
+                    abort(transactionId);
                     return false;
                 }
 
