@@ -37,20 +37,12 @@ public class Transaction {
         }
     }
 
-    private boolean isTimedOut() {
-        return lastOperationTimestamp.get() + TIMEOUT < System.currentTimeMillis();
-    }
-
     /**
-     * Checks if the transaction has timed out and aborts if it has timed out.
+     * Checks if the transaction has timed out.
      * @return Return true for timed out, false otherwise.
      */
     boolean checkForTimeout() {
-        if (isTimedOut()) {
-            return true;
-        } else {
-            return false;
-        }
+        return lastOperationTimestamp.get() + TIMEOUT < System.currentTimeMillis();
     }
 
     public synchronized boolean commit() {

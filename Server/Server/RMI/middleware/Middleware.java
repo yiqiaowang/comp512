@@ -43,7 +43,7 @@ public class Middleware implements IResourceManager {
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(FLIGHTS.toString(), flightNum, flightsResourceManager, LOCK_WRITE));
         if (!locksAcquired) {
-            System.out.println("Failed to acquire the locks");
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -58,6 +58,7 @@ public class Middleware implements IResourceManager {
     public boolean addCars(int id, String location, int numCars, int price) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(CARS.toString(), location, carsResourceManager, LOCK_WRITE));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -72,6 +73,7 @@ public class Middleware implements IResourceManager {
     public boolean addRooms(int id, String location, int numRooms, int price) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(ROOMS.toString(), location, roomsResourceManager, LOCK_WRITE));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -84,12 +86,15 @@ public class Middleware implements IResourceManager {
 
     @Override
     public int newCustomer(int id) throws RemoteException, InvalidTransactionException {
-        boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(CUSTOMERS.toString(), "newCustomer", customersResourceManager, LOCK_WRITE));
-        if (!locksAcquired) {
-            throw new InvalidTransactionException(id);
-        }
         try {
-            return customersResourceManager.newCustomer(id);
+            int customerId = customersResourceManager.newCustomer(id);
+            boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(CUSTOMERS.toString(), customerId, customersResourceManager, LOCK_WRITE));
+            if (!locksAcquired) {
+                transactionManager.abort(id);
+                throw new InvalidTransactionException(id);
+            } else {
+                return customerId;
+            }
         } catch (RemoteException | InvalidTransactionException e) {
             transactionManager.abort(id);
             throw e;
@@ -100,6 +105,7 @@ public class Middleware implements IResourceManager {
     public boolean newCustomer(int id, int cid) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(CUSTOMERS.toString(), cid, customersResourceManager, LOCK_WRITE));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -114,6 +120,7 @@ public class Middleware implements IResourceManager {
     public boolean deleteFlight(int id, int flightNum) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(FLIGHTS.toString(), flightNum, flightsResourceManager, LOCK_WRITE));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -128,6 +135,7 @@ public class Middleware implements IResourceManager {
     public boolean deleteCars(int id, String location) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(CARS.toString(), location, carsResourceManager, LOCK_WRITE));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -142,6 +150,7 @@ public class Middleware implements IResourceManager {
     public boolean deleteRooms(int id, String location) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(ROOMS.toString(), location, roomsResourceManager, LOCK_WRITE));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -156,6 +165,7 @@ public class Middleware implements IResourceManager {
     public boolean deleteCustomer(int id, int customerID) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(CUSTOMERS.toString(), customerID, customersResourceManager, LOCK_WRITE));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -170,6 +180,7 @@ public class Middleware implements IResourceManager {
     public int queryFlight(int id, int flightNumber) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(FLIGHTS.toString(), flightNumber, flightsResourceManager, LOCK_READ));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -184,6 +195,7 @@ public class Middleware implements IResourceManager {
     public int queryCars(int id, String location) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(CARS.toString(), location, carsResourceManager, LOCK_READ));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -198,6 +210,7 @@ public class Middleware implements IResourceManager {
     public int queryRooms(int id, String location) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(ROOMS.toString(), location, roomsResourceManager, LOCK_READ));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -212,6 +225,7 @@ public class Middleware implements IResourceManager {
     public String queryCustomerInfo(int id, int customerID) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(CUSTOMERS.toString(), customerID, customersResourceManager, LOCK_READ));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -226,6 +240,7 @@ public class Middleware implements IResourceManager {
     public int queryFlightPrice(int id, int flightNumber) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(FLIGHTS.toString(), flightNumber, flightsResourceManager, LOCK_READ));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -240,6 +255,7 @@ public class Middleware implements IResourceManager {
     public int queryCarsPrice(int id, String location) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(CARS.toString(), location, carsResourceManager, LOCK_READ));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
         try {
@@ -254,6 +270,7 @@ public class Middleware implements IResourceManager {
     public int queryRoomsPrice(int id, String location) throws RemoteException, InvalidTransactionException {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, new ResourceLockRequest(ROOMS.toString(), location, roomsResourceManager, LOCK_READ));
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
 
@@ -272,6 +289,7 @@ public class Middleware implements IResourceManager {
                 new ResourceLockRequest(FLIGHTS.toString(), flightNumber, flightsResourceManager, LOCK_WRITE));
 
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
 
@@ -305,6 +323,7 @@ public class Middleware implements IResourceManager {
                 new ResourceLockRequest(CARS.toString(), location, carsResourceManager, LOCK_WRITE));
 
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
 
@@ -340,6 +359,7 @@ public class Middleware implements IResourceManager {
                 new ResourceLockRequest(ROOMS.toString(), location, roomsResourceManager, LOCK_WRITE));
 
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
 
@@ -393,6 +413,7 @@ public class Middleware implements IResourceManager {
         boolean locksAcquired = transactionManager.requestLocksOnResources(id, requiredResources);
 
         if (!locksAcquired) {
+            transactionManager.abort(id);
             throw new InvalidTransactionException(id);
         }
 

@@ -22,6 +22,8 @@ public class ResourceManager implements IResourceManager
 
 	protected static IResourceManager middleware;
 
+	private final Object createCustomerLock = new Object();
+
 
 	public ResourceManager(String p_name)
 	{
@@ -88,33 +90,33 @@ public class ResourceManager implements IResourceManager
 	{
 		Trace.info("RM::queryNum(" + xid + ", " + key + ") called");
 		ReservableItem curObj = (ReservableItem)readData(xid, key);
-		int value = 0;  
+		int value = 0;
 		if (curObj != null)
 		{
 			value = curObj.getCount();
 		}
 		Trace.info("RM::queryNum(" + xid + ", " + key + ") returns count=" + value);
 		return value;
-	}    
+	}
 
 	// Query the price of an item
 	protected int queryPrice(int xid, String key)
 	{
 		Trace.info("RM::queryPrice(" + xid + ", " + key + ") called");
 		ReservableItem curObj = (ReservableItem)readData(xid, key);
-		int value = 0; 
+		int value = 0;
 		if (curObj != null)
 		{
 			value = curObj.getPrice();
 		}
 		Trace.info("RM::queryPrice(" + xid + ", " + key + ") returns cost=$" + value);
-		return value;        
+		return value;
 	}
 
 	// Reserve an item
 	protected boolean reserveItem(int xid, int customerID, String key, String location)
 	{
-		Trace.info("RM::reserveItem(" + xid + ", customer=" + customerID + ", " + key + ", " + location + ") called" );        
+		Trace.info("RM::reserveItem(" + xid + ", customer=" + customerID + ", " + key + ", " + location + ") called" );
 //		// Read customer object if it exists (and read lock it)
 //		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 //		if (customer == null)
@@ -147,7 +149,7 @@ public class ResourceManager implements IResourceManager
 
 			Trace.info("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") succeeded");
 			return true;
-		}        
+		}
 	}
 
 	// Create a new flight, or add seats to existing flight
@@ -304,33 +306,36 @@ public class ResourceManager implements IResourceManager
 
 	public int newCustomer(int xid) throws RemoteException
 	{
-        	Trace.info("RM::newCustomer(" + xid + ") called");
-		// Generate a globally unique ID for the new customer
-		int cid = Integer.parseInt(String.valueOf(xid) +
-			String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND)) +
-			String.valueOf(Math.round(Math.random() * 100 + 1)));
-		Customer customer = new Customer(cid);
-		writeData(xid, customer.getKey(), customer);
-		System.out.println("Wrote customer to the table");
-		Trace.info("RM::newCustomer(" + cid + ") returns ID=" + cid);
-		return cid;
+		synchronized (createCustomerLock) {
+			Trace.info("RM::newCustomer(" + xid + ") called");
+
+			// Generate a globally unique ID for the new customer
+			int cid = Integer.parseInt(String.valueOf(xid) +
+					String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND)) +
+					String.valueOf(Math.round(Math.random() * 100 + 1)));
+
+			Customer customer = new Customer(cid);
+			writeData(xid, customer.getKey(), customer);
+			System.out.println("Wrote customer to the table");
+			Trace.info("RM::newCustomer(" + cid + ") returns ID=" + cid);
+			return cid;
+		}
 	}
 
 	public boolean newCustomer(int xid, int customerID) throws RemoteException
 	{
-		Trace.info("RM::newCustomer(" + xid + ", " + customerID + ") called");
-		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
-		if (customer == null)
-		{
-			customer = new Customer(customerID);
-			writeData(xid, customer.getKey(), customer);
-			Trace.info("RM::newCustomer(" + xid + ", " + customerID + ") created a new customer");
-			return true;
-		}
-		else
-		{
-			Trace.info("INFO: RM::newCustomer(" + xid + ", " + customerID + ") failed--customer already exists");
-			return false;
+		synchronized (createCustomerLock) {
+			Trace.info("RM::newCustomer(" + xid + ", " + customerID + ") called");
+			Customer customer = (Customer) readData(xid, Customer.getKey(customerID));
+			if (customer == null) {
+				customer = new Customer(customerID);
+				writeData(xid, customer.getKey(), customer);
+				Trace.info("RM::newCustomer(" + xid + ", " + customerID + ") created a new customer");
+				return true;
+			} else {
+				Trace.info("INFO: RM::newCustomer(" + xid + ", " + customerID + ") failed--customer already exists");
+				return false;
+			}
 		}
 	}
 
