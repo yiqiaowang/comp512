@@ -14,7 +14,10 @@ public class BenchmarkResult {
         for (long result : this.results) {
             t += result; 
         }
-        return t / this.results.size();
+        if (this.results.size() > 0)
+            return t / this.results.size();
+        else
+            return 0;
     }
 
     public void addResult(long result) {

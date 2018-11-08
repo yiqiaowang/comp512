@@ -4,6 +4,7 @@ public enum Command {
 	Help("List all available commands", "[CommandName]"),
 
 	Start("Start a transaction", ""),
+        StartID("Start a transaction with given id", "<xid>"),
 	Commit("Commit a transaction", "<xid>"),
 	Abort("Abort a transaction", "<xid>"),
 	Shutdown("Shutdown all servers", ""),

@@ -1,6 +1,7 @@
 package Benchmark;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 // Import the client here
 // Import the parametrized transaction type
 
@@ -9,8 +10,7 @@ public class BenchmarkRunner {
     private static int num_of_clients = 1;
     private static float transactions_per_sec = 1.0f;
     private static int iterations = 1;
-    private static String logfile =
-        "results_" + num_of_clients + "_" +transactions_per_sec + ".csv";
+    private static int range = 5;
     private ArrayList<BenchmarkWorker> clients = new ArrayList<>();
     private ArrayList<BenchmarkResult> results = new ArrayList<>();
     private float delay_time = 1;
@@ -29,6 +29,10 @@ public class BenchmarkRunner {
         }
 
         if (args.length > 3) {
+            range = Integer.parseInt(args[3]); 
+        }
+
+        if (args.length > 4) {
             System.err.println((char)27 + "[31;1mBenchmarkRunner exception: " + (char)27 + "[0mUsage: java Performance.BenchmarkRunner [num_of_clients [transactions_per_sec]]");
             System.exit(1);
         }
@@ -56,9 +60,11 @@ public class BenchmarkRunner {
                 runner.addResult(client.getResult());
             }
 
-            BenchmarkLogger logger = new BenchmarkLogger(BenchmarkRunner.logfile);
+            String logdir = "range_logs/";
+            String logfile = "results_range" + BenchmarkRunner.range + ".csv";
+            BenchmarkLogger logger = new BenchmarkLogger(logdir + logfile);
             logger.writeRow(
-                    BenchmarkRunner.transactions_per_sec,
+                    BenchmarkRunner.range,
                     runner.averageResults()
                     );
             logger.close();
@@ -89,12 +95,33 @@ public class BenchmarkRunner {
 
         this.delay_time = BenchmarkRunner.num_of_clients / BenchmarkRunner.transactions_per_sec;
         long delay_time_millis = (long) (this.delay_time * 1000);
+
+
+         
+    ArrayList<Integer> set_a = new ArrayList<>(Arrays.asList(
+                1, 2, 3, 4, 5
+                ));
+
+
+    ArrayList<Integer> set_b = new ArrayList<>(Arrays.asList(
+                1,2,3,4,5
+                ));
+
+
+
         // Initialize ArrayList of clients 
         for (int i = 0; i < BenchmarkRunner.num_of_clients; i++) {
-            this.clients.add(
-                    new BenchmarkWorker(BenchmarkRunner.iterations,
-                        delay_time_millis)
-                    );
+            if (i % 2 == 0) {
+                this.clients.add(
+                        new BenchmarkWorker(BenchmarkRunner.iterations,
+                            delay_time_millis, set_a)
+                        );
+            } else {
+                this.clients.add(
+                        new BenchmarkWorker(BenchmarkRunner.iterations,
+                            delay_time_millis, set_b)
+                        );
+            }
         }
     }
 }
