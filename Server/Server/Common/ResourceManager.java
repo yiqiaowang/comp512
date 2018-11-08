@@ -28,12 +28,15 @@ public class ResourceManager implements IResourceManager
 	// Reads a data item
 	protected RMItem readData(int xid, String key)
 	{
-		Map<String, RMItem> transactionData = uncommittedTransactions.get(xid);
-		if (transactionData != null) {
-			RMItem item = transactionData.get(key);
-			if (item != null) {
-				return (RMItem) item.clone();
+		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> {
+			synchronized (m_data) {
+				return m_data.clone();
 			}
+		});
+
+		RMItem item = transactionData.get(key);
+		if (item != null) {
+			return (RMItem) item.clone();
 		}
 
 		return null;
@@ -53,10 +56,13 @@ public class ResourceManager implements IResourceManager
 	// Remove the item out of storage
 	protected void removeData(int xid, String key)
 	{
-		Map<String, RMItem> transactionData = uncommittedTransactions.get(xid);
-		if (transactionData != null) {
-			transactionData.remove(key);
-		}
+		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> {
+			synchronized (m_data) {
+				return m_data.clone();
+			}
+		});
+		transactionData.remove(key);
+
 	}
 
 	// Deletes the encar item

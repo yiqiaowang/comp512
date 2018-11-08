@@ -24,16 +24,6 @@ public class RMIResourceManager extends ResourceManager
 
 
 	@Override
-	public void abort(int xid) throws RemoteException {
-
-	}
-
-	@Override
-	public boolean commit(int xid) throws RemoteException {
-		return false;
-	}
-
-	@Override
 	public boolean shutdown() throws RemoteException {
 		try {
 			if (shutdownHook != null) {

@@ -372,13 +372,22 @@ public class Middleware implements IResourceManager {
             return false;
         }
 
+
         boolean locksAcquired = transactionManager.requestLocksOnResources(id,
                 new ResourceLockRequest(CUSTOMERS.toString(), customersResourceManager, LOCK_WRITE),
-                new ResourceLockRequest(FLIGHTS.toString(), flightsResourceManager, LOCK_WRITE),
-                new ResourceLockRequest(ROOMS.toString(), roomsResourceManager, LOCK_WRITE),
-                new ResourceLockRequest(CARS.toString(), carsResourceManager, LOCK_WRITE));
+                new ResourceLockRequest(FLIGHTS.toString(), flightsResourceManager, LOCK_WRITE));
 
         if (!locksAcquired) {
+            throw new InvalidTransactionException(id);
+        }
+
+        if (car && !transactionManager.requestLocksOnResources(id,
+                    new ResourceLockRequest(CARS.toString(), carsResourceManager, LOCK_WRITE))) {
+            throw new InvalidTransactionException(id);
+        }
+
+        if (room && !transactionManager.requestLocksOnResources(id,
+                new ResourceLockRequest(ROOMS.toString(), roomsResourceManager, LOCK_WRITE))) {
             throw new InvalidTransactionException(id);
         }
 
