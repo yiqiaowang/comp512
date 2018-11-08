@@ -287,7 +287,7 @@ public class Middleware implements IResourceManager {
             }
 
             int flightPrice = flightsResourceManager.queryFlightPrice(id, flightNumber);
-            customersResourceManager.reserveCustomer(customerID, Flight.getKey(flightNumber), String.valueOf(flightNumber), flightPrice);
+            customersResourceManager.reserveCustomer(id, customerID, Flight.getKey(flightNumber), String.valueOf(flightNumber), flightPrice);
 
             return true;
         } catch (RemoteException | InvalidTransactionException e) {
@@ -322,7 +322,7 @@ public class Middleware implements IResourceManager {
 
             int rentalPrice = flightsResourceManager.queryCarsPrice(id, location);
 
-            customersResourceManager.reserveCustomer(customerID, Car.getKey(location), location, rentalPrice);
+            customersResourceManager.reserveCustomer(id, customerID, Car.getKey(location), location, rentalPrice);
 
             return true;
         } catch (RemoteException | InvalidTransactionException e) {
@@ -356,7 +356,7 @@ public class Middleware implements IResourceManager {
             }
 
             int roomPrice = roomsResourceManager.queryRoomsPrice(id, location);
-            customersResourceManager.reserveCustomer(customerID, Room.getKey(location), location, roomPrice);
+            customersResourceManager.reserveCustomer(id, customerID, Room.getKey(location), location, roomPrice);
 
             return true;
         } catch (RemoteException | InvalidTransactionException e) {

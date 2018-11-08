@@ -5,16 +5,19 @@
 
 package Server.Common;
 
-import Server.Interface.*;
+import Server.Interface.IResourceManager;
 
-import java.util.*;
 import java.rmi.RemoteException;
+import java.util.Calendar;
+import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ResourceManager implements IResourceManager
 {
 	protected String m_name = "";
-	protected final RMHashMap m_data = new RMHashMap();
+	protected final AtomicReference<RMHashMap> m_data = new AtomicReference<>(new RMHashMap());
 	protected final Map<Integer, RMHashMap> uncommittedTransactions = new ConcurrentHashMap<>();
 
 	protected static IResourceManager middleware;
@@ -28,11 +31,7 @@ public class ResourceManager implements IResourceManager
 	// Reads a data item
 	protected RMItem readData(int xid, String key)
 	{
-		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> {
-			synchronized (m_data) {
-				return m_data.clone();
-			}
-		});
+		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> m_data.get().clone());
 
 		RMItem item = transactionData.get(key);
 		if (item != null) {
@@ -45,22 +44,14 @@ public class ResourceManager implements IResourceManager
 	// Writes a data item
 	protected void writeData(int xid, String key, RMItem value)
 	{
-		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> {
-			synchronized (m_data) {
-				return m_data.clone();
-			}
-		});
+		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> m_data.get().clone());
 		transactionData.put(key, value);
 	}
 
 	// Remove the item out of storage
 	protected void removeData(int xid, String key)
 	{
-		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> {
-			synchronized (m_data) {
-				return m_data.clone();
-			}
-		});
+		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> m_data.get().clone());
 		transactionData.remove(key);
 
 	}
@@ -424,11 +415,9 @@ public class ResourceManager implements IResourceManager
 	@Override
 	public boolean commit(int xid) throws RemoteException {
 		RMHashMap transactionData = uncommittedTransactions.remove(xid);
+
 		if (transactionData != null) {
-			synchronized (m_data) {
-				m_data.clear();
-				m_data.putAll(transactionData);
-			}
+			m_data.set(transactionData);
 			return true;
 		} else {
 			return false;
