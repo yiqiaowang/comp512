@@ -8,17 +8,63 @@ package Server.Common;
 import Server.Interface.IResourceManager;
 
 import java.rmi.RemoteException;
-import java.util.Calendar;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ResourceManager implements IResourceManager
 {
+	static class TransactionHandler {
+		private final RMHashMap addedItems = new RMHashMap();
+		private final Set<String> deletedItems = new HashSet<>();
+		private final RMHashMap resourceData;
+
+		TransactionHandler(RMHashMap resourceData) {
+			this.resourceData = resourceData;
+		}
+
+		synchronized RMItem readItem(String key) {
+			if (deletedItems.contains(key)) {
+				return null;
+			}
+
+			RMItem item = addedItems.get(key);
+			if (item == null) {
+				item = resourceData.get(key);
+			}
+
+			if (item != null) {
+				return (RMItem) item.clone();
+			} else {
+				return null;
+			}
+		}
+
+		synchronized void addItem(String key, RMItem value) {
+			addedItems.put(key, value);
+			deletedItems.remove(key);
+		}
+
+		synchronized void deleteItem(String key) {
+			deletedItems.add(key);
+			addedItems.remove(key);
+		}
+
+		synchronized void commit() {
+			synchronized (resourceData) {
+				for (String deletedItem : deletedItems) {
+					resourceData.remove(deletedItem);
+				}
+
+				resourceData.putAll(addedItems);
+			}
+		}
+	}
+
+
+
 	protected String m_name = "";
-	protected final AtomicReference<RMHashMap> m_data = new AtomicReference<>(new RMHashMap());
-	protected final Map<Integer, RMHashMap> uncommittedTransactions = new ConcurrentHashMap<>();
+	protected final RMHashMap m_data = new RMHashMap();
+	protected final Map<Integer, TransactionHandler> uncommittedTransactions = new ConcurrentHashMap<>();
 
 	protected static IResourceManager middleware;
 
@@ -33,28 +79,22 @@ public class ResourceManager implements IResourceManager
 	// Reads a data item
 	protected RMItem readData(int xid, String key)
 	{
-		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> m_data.get().clone());
-
-		RMItem item = transactionData.get(key);
-		if (item != null) {
-			return (RMItem) item.clone();
-		}
-
-		return null;
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data));
+		return transactionData.readItem(key);
 	}
 
 	// Writes a data item
 	protected void writeData(int xid, String key, RMItem value)
 	{
-		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> m_data.get().clone());
-		transactionData.put(key, value);
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data));
+		transactionData.addItem(key, value);
 	}
 
 	// Remove the item out of storage
 	protected void removeData(int xid, String key)
 	{
-		Map<String, RMItem> transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> m_data.get().clone());
-		transactionData.remove(key);
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data));
+		transactionData.deleteItem(key);
 
 	}
 
@@ -421,14 +461,14 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public boolean commit(int xid) throws RemoteException {
-		RMHashMap transactionData = uncommittedTransactions.remove(xid);
+		TransactionHandler transactionHandler = uncommittedTransactions.remove(xid);
 
-		if (transactionData != null) {
-			m_data.set(transactionData);
-			return true;
-		} else {
+		if (transactionHandler == null) {
 			return false;
 		}
+
+		transactionHandler.commit();
+		return true;
 	}
 }
  
