@@ -41,28 +41,26 @@ public class MultiResourceTransaction extends Transaction {
                 this.transactionArgs(this.identifier)
                 );
 
-        for (int i = 0; i < 100; i++) {
-            this.client.execute(Command.ReserveFlight,
-                    this.reserveFlightArgs(
-                        this.identifier,
-                        this.identifier,
-                        this.getFlightNumber())
-                    );
+        this.client.execute(Command.ReserveFlight,
+                this.reserveFlightArgs(
+                    this.identifier,
+                    this.identifier,
+                    this.getFlightNumber())
+                );
 
-            this.client.execute(Command.ReserveRoom,
-                    this.reserveLocationArgs(
-                        this.identifier,
-                        this.identifier,
-                        this.getRoomLocation())
-                    );
+        this.client.execute(Command.ReserveRoom,
+                this.reserveLocationArgs(
+                    this.identifier,
+                    this.identifier,
+                    this.getRoomLocation())
+                );
 
-            this.client.execute(Command.ReserveCar,
-                    this.reserveLocationArgs(
-                        this.identifier,
-                        this.identifier,
-                        this.getCarLocation())
-                    );
-        }
+        this.client.execute(Command.ReserveCar,
+                this.reserveLocationArgs(
+                    this.identifier,
+                    this.identifier,
+                    this.getCarLocation())
+                );
 
         this.client.execute(Command.Commit,
                 this.transactionArgs(this.identifier)

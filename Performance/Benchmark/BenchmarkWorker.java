@@ -16,15 +16,20 @@ public class BenchmarkWorker implements Runnable {
      */
 
     public static ArrayList<Integer> flight_numbers = new ArrayList<>(Arrays.asList(
-                1, 2, 3, 4, 5
+                // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+                1,2,3
+
+                // 1, 2, 3, 4, 5
                 ));
 
     public static ArrayList<String> car_locations = new ArrayList<>(Arrays.asList(
-                "montreal", "los angeles"
+                "a", "b", "c"
+                // "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"
                 ));
 
     public static ArrayList<String> room_locations = new ArrayList<>(Arrays.asList(
-                "toronto", "san francisco"
+                "a", "b", "c"
+                // "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"
                 ));
 
     public SingleResourceTransaction transaction;
@@ -42,20 +47,31 @@ public class BenchmarkWorker implements Runnable {
 
     private volatile BenchmarkResult results = new BenchmarkResult();
 
+    public BenchmarkWorker(int iterations, long delay, int id) {
+        this(iterations,
+                delay,
+                BenchmarkWorker.flight_numbers,
+                BenchmarkWorker.room_locations,
+                BenchmarkWorker.car_locations,
+                id);
+    };
+
     public BenchmarkWorker(int iterations, long delay) {
         this(iterations,
                 delay,
                 BenchmarkWorker.flight_numbers,
                 BenchmarkWorker.room_locations,
-                BenchmarkWorker.car_locations);
+                BenchmarkWorker.car_locations,
+                0);
     };
 
-    public BenchmarkWorker(int iterations, long delay, ArrayList<Integer> flight_numbers) {
+    public BenchmarkWorker(int iterations, long delay, ArrayList<Integer> flight_numbers, int id) {
         this(iterations,
                 delay,
                 flight_numbers,
                 BenchmarkWorker.room_locations,
-                BenchmarkWorker.car_locations);
+                BenchmarkWorker.car_locations,
+                id);
     };
 
     public BenchmarkWorker(
@@ -63,14 +79,15 @@ public class BenchmarkWorker implements Runnable {
             long delay,
             ArrayList<Integer> flight_numbers,
             ArrayList<String> room_locations,
-            ArrayList<String> car_locations
+            ArrayList<String> car_locations,
+            int id
             ) {
         this.bufferTimeMillis = delay;
         this.iterations = iterations;
         this.client = new RMIClient();
         this.rand = new Random();
-        this.identifier = this.rand.nextInt(1000000);
-        
+        this.identifier = id == 0 ? this.rand.nextInt(1000000) : id;
+
         // Configure this as well
         this.transaction = new SingleResourceTransaction(
                 this.identifier,
@@ -112,16 +129,16 @@ public class BenchmarkWorker implements Runnable {
         try {
             // Connect to middleware and connect server
             this.transaction.connectServer();
-            this.transaction.setupCustomer();
+            // this.transaction.setupCustomer();
 
             // Start benchmark
             int counter = 0;
 
             // Warmup the JVM with 10 iterations
-            while (counter < 10) {
-                this.execute(this.bufferTimeMillis, false);
-                counter++;
-            }
+            // while (counter < 10) {
+            //     this.execute(this.bufferTimeMillis, false);
+            //     counter++;
+            // }
 
             // Perform benchmark
             counter = 0;

@@ -68,7 +68,15 @@ public abstract class Client
 		}
 	}
 
-	public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException, InvalidTransactionException {
+        public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException {
+            try {
+                raw_execute(cmd, arguments);
+            } catch (InvalidTransactionException e) {
+                System.out.println("Transaction aborted due to deadlock");
+            }
+        }
+
+	private void raw_execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException, InvalidTransactionException {
 		switch (cmd)
 		{
 			case Help:

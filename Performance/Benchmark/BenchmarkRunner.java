@@ -10,7 +10,7 @@ public class BenchmarkRunner {
     private static int num_of_clients = 1;
     private static float transactions_per_sec = 1.0f;
     private static int iterations = 1;
-    private static int range = 5;
+    private static int range = 0;
     private ArrayList<BenchmarkWorker> clients = new ArrayList<>();
     private ArrayList<BenchmarkResult> results = new ArrayList<>();
     private float delay_time = 1;
@@ -61,7 +61,7 @@ public class BenchmarkRunner {
             }
 
             String logdir = "range_logs/";
-            String logfile = "results_range" + BenchmarkRunner.range + ".csv";
+            String logfile = "results_load-" + BenchmarkRunner.range + ".csv";
             BenchmarkLogger logger = new BenchmarkLogger(logdir + logfile);
             logger.writeRow(
                     BenchmarkRunner.range,
@@ -104,22 +104,27 @@ public class BenchmarkRunner {
 
 
     ArrayList<Integer> set_b = new ArrayList<>(Arrays.asList(
-                1,2,3,4,5
+                // 1, 2, 3, 4, 5
+                6,7,8,9,10
                 ));
 
 
 
         // Initialize ArrayList of clients 
-        for (int i = 0; i < BenchmarkRunner.num_of_clients; i++) {
+        for (int i = 1; i <= BenchmarkRunner.num_of_clients; i++) {
+                // this.clients.add(
+                //         new BenchmarkWorker(BenchmarkRunner.iterations,
+                //             delay_time_millis, i)
+                //         );
             if (i % 2 == 0) {
                 this.clients.add(
                         new BenchmarkWorker(BenchmarkRunner.iterations,
-                            delay_time_millis, set_a)
+                            delay_time_millis, set_a, i)
                         );
             } else {
                 this.clients.add(
                         new BenchmarkWorker(BenchmarkRunner.iterations,
-                            delay_time_millis, set_b)
+                            delay_time_millis, set_b, i)
                         );
             }
         }

@@ -26,14 +26,14 @@ public class SingleResourceTransaction extends Transaction {
         return args;
     }
 
-    // Reserve 3 flights for now, client.execute is a blocking call
-    public void run() throws InterruptedException, RemoteException, NumberFormatException, InvalidTransactionException {
+    // Reserve 5 flights for now, client.execute is a blocking call
+    public void run() throws InterruptedException, RemoteException, NumberFormatException {
 
         this.client.execute(Command.StartID,
                 this.transactionArgs(this.identifier)
                 );
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 3; i++) {
             this.client.execute(Command.ReserveFlight,
                     this.reserveFlightArgs(
                         this.identifier,
