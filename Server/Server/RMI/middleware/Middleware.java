@@ -3,6 +3,7 @@ package Server.RMI.middleware;
 import Server.Common.Car;
 import Server.Common.Flight;
 import Server.Common.Room;
+import Server.Common.PeerStatus;
 import Server.Interface.IResourceManager;
 import Server.Interface.InvalidTransactionException;
 import Server.RMI.RMIMiddleware;
@@ -19,6 +20,9 @@ import static Server.LockManager.TransactionLockObject.LockType.LOCK_WRITE;
 public class Middleware implements IResourceManager {
     private static final String name = "Middleware";
 
+    // Failure Detection of resource managers
+    private HashMap<IResourceManager, PeerStatus> resourceManagerStatus = new HashMap<>();
+    private ArrayList<IResourceManager> failedPeers = new ArrayList<>();
 
     private final IResourceManager flightsResourceManager;
     private final IResourceManager carsResourceManager;
@@ -33,6 +37,48 @@ public class Middleware implements IResourceManager {
         this.roomsResourceManager = roomsResourceManager;
         this.carsResourceManager = carsResourceManager;
         this.customersResourceManager = customersResourceManager;
+
+        this.resourceManagerStatus.put(this.flightsResourceManager,
+                new PeerStatus());
+        this.resourceManagerStatus.put(this.roomsResourceManager,
+                new PeerStatus());
+        this.resourceManagerStatus.put(this.carsResourceManager,
+                new PeerStatus());
+        this.resourceManagerStatus.put(this.customersResourceManager,
+                new PeerStatus());
+
+        // Start health checks here
+        Thread checkForFailures = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+
+                System.out.println("RUNNING HEALTH CHECKS!");
+                for (IResourceManager peer : this.resourceManagerStatus.keySet()) {
+                    try {
+                        PeerStatus status = this.resourceManagerStatus.get(peer);
+                        String peerName = peer.getName();
+                        if (System.currentTimeMillis() > status.getTTL()) {
+                            if (peer.isAlive()) {
+                                status.setTTL(System.currentTimeMillis() + 2000);
+                            } else {
+                                this.failedPeers.add(peer);
+                                // Do something when once failure is detected. 
+                                System.out.println("Suspected timeout failure at " +
+                                        peerName);
+                            }
+                        }
+                    } catch(RemoteException e){
+                        this.failedPeers.add(peer);
+                        System.out.println("Remote failure exception caught during health checks");
+                    }
+                }
+            }
+        });
+        checkForFailures.start();
     }
 
 
@@ -77,8 +123,8 @@ public class Middleware implements IResourceManager {
         try {
             return roomsResourceManager.addRooms(id, location, numRooms, price);
         } catch (RemoteException | InvalidTransactionException e) {
-                transactionManager.abort(id);
-                throw e;
+            transactionManager.abort(id);
+            throw e;
         }
     }
 
@@ -124,8 +170,8 @@ public class Middleware implements IResourceManager {
         try {
             return flightsResourceManager.deleteFlight(id, flightNum);
         } catch (RemoteException | InvalidTransactionException e) {
-                transactionManager.abort(id);
-                throw e;
+            transactionManager.abort(id);
+            throw e;
         }
     }
 
@@ -154,8 +200,8 @@ public class Middleware implements IResourceManager {
         try {
             return roomsResourceManager.deleteRooms(id, location);
         } catch (RemoteException | InvalidTransactionException e) {
-                transactionManager.abort(id);
-                throw e;
+            transactionManager.abort(id);
+            throw e;
         }
     }
 
@@ -199,8 +245,8 @@ public class Middleware implements IResourceManager {
         try {
             return carsResourceManager.queryCars(id, location);
         } catch (RemoteException | InvalidTransactionException e) {
-                transactionManager.abort(id);
-                throw e;
+            transactionManager.abort(id);
+            throw e;
         }
     }
 
@@ -499,5 +545,9 @@ public class Middleware implements IResourceManager {
         allShutdown = RMIMiddleware.shutdown() && allShutdown;
 
         return allShutdown;
+    }
+
+    public boolean isAlive() throws RemoteException { 
+        return true;
     }
 }

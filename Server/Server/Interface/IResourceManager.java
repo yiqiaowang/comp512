@@ -217,4 +217,6 @@ public interface IResourceManager extends Remote
     boolean start(int xid) throws RemoteException;
 
     boolean commit(int xid) throws RemoteException;
+
+    boolean isAlive() throws RemoteException;
 }

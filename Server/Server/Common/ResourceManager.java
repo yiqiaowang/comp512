@@ -13,6 +13,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ResourceManager implements IResourceManager
 {
+    /*
+     * Failure Detection
+     */
+
+    protected PeerStatus middlewareStatus = new PeerStatus();
+
 	static class TransactionHandler {
 		private final RMHashMap addedItems = new RMHashMap();
 		private final Set<String> deletedItems = new HashSet<>();
@@ -470,5 +476,10 @@ public class ResourceManager implements IResourceManager
 		transactionHandler.commit();
 		return true;
 	}
+
+	@Override
+        public boolean isAlive() throws RemoteException { 
+            return true;
+        }
 }
  

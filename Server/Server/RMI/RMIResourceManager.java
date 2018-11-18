@@ -88,6 +88,34 @@ public class RMIResourceManager extends ResourceManager
 		}
 	}
 
+        public void startHealthChecks() {
+        // Start health checks here
+        Thread checkForFailures = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+
+                try {
+                    if (System.currentTimeMillis() > middlewareStatus.getTTL()) {
+                        if (middleware.isAlive()) {
+                            middlewareStatus.setTTL(System.currentTimeMillis() + 2000);
+                        } else {
+                            // this.failedPeers.add(peer);
+                            // Do something when once failure is detected. 
+                            System.out.println("Suspected timeout failure at middleware");
+                        }
+                    }
+                } catch(RemoteException e){
+                    System.out.println("Remote failure exception caught during health checks");
+                }
+            }
+        });
+        checkForFailures.start();
+        }
+
 	public static void main(String args[])
 	{
 		if (args.length > 0)
@@ -97,6 +125,7 @@ public class RMIResourceManager extends ResourceManager
 		if (args.length > 1) {
 			port = Integer.parseInt(args[1]);
 		}
+                // TODO::  Add location of middleware here
 			
 		// Create the RMI server entry
 		try {
