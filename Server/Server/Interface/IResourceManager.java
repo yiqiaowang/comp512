@@ -2,6 +2,7 @@ package Server.Interface;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.NotBoundException;
 
 import java.util.*;
 
@@ -219,4 +220,5 @@ public interface IResourceManager extends Remote
     boolean commit(int xid) throws RemoteException;
 
     boolean isAlive() throws RemoteException;
+    void startHealthChecks(String host, int port) throws RemoteException, NotBoundException;
 }

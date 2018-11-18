@@ -62,59 +62,31 @@ public class RMIResourceManager extends ResourceManager
 	}
 
 
-	private static void connectToMiddleware(String server, int port) {
-		try {
-			boolean first = true;
-			while (true) {
-				try {
-					Registry registry = LocateRegistry.getRegistry(server, port);
-					middleware = (IResourceManager)registry.lookup(s_rmiPrefix + "Middleware");
-					System.out.println("Connected to 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
-					break;
-				}
-				catch (NotBoundException | RemoteException e) {
-					if (first) {
-						System.out.println("Waiting for 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
-						first = false;
-					}
-				}
-				Thread.sleep(1000);
-			}
-		}
-		catch (Exception e) {
-			System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
-			e.printStackTrace();
-			System.exit(1);
-		}
-	}
-
-        public void startHealthChecks() {
-        // Start health checks here
-        Thread checkForFailures = new Thread(() -> {
-            while (true) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    return;
-                }
-
-                try {
-                    if (System.currentTimeMillis() > middlewareStatus.getTTL()) {
-                        if (middleware.isAlive()) {
-                            middlewareStatus.setTTL(System.currentTimeMillis() + 2000);
-                        } else {
-                            // this.failedPeers.add(peer);
-                            // Do something when once failure is detected. 
-                            System.out.println("Suspected timeout failure at middleware");
-                        }
-                    }
-                } catch(RemoteException e){
-                    System.out.println("Remote failure exception caught during health checks");
-                }
-            }
-        });
-        checkForFailures.start();
-        }
+	// private static void connectToMiddleware(String server, int port) {
+	// 	try {
+	// 		boolean first = true;
+	// 		while (true) {
+	// 			try {
+	// 				Registry registry = LocateRegistry.getRegistry(server, port);
+	// 				middleware = (IResourceManager)registry.lookup(s_rmiPrefix + "Middleware");
+	// 				System.out.println("Connected to 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
+	// 				break;
+	// 			}
+	// 			catch (NotBoundException | RemoteException e) {
+	// 				if (first) {
+	// 					System.out.println("Waiting for 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
+	// 					first = false;
+	// 				}
+	// 			}
+	// 			Thread.sleep(1000);
+	// 		}
+	// 	}
+	// 	catch (Exception e) {
+	// 		System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
+	// 		e.printStackTrace();
+	// 		System.exit(1);
+	// 	}
+	// }
 
 	public static void main(String args[])
 	{
@@ -159,6 +131,9 @@ public class RMIResourceManager extends ResourceManager
 
 			Runtime.getRuntime().addShutdownHook(shutdownHook);
 			System.out.println("'" + s_serverName + "' resource manager server ready and bound to '" + s_rmiPrefix + s_serverName + "'");
+
+
+                        // Start the health checks at the resource managers
 		}
 		catch (Exception e) {
 			System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");

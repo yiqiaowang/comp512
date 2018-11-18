@@ -19,20 +19,21 @@ public class RMIMiddleware {
 
     private static Thread shutdownHook;
 
+    private static String host;
     private static int port;
 
 
-    public static IResourceManager initializeMiddleware(int port, String[] args) {
+    public static IResourceManager initializeMiddleware(String host, int port, String[] args) {
         IResourceManager flightsResourceManager = hostAndPortToResourceManager(args[0], Services.FLIGHTS.toString());
         IResourceManager carsResourceManager = hostAndPortToResourceManager(args[1], Services.CARS.toString());
         IResourceManager roomsResourceManager = hostAndPortToResourceManager(args[2], Services.ROOMS.toString());
         ICustomerResourceManager customerResourceManager = hostAndPortToCustomerResourceManager(args[3], Services.CUSTOMERS.toString());
 
-        return initializeMiddleware(port, flightsResourceManager, carsResourceManager, roomsResourceManager, customerResourceManager);
+        return initializeMiddleware(host, port, flightsResourceManager, carsResourceManager, roomsResourceManager, customerResourceManager);
     }
 
 
-    public static IResourceManager initializeMiddleware(int port, IResourceManager flightsResourceManager, IResourceManager carsResourceManager, IResourceManager roomsResourceManager, ICustomerResourceManager customerResourceManager) {
+    public static IResourceManager initializeMiddleware(String host, int port, IResourceManager flightsResourceManager, IResourceManager carsResourceManager, IResourceManager roomsResourceManager, ICustomerResourceManager customerResourceManager) {
         try {
             IResourceManager middleware = new Middleware(flightsResourceManager, carsResourceManager, roomsResourceManager, customerResourceManager);
 
@@ -112,9 +113,10 @@ public class RMIMiddleware {
     }
 
     public static void main(String[] args) throws RemoteException {
-        if (args.length > 4) {
-            port = Integer.parseInt(args[0]);
-            initializeMiddleware(port, Arrays.copyOfRange(args, 1, args.length));
+        if (args.length > 5) {
+            host = args[0];
+            port = Integer.parseInt(args[1]);
+            initializeMiddleware(host, port, Arrays.copyOfRange(args, 2, args.length));
         } else {
             System.out.println("Missing parameters");
         }

@@ -11,6 +11,7 @@ import Server.Transaction.ResourceLockRequest;
 import Server.Transaction.TransactionManager;
 
 import java.rmi.RemoteException;
+import java.rmi.NotBoundException;
 import java.util.*;
 
 import static Server.Common.Services.*;
@@ -47,6 +48,7 @@ public class Middleware implements IResourceManager {
         this.resourceManagerStatus.put(this.customersResourceManager,
                 new PeerStatus());
 
+        
         // Start health checks here
         Thread checkForFailures = new Thread(() -> {
             while (true) {
@@ -81,6 +83,24 @@ public class Middleware implements IResourceManager {
         checkForFailures.start();
     }
 
+    public void notifyResourceManagers(String host, int port) {
+        // Tell resource managers about middleware
+        try {
+            this.flightsResourceManager.startHealthChecks(host, port);
+            this.roomsResourceManager.startHealthChecks(host, port);
+            this.carsResourceManager.startHealthChecks(host, port);
+            this.customersResourceManager.startHealthChecks(host, port);
+        } catch(NotBoundException | RemoteException e){
+            System.out.println("Remote failure exception caught during health checks");
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void startHealthChecks(String host, int port) {
+        System.out.println("startHealthChecks should not be called at the middleware");
+        return; 
+    }
 
 
     @Override
