@@ -35,10 +35,10 @@ public class RMIMiddleware {
 
     public static IResourceManager initializeMiddleware(String host, int port, IResourceManager flightsResourceManager, IResourceManager carsResourceManager, IResourceManager roomsResourceManager, ICustomerResourceManager customerResourceManager) {
         try {
-            IResourceManager middleware = new Middleware(flightsResourceManager, carsResourceManager, roomsResourceManager, customerResourceManager);
+            Middleware middleware = new Middleware(flightsResourceManager, carsResourceManager, roomsResourceManager, customerResourceManager);
 
             // Dynamically generate the stub (client proxy)
-            IResourceManager resourceManager = (IResourceManager)UnicastRemoteObject.exportObject(middleware, 0);
+            IResourceManager resourceManager = (IResourceManager)UnicastRemoteObject.exportObject((IResourceManager) middleware, 0);
 
             // Bind the remote object's stub in the registry
             Registry l_registry;
@@ -62,6 +62,8 @@ public class RMIMiddleware {
             });
             Runtime.getRuntime().addShutdownHook(shutdownHook);
 
+            // Notify resource managers here
+            middleware.notifyResourceManagers(host, port);
             return resourceManager;
         }
         catch (Exception e) {

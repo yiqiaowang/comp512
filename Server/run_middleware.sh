@@ -7,4 +7,4 @@
 
 # usage ./run_middleware.sh [port [ FlightRM host:port [ RoomRM host:port  [ CarRM host:port [ CustomerRM host:port ] ]] ]]
 
-java -Djava.security.policy=java.policy -Djava.rmi.server.codebase=file:$(pwd)/ Server.RMI.RMIMiddleware $1 $2 $3 $4 $5
+java -Djava.security.policy=java.policy -Djava.rmi.server.codebase=file:$(pwd)/ Server.RMI.RMIMiddleware $1 $2 $3 $4 $5 $6

@@ -512,6 +512,8 @@ public class ResourceManager implements IResourceManager
                 } catch(RemoteException e){
                     System.out.println("Remote failure exception caught during health checks");
                 }
+
+                System.out.println("Health checks passed!");
             }
         });
         checkForFailures.start();
