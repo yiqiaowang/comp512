@@ -53,29 +53,25 @@ public class Middleware implements IResourceManager {
         Thread checkForFailures = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     return;
                 }
 
-                System.out.println("Running health checks");
+                System.out.println("Running health checks!");
                 for (IResourceManager peer : this.resourceManagerStatus.keySet()) {
                     try {
                         PeerStatus status = this.resourceManagerStatus.get(peer);
                         String peerName = peer.getName();
                         if (System.currentTimeMillis() > status.getTTL()) {
-                            if (peer.isAlive()) {
-                                status.setTTL(System.currentTimeMillis() + 2000);
-                            } else {
-                                this.failedPeers.add(peer);
-                                // Do something when once failure is detected. 
-                                System.out.println("Suspected timeout failure at " +
-                                        peerName);
-                            }
+                            // If the `isAlive' method call fails
+                            // we go directly to the catch block
+                            peer.isAlive();
+                            status.setTTL(System.currentTimeMillis() + 2000);
                         }
-                    } catch(RemoteException e){
+                    } catch (RemoteException e) {
                         this.failedPeers.add(peer);
-                        System.out.println("Remote failure exception caught during health checks");
+                        System.out.println("Suspected failure detected at a resource manager!");
                     }
                 }
             }
@@ -86,10 +82,10 @@ public class Middleware implements IResourceManager {
     public void notifyResourceManagers(String host, int port) {
         // Tell resource managers about middleware
         try {
-            this.flightsResourceManager.startHealthChecks(host, port);
-            this.roomsResourceManager.startHealthChecks(host, port);
-            this.carsResourceManager.startHealthChecks(host, port);
-            this.customersResourceManager.startHealthChecks(host, port);
+            this.flightsResourceManager.startFailureDetector(host, port);
+            this.roomsResourceManager.startFailureDetector(host, port);
+            this.carsResourceManager.startFailureDetector(host, port);
+            this.customersResourceManager.startFailureDetector(host, port);
         } catch(NotBoundException | RemoteException e){
             System.out.println("Remote failure exception caught during health checks");
             e.printStackTrace();
@@ -97,8 +93,8 @@ public class Middleware implements IResourceManager {
     }
 
     @Override
-    public void startHealthChecks(String host, int port) {
-        System.out.println("startHealthChecks should not be called at the middleware");
+    public void startFailureDetector(String host, int port) {
+        System.out.println("startFailureDetector should not be called at the middleware");
         return; 
     }
 

@@ -20,7 +20,9 @@ public class ResourceManager implements IResourceManager
      * Failure Detection
      */
 
-    protected PeerStatus middlewareStatus = new PeerStatus();
+
+    protected RMFailureDetector failureDetector;
+
     protected static String s_rmiPrefix = "groupFive_";
 
 	static class TransactionHandler {
@@ -487,37 +489,10 @@ public class ResourceManager implements IResourceManager
         }
 
         @Override
-        public void startHealthChecks(String server, int port) throws NotBoundException, RemoteException {
-            Registry registry = LocateRegistry.getRegistry(server, port);
-            middleware = (IResourceManager)registry.lookup(s_rmiPrefix + "Middleware");
-            // Start health checks here
-            Thread checkForFailures = new Thread(() -> {
-            while (true) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    return;
-                }
-
-                try {
-                    if (System.currentTimeMillis() > middlewareStatus.getTTL()) {
-                        if (middleware.isAlive()) {
-                            middlewareStatus.setTTL(System.currentTimeMillis() + 2000);
-                        } else {
-                            // this.failedPeers.add(peer);
-                            // Do something when once failure is detected. 
-                            System.out.println("Suspected timeout failure at middleware");
-                        }
-                    }
-                    System.out.println("Health checks passed!");
-                } catch(RemoteException e){
-                    System.out.println("Remote failure exception caught during health checks");
-                }
-
-            }
-        });
-        checkForFailures.start();
+        public void startFailureDetector(String server, int port) {
+            this.failureDetector = new RMFailureDetector(server, port);
+            Thread t = new Thread(this.failureDetector);
+            t.start();
         }
-
 }
  

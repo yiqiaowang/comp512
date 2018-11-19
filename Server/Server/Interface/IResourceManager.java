@@ -220,5 +220,5 @@ public interface IResourceManager extends Remote
     boolean commit(int xid) throws RemoteException;
 
     boolean isAlive() throws RemoteException;
-    void startHealthChecks(String host, int port) throws RemoteException, NotBoundException;
+    void startFailureDetector(String host, int port) throws RemoteException, NotBoundException;
 }
