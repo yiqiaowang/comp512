@@ -61,33 +61,6 @@ public class RMIResourceManager extends ResourceManager
 		return result;
 	}
 
-
-	// private static void connectToMiddleware(String server, int port) {
-	// 	try {
-	// 		boolean first = true;
-	// 		while (true) {
-	// 			try {
-	// 				Registry registry = LocateRegistry.getRegistry(server, port);
-	// 				middleware = (IResourceManager)registry.lookup(s_rmiPrefix + "Middleware");
-	// 				System.out.println("Connected to 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
-	// 				break;
-	// 			}
-	// 			catch (NotBoundException | RemoteException e) {
-	// 				if (first) {
-	// 					System.out.println("Waiting for 'Middleware' server [" + server + ":" + port + "/" + s_rmiPrefix + "Middleware" + "]");
-	// 					first = false;
-	// 				}
-	// 			}
-	// 			Thread.sleep(1000);
-	// 		}
-	// 	}
-	// 	catch (Exception e) {
-	// 		System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
-	// 		e.printStackTrace();
-	// 		System.exit(1);
-	// 	}
-	// }
-
 	public static void main(String args[])
 	{
 		if (args.length > 0)
@@ -97,7 +70,6 @@ public class RMIResourceManager extends ResourceManager
 		if (args.length > 1) {
 			port = Integer.parseInt(args[1]);
 		}
-                // TODO::  Add location of middleware here
 			
 		// Create the RMI server entry
 		try {
@@ -133,7 +105,6 @@ public class RMIResourceManager extends ResourceManager
 			System.out.println("'" + s_serverName + "' resource manager server ready and bound to '" + s_rmiPrefix + s_serverName + "'");
 
 
-                        // Start the health checks at the resource managers
 		}
 		catch (Exception e) {
 			System.err.println((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
