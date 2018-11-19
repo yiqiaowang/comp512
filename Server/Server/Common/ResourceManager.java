@@ -7,6 +7,7 @@ package Server.Common;
 
 import Server.Interface.IResourceManager;
 
+import java.io.*;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,6 +59,17 @@ public class ResourceManager implements IResourceManager
 				resourceData.putAll(addedItems);
 			}
 		}
+
+		private synchronized void log() {
+            try (OutputStream file = new FileOutputStream("/home/mathew/Desktop/test.ser");
+                 ObjectOutputStream oos = new ObjectOutputStream(file))
+            {
+                oos.writeObject(this);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 	}
 
 
