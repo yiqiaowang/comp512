@@ -58,6 +58,7 @@ public class Middleware implements IResourceManager {
                     return;
                 }
 
+                System.out.println("Running health checks");
                 for (IResourceManager peer : this.resourceManagerStatus.keySet()) {
                     try {
                         PeerStatus status = this.resourceManagerStatus.get(peer);
@@ -77,7 +78,6 @@ public class Middleware implements IResourceManager {
                         System.out.println("Remote failure exception caught during health checks");
                     }
                 }
-                System.out.println("Health checks passed!");
             }
         });
         checkForFailures.start();
