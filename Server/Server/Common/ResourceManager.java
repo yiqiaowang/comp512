@@ -7,10 +7,8 @@ package Server.Common;
 
 import Server.Interface.IResourceManager;
 
-import java.rmi.NotBoundException;
+import java.io.*;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,58 +23,80 @@ public class ResourceManager implements IResourceManager
 
     protected static String s_rmiPrefix = "groupFive_";
 
-	static class TransactionHandler {
-		private final RMHashMap addedItems = new RMHashMap();
-		private final Set<String> deletedItems = new HashSet<>();
-		private final RMHashMap resourceData;
-
-		TransactionHandler(RMHashMap resourceData) {
-			this.resourceData = resourceData;
-		}
-
-		synchronized RMItem readItem(String key) {
-			if (deletedItems.contains(key)) {
-				return null;
-			}
-
-			RMItem item = addedItems.get(key);
-			if (item == null) {
-				item = resourceData.get(key);
-			}
-
-			if (item != null) {
-				return (RMItem) item.clone();
-			} else {
-				return null;
-			}
-		}
-
-		synchronized void addItem(String key, RMItem value) {
-			addedItems.put(key, value);
-			deletedItems.remove(key);
-		}
-
-		synchronized void deleteItem(String key) {
-			deletedItems.add(key);
-			addedItems.remove(key);
-		}
-
-		synchronized void commit() {
-			synchronized (resourceData) {
-				for (String deletedItem : deletedItems) {
-					resourceData.remove(deletedItem);
-				}
-
-				resourceData.putAll(addedItems);
-			}
-		}
-	}
+    private static final String persistentCommittedDataPath = "./committed_data/";
 
 
-
-	protected String m_name = "";
+    protected String m_name = "";
 	protected final RMHashMap m_data = new RMHashMap();
 	protected final Map<Integer, TransactionHandler> uncommittedTransactions = new ConcurrentHashMap<>();
+
+
+	private void startup() {
+	    m_data.clear();
+	    uncommittedTransactions.clear();
+
+        Map<Integer, TransactionHandler> transactionsInProgress = loadPreviousTransactionData();
+
+        if (transactionsInProgress.size() > 0) {
+	        // TODO: Handle previous, uncommitted transactions (either abort or commit)
+        }
+    }
+
+	private Map<Integer, TransactionHandler> loadPreviousTransactionData() {
+	    File directory = new File(TransactionHandler.DATA_PATH);
+	    File[] transactionsInProgress = directory.listFiles();
+
+	    if (transactionsInProgress == null) {
+	        // The directory doesn't exist - there is no data
+            return Collections.emptyMap();
+        }
+
+        Map<Integer, TransactionHandler> uncommittedTransactions = new HashMap<>();
+
+        for (File transaction : transactionsInProgress) {
+            try (
+                ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(transaction))
+            ) {
+                TransactionHandler handler = (TransactionHandler) inputStream.readObject();
+                uncommittedTransactions.put(handler.getTransactionId(), handler);
+            }
+            catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                // TODO: Better error handling
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return uncommittedTransactions;
+    }
+
+    private synchronized void writeCommittedData() {
+        try (
+            OutputStream file = new FileOutputStream(persistentCommittedDataPath + "m_name");
+            ObjectOutputStream outputStream = new ObjectOutputStream(file)
+        ) {
+            outputStream.writeObject(m_data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private synchronized void readCommittedData() {
+	    try (
+	            InputStream file = new FileInputStream(persistentCommittedDataPath + "m_name");
+	            ObjectInputStream inputStream = new ObjectInputStream(file)
+        ) {
+            m_data.clear();
+	        RMHashMap data = (RMHashMap) inputStream.readObject();
+	        m_data.putAll(data);
+        }
+        catch (IOException e) {
+            // If this happens, then there is no data to read
+        } catch (ClassNotFoundException e) {
+            // Should never get called
+        }
+    }
 
 	protected IResourceManager middleware;
 
@@ -91,21 +111,21 @@ public class ResourceManager implements IResourceManager
 	// Reads a data item
 	protected RMItem readData(int xid, String key)
 	{
-		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data));
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid));
 		return transactionData.readItem(key);
 	}
 
 	// Writes a data item
 	protected void writeData(int xid, String key, RMItem value)
 	{
-		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data));
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid));
 		transactionData.addItem(key, value);
 	}
 
 	// Remove the item out of storage
 	protected void removeData(int xid, String key)
 	{
-		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data));
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid));
 		transactionData.deleteItem(key);
 
 	}
