@@ -1,8 +1,12 @@
 package Client;
 
 public enum Command {
-	Help("List all available commands", "[CommandName]"),
+        /* Crashes */
+        ResetCrashes("Reset all enabled crashes", ""),
+        CrashMiddleware("Enable a crash mode at the middleware", "<Mode>"),
+        CrashResourceManager("Enable a crash mode at the resource managers", "<Mode>"),
 
+	Help("List all available commands", "[CommandName]"), 
 	Start("Start a transaction", ""),
         StartID("Start a transaction with given id", "<xid>"),
 	Commit("Commit a transaction", "<xid>"),

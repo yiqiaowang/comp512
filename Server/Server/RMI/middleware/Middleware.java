@@ -4,6 +4,8 @@ import Server.Common.Car;
 import Server.Common.Flight;
 import Server.Common.Room;
 import Server.Common.PeerStatus;
+import Server.Common.CrashModes;
+import Server.Common.ChaosMonkey;
 import Server.Interface.IResourceManager;
 import Server.Interface.InvalidTransactionException;
 import Server.RMI.RMIMiddleware;
@@ -22,6 +24,7 @@ public class Middleware implements IResourceManager {
     private static final String name = "Middleware";
 
     // Failure Detection of resource managers
+    protected ChaosMonkey chaosMonkey = new ChaosMonkey();
     private HashMap<IResourceManager, PeerStatus> resourceManagerStatus = new HashMap<>();
     private ArrayList<IResourceManager> failedPeers = new ArrayList<>();
 
@@ -48,7 +51,7 @@ public class Middleware implements IResourceManager {
         this.resourceManagerStatus.put(this.customersResourceManager,
                 new PeerStatus());
 
-        
+
         // Start health checks here
         Thread checkForFailures = new Thread(() -> {
             while (true) {
@@ -566,4 +569,57 @@ public class Middleware implements IResourceManager {
     public boolean isAlive() throws RemoteException { 
         return true;
     }
+    @Override
+    public void resetCrashes() throws RemoteException {
+        this.chaosMonkey.disableAll();
+    }
+
+    @Override
+    public void crashMiddleware(int mode) throws RemoteException {
+        CrashModes cmode = CrashModes.INVALID;
+        switch (mode) {
+            case 1: cmode = CrashModes.T_ONE;
+                    break;
+            case 2: cmode = CrashModes.T_TWO;
+                    break;
+            case 3: cmode = CrashModes.T_THREE;
+                    break;
+            case 4: cmode = CrashModes.T_FOUR;
+                    break;
+            case 5: cmode = CrashModes.T_FIVE;
+                    break;
+            case 6: cmode = CrashModes.T_SIX;
+                    break;
+            case 7: cmode = CrashModes.T_SEVEN;
+                    break;
+            case 8: cmode = CrashModes.T_EIGHT;
+                    break;
+        }
+        this.chaosMonkey.enableCrashMode(cmode);
+    }
+
+    @Override
+    public void crashResourceManager(String name, int mode) throws RemoteException {
+        // TODO: Perhaps fix the names not sure how this is supposed to work..
+        if (name.equals(flightsResourceManager.getName())) {
+            flightsResourceManager.crashResourceManager(name, mode);
+        }
+        else if (name.equals(carsResourceManager.getName())){
+                carsResourceManager.crashResourceManager(name, mode);
+        }
+        else if (name.equals(roomsResourceManager.getName())) {
+                roomsResourceManager.crashResourceManager(name, mode);
+        }
+        else if (name.equals(customersResourceManager.getName())) {
+                customersResourceManager.crashResourceManager(name, mode);
+        } else {
+            System.out.println("Could not find resource manager: " + name);
+        }
+    }
+
+    // @Override
+    // public boolean prepare(int xid) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+    //     // TODO
+    //     return false;
+    // }
 }

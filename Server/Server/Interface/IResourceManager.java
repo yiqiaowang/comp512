@@ -221,4 +221,12 @@ public interface IResourceManager extends Remote
 
     boolean isAlive() throws RemoteException;
     void startFailureDetector(String host, int port) throws RemoteException, NotBoundException;
+    
+    /* Crashes */
+    void resetCrashes() throws RemoteException;
+    void crashMiddleware(int mode) throws RemoteException;
+    void crashResourceManager(String name, int mode) throws RemoteException;
+
+    /* 2-Phase Commit */
+    // boolean prepare(int xid) throws RemoteException, TransactionAbortedException, InvalidTransactionException;
 }

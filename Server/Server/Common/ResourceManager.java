@@ -19,6 +19,7 @@ public class ResourceManager implements IResourceManager
      */
 
 
+    protected ChaosMonkey chaosMonkey = new ChaosMonkey();
     protected RMFailureDetector failureDetector;
 
     protected static String s_rmiPrefix = "groupFive_";
@@ -514,5 +515,39 @@ public class ResourceManager implements IResourceManager
             Thread t = new Thread(this.failureDetector);
             t.start();
         }
+        
+        @Override
+        public void resetCrashes() throws RemoteException {
+            this.chaosMonkey.disableAll();
+        }
+
+        @Override
+        public void crashMiddleware(int mode) throws RemoteException {
+            System.out.println("Crash middleware should not be called at the resource managers!");
+        }
+
+        @Override
+        public void crashResourceManager(String name, int mode) throws RemoteException {
+            CrashModes cmode = CrashModes.INVALID;
+            switch (mode) {
+                case 1: cmode = CrashModes.R_ONE;
+                        break;
+                case 2: cmode = CrashModes.R_TWO;
+                        break;
+                case 3: cmode = CrashModes.R_THREE;
+                        break;
+                case 4: cmode = CrashModes.R_FOUR;
+                        break;
+                case 5: cmode = CrashModes.R_FIVE;
+                        break;
+            }
+            this.chaosMonkey.enableCrashMode(cmode);
+        }
+
+        // @Override
+        // public boolean prepare(int xid) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
+        //     // TODO
+        //     return false;
+        // }
 }
  

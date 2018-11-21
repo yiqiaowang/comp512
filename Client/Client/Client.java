@@ -8,9 +8,7 @@ import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.ConnectException;
 import java.rmi.ServerException;
-import java.rmi.UnmarshalException;
-
-public abstract class Client
+import java.rmi.UnmarshalException; public abstract class Client
 {
 	IResourceManager m_resourceManager = null;
 
@@ -71,6 +69,37 @@ public abstract class Client
 	public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException, InvalidTransactionException {
 		switch (cmd)
 		{
+
+                    /* Crashes */
+                    case ResetCrashes: {
+                                           if (arguments.size() != 1) {
+                                               System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of ResetCrashes command.");
+                                           } else {
+                                               m_resourceManager.resetCrashes();
+                                           }
+                                           break;
+                    }
+                    case CrashMiddleware: {
+                                              if (arguments.size() != 2) {
+                                                  System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of CrashMiddleware command.");
+                                              } else {
+                                                  int mode = toInt(arguments.elementAt(1));
+                                                  m_resourceManager.crashMiddleware(mode);
+                                                  System.out.println("Enabled crash mode: " + mode);
+                                              }
+                                              break;
+                    }
+                    case CrashResourceManager: {
+                                              if (arguments.size() != 3) {
+                                                  System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mImproper use of CrashResourceManager command.");
+                                              } else {
+                                                  String name = arguments.elementAt(1);
+                                                  int mode = toInt(arguments.elementAt(2));
+                                                  m_resourceManager.CrashResourceManager(name, mode);
+                                                  System.out.println("Enabled crash mode: " + mode + " at " +name);
+                                              }
+                                              break;
+                    }
 			case Help:
 			{
 				if (arguments.size() == 1) {
