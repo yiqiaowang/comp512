@@ -1,8 +1,10 @@
 package Server.Transaction;
 
+import Server.Interface.InvalidTransactionException;
 import Server.LockManager.DeadlockException;
 import Server.LockManager.LockManager;
 
+import java.io.*;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,12 +12,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TransactionManager {
-    private final Map<Integer, Transaction> transactions = new ConcurrentHashMap<>();
-    private final AtomicInteger transactionIdGenerator = new AtomicInteger(0);
-    private final LockManager lockManager = new LockManager();
+public class TransactionManager implements Serializable {
+    private Map<Integer, Transaction> transactions;
+    private AtomicInteger transactionIdGenerator;
+    private LockManager lockManager;
 
-    public TransactionManager() {
+    private static final String ACTIVE_TRANSACTIONS_LOG = "./middleware_active_transactions";
+
+    private void startCheckForTimeouts() {
         Thread checkForTimeouts = new Thread(() -> {
             while (true) {
                 try {
@@ -36,9 +40,43 @@ public class TransactionManager {
                     System.out.println("Transaction " + timedOutTransactionId + " has timed out");
                     abort(timedOutTransactionId);
                 }
+
+                if (timedOutTransactionIds.size() > 0) {
+                    persistActiveTransactions();
+                }
             }
         });
         checkForTimeouts.start();
+    }
+
+
+    public static TransactionManager initialize() {
+        System.out.println("Initialize transaction manager called");
+
+        TransactionManager transactionManager;
+
+        try (
+                InputStream file = new FileInputStream(ACTIVE_TRANSACTIONS_LOG);
+                ObjectInputStream inputStream = new ObjectInputStream(file)
+        ) {
+            System.out.println("Created and returning transaction manager object from file");
+            transactionManager = (TransactionManager) inputStream.readObject();
+        }
+        // TODO: Log any errors or handle them
+        catch (IOException e) {
+            // If this happens, then there is no data to read. Initialize with default values
+            transactionManager = new TransactionManager();
+            transactionManager.lockManager = new LockManager();
+            transactionManager.transactionIdGenerator = new AtomicInteger(0);
+            transactionManager.transactions = new ConcurrentHashMap<>();
+        } catch (ClassNotFoundException e) {
+            // Should never happen
+            return null;
+        }
+
+        transactionManager.startCheckForTimeouts();
+
+        return transactionManager;
     }
 
 
@@ -46,6 +84,8 @@ public class TransactionManager {
         int transactionId = transactionIdGenerator.incrementAndGet();
         Transaction transaction = new Transaction(transactionId);
         transactions.put(transactionId, transaction);
+
+        persistActiveTransactions();
 
         return transactionId;
     }
@@ -73,15 +113,19 @@ public class TransactionManager {
                     if (!lockAcquired) {
                         System.out.println("Failed to acquire " + resourceLockRequest.getLockType() + " on " + resourceLockRequest.getResourceName());
                         abort(transactionId);
-                        return false;
+                        break;
                     }
                 } catch (DeadlockException e) {
                     System.out.println("Failed to acquire " + resourceLockRequest.getLockType() + " on " + resourceLockRequest.getResourceName() + " because of deadlock");
                     abort(transactionId);
-                    return false;
+                    break;
                 }
 
                 transaction.addResourceManager(resourceLockRequest.getResourceManager(), resourceLockRequest.getResourceName());
+            }
+
+            if (resourceLockRequests.length > 0) {
+                persistActiveTransactions();
             }
 
             return true;
@@ -99,6 +143,8 @@ public class TransactionManager {
         transactions.remove(transactionId);
         lockManager.UnlockAll(transactionId);
 
+        persistActiveTransactions();
+
         return commitResult;
     }
 
@@ -112,6 +158,8 @@ public class TransactionManager {
         transaction.abort();
         transactions.remove(transactionId);
         lockManager.UnlockAll(transactionId);
+
+        persistActiveTransactions();
     }
 
     public boolean isOngoingTransaction(int transactionId) {
@@ -122,9 +170,60 @@ public class TransactionManager {
         if (!isOngoingTransaction(transactionId)) {
             Transaction transaction = new Transaction(transactionId);
             transactions.put(transactionId, transaction);
+
+            persistActiveTransactions();
             return true;
         } else {
             return false;
         }
+    }
+
+    private void writeObject(ObjectOutputStream outputStream) throws IOException {
+        outputStream.writeInt(transactionIdGenerator.get());
+        outputStream.writeInt(transactions.size());
+
+        for (Map.Entry<Integer, Transaction> transactionEntry : transactions.entrySet()) {
+            outputStream.writeInt(transactionEntry.getKey());
+            outputStream.writeObject(transactionEntry.getValue());
+        }
+
+        outputStream.writeObject(lockManager);
+    }
+
+    private void readObject(ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
+        transactionIdGenerator = new AtomicInteger(inputStream.readInt());
+
+        int numTransactions = inputStream.readInt();
+        transactions = new ConcurrentHashMap<>();
+
+        for (int i = 0; i < numTransactions; i++) {
+            int transactionId = inputStream.readInt();
+            Transaction transaction = (Transaction) inputStream.readObject();
+            transactions.put(transactionId, transaction);
+        }
+
+        lockManager = (LockManager) inputStream.readObject();
+
+
+    }
+
+    public synchronized void persistActiveTransactions() {
+        try (
+                OutputStream file = new FileOutputStream(ACTIVE_TRANSACTIONS_LOG);
+                ObjectOutputStream outputStream = new ObjectOutputStream(file)
+        ) {
+            outputStream.writeObject(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean prepare(int transactionId) throws RemoteException, InvalidTransactionException {
+        Transaction transaction = transactions.get(transactionId);
+        if (transaction == null) {
+            throw new InvalidTransactionException(transactionId);
+        }
+
+        return transaction.checkForCommit();
     }
 }

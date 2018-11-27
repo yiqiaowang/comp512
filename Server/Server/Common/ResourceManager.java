@@ -6,6 +6,7 @@
 package Server.Common;
 
 import Server.Interface.IResourceManager;
+import Server.Interface.InvalidTransactionException;
 
 import java.io.*;
 import java.rmi.RemoteException;
@@ -40,11 +41,16 @@ public class ResourceManager implements IResourceManager
 
         if (transactionsInProgress.size() > 0) {
 	        // TODO: Handle previous, uncommitted transactions (either abort or commit)
+			transactionsInProgress.forEach((transactionId, transactionInProgress) -> {
+
+			});
         }
+
+        readCommittedData();
     }
 
 	private Map<Integer, TransactionHandler> loadPreviousTransactionData() {
-	    File directory = new File(TransactionHandler.DATA_PATH);
+	    File directory = new File(TransactionHandler.DATA_PATH + m_name);
 	    File[] transactionsInProgress = directory.listFiles();
 
 	    if (transactionsInProgress == null) {
@@ -74,24 +80,29 @@ public class ResourceManager implements IResourceManager
 
     private synchronized void writeCommittedData() {
         try (
-            OutputStream file = new FileOutputStream(persistentCommittedDataPath + "m_name");
+            OutputStream file = new FileOutputStream(persistentCommittedDataPath + m_name);
             ObjectOutputStream outputStream = new ObjectOutputStream(file)
         ) {
             outputStream.writeObject(m_data);
+            outputStream.writeObject(uncommittedTransactions);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    @SuppressWarnings("unchecked")
     private synchronized void readCommittedData() {
 	    try (
-	            InputStream file = new FileInputStream(persistentCommittedDataPath + "m_name");
+	            InputStream file = new FileInputStream(persistentCommittedDataPath + m_name);
 	            ObjectInputStream inputStream = new ObjectInputStream(file)
         ) {
-            m_data.clear();
 	        RMHashMap data = (RMHashMap) inputStream.readObject();
-	        m_data.putAll(data);
+            m_data.putAll(data);
+
+	        Map<Integer, TransactionHandler> transactions = (Map<Integer, TransactionHandler>) inputStream.readObject();
+	        uncommittedTransactions.putAll(transactions);
         }
+        // TODO: Log any errors or handle them
         catch (IOException e) {
             // If this happens, then there is no data to read
         } catch (ClassNotFoundException e) {
@@ -107,26 +118,27 @@ public class ResourceManager implements IResourceManager
 	public ResourceManager(String p_name)
 	{
 		m_name = p_name;
+		startup();
 	}
 
 	// Reads a data item
 	protected RMItem readData(int xid, String key)
 	{
-		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid));
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid, m_name));
 		return transactionData.readItem(key);
 	}
 
 	// Writes a data item
 	protected void writeData(int xid, String key, RMItem value)
 	{
-		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid));
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid, m_name));
 		transactionData.addItem(key, value);
 	}
 
 	// Remove the item out of storage
 	protected void removeData(int xid, String key)
 	{
-		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid));
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid, m_name));
 		transactionData.deleteItem(key);
 
 	}
@@ -500,54 +512,59 @@ public class ResourceManager implements IResourceManager
 			return false;
 		}
 
-		transactionHandler.commit();
+		boolean result = transactionHandler.commit();
+		writeCommittedData();
+
+		return result;
+	}
+
+	@Override
+	public boolean isAlive() throws RemoteException {
 		return true;
 	}
 
 	@Override
-        public boolean isAlive() throws RemoteException { 
-            return true;
-        }
-
-        @Override
-        public void startFailureDetector(String server, int port) {
-            this.failureDetector = new RMFailureDetector(server, port);
-            Thread t = new Thread(this.failureDetector);
-            t.start();
-        }
+	public void startFailureDetector(String server, int port) {
+		this.failureDetector = new RMFailureDetector(server, port);
+		Thread t = new Thread(this.failureDetector);
+		t.start();
+	}
         
-        @Override
-        public void resetCrashes() throws RemoteException {
-            this.chaosMonkey.disableAll();
-        }
+	@Override
+	public void resetCrashes() throws RemoteException {
+		this.chaosMonkey.disableAll();
+	}
 
-        @Override
-        public void crashMiddleware(int mode) throws RemoteException {
-            System.out.println("Crash middleware should not be called at the resource managers!");
-        }
+	@Override
+	public void crashMiddleware(int mode) throws RemoteException {
+		System.out.println("Crash middleware should not be called at the resource managers!");
+	}
 
-        @Override
-        public void crashResourceManager(String name, int mode) throws RemoteException {
-            CrashModes cmode = CrashModes.INVALID;
-            switch (mode) {
-                case 1: cmode = CrashModes.R_ONE;
-                        break;
-                case 2: cmode = CrashModes.R_TWO;
-                        break;
-                case 3: cmode = CrashModes.R_THREE;
-                        break;
-                case 4: cmode = CrashModes.R_FOUR;
-                        break;
-                case 5: cmode = CrashModes.R_FIVE;
-                        break;
-            }
-            this.chaosMonkey.enableCrashMode(cmode);
-        }
+	@Override
+	public void crashResourceManager(String name, int mode) throws RemoteException {
+		CrashModes cmode = CrashModes.INVALID;
+		switch (mode) {
+			case 1: cmode = CrashModes.R_ONE;
+					break;
+			case 2: cmode = CrashModes.R_TWO;
+					break;
+			case 3: cmode = CrashModes.R_THREE;
+					break;
+			case 4: cmode = CrashModes.R_FOUR;
+					break;
+			case 5: cmode = CrashModes.R_FIVE;
+					break;
+		}
+		this.chaosMonkey.enableCrashMode(cmode);
+	}
 
-        // @Override
-        // public boolean prepare(int xid) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
-        //     // TODO
-        //     return false;
-        // }
+	@Override
+	public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {
+		TransactionHandler transaction = uncommittedTransactions.get(xid);
+		if (transaction == null) {
+			return false;
+		}
+		return transaction.vote();
+	}
 }
  

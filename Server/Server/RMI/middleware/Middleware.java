@@ -33,7 +33,10 @@ public class Middleware implements IResourceManager {
     private final IResourceManager roomsResourceManager;
 
     private final ICustomerResourceManager customersResourceManager;
-    private final TransactionManager transactionManager = new TransactionManager();
+    private final TransactionManager transactionManager = TransactionManager.initialize();
+
+    // TODO: Store set of committed transactions
+    private final Set<Integer> committedTransactions = new HashSet<>();
 
 
     public Middleware(IResourceManager flightsResourceManager, IResourceManager carsResourceManager, IResourceManager roomsResourceManager, ICustomerResourceManager customersResourceManager) {
@@ -550,7 +553,20 @@ public class Middleware implements IResourceManager {
 
     @Override
     public boolean commit(int xid) throws RemoteException {
-        return transactionManager.commit(xid);
+        try {
+            if (prepare(xid)) {
+                transactionManager.commit(xid);
+                synchronized (committedTransactions) {
+                    committedTransactions.add(xid);
+                }
+                return true;
+            }
+        } catch (InvalidTransactionException | RemoteException e) {
+
+        }
+
+        transactionManager.abort(xid);
+        return false;
     }
 
     @Override
@@ -617,9 +633,26 @@ public class Middleware implements IResourceManager {
         }
     }
 
-    // @Override
-    // public boolean prepare(int xid) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
-    //     // TODO
-    //     return false;
-    // }
+    public boolean transactionCommitted(int xid) throws RemoteException {
+        return committedTransactions.contains(xid);
+    }
+
+
+     @Override
+     public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {
+        int numTimeouts = 5;
+        for (int i = 0; i < numTimeouts; i++) {
+            try {
+                return transactionManager.prepare(xid);
+            } catch (RemoteException e) {
+                try {
+                    Thread.sleep(10 * 1000);
+                } catch (InterruptedException e1) {
+                    return false;
+                }
+            }
+        }
+
+        return false;
+     }
 }

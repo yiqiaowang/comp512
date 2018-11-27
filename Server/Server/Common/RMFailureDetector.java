@@ -13,7 +13,8 @@ class RMFailureDetector implements Runnable {
     private int port;
     private boolean isEnabled = true;
     private boolean detectedFailure = false;
-    private IResourceManager middleware; 
+    private IResourceManager middleware;
+
 
     public RMFailureDetector(String server, int port) { 
         this.server = server;

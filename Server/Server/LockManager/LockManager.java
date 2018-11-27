@@ -2,11 +2,12 @@ package Server.LockManager;
 
 import Server.Common.Trace;
 
+import java.io.Serializable;
 import java.util.BitSet;
 import java.util.Objects;
 import java.util.Vector;
 
-public class LockManager
+public class LockManager implements Serializable
 {
 	private static int TABLE_SIZE = 2039;
 	private static int DEADLOCK_TIMEOUT = 10000;
@@ -64,7 +65,6 @@ public class LockManager
 						}
 
 						if (bConvert.get(0)) {
-							//TODO: Lock conversion
                             // remove read lock and add write lock
                             lockTable.remove(new TransactionLockObject(xid, data, TransactionLockObject.LockType.LOCK_READ));
                             lockTable.remove(new DataLockObject(xid, data, TransactionLockObject.LockType.LOCK_READ));
@@ -246,7 +246,6 @@ public class LockManager
 					{
 					    bitset.set(0);
                     }
-					//TODO: Lock conversion
 				}
 			} 
 			else if (dataLockObject.getLockType() == TransactionLockObject.LockType.LOCK_READ)

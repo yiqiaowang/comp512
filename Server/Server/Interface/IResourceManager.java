@@ -1,5 +1,6 @@
 package Server.Interface;
 
+import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
@@ -22,7 +23,7 @@ import java.util.*;
  * has succeeded.
  */
 
-public interface IResourceManager extends Remote 
+public interface IResourceManager extends Remote, Serializable
 {
     /**
      * Add seats to a flight.
@@ -229,4 +230,8 @@ public interface IResourceManager extends Remote
 
     /* 2-Phase Commit */
     // boolean prepare(int xid) throws RemoteException, TransactionAbortedException, InvalidTransactionException;
+
+
+
+    boolean prepare(int xid) throws RemoteException, InvalidTransactionException;
 }

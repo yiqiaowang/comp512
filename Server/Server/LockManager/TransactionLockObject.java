@@ -1,8 +1,10 @@
 package Server.LockManager;
 
+import java.io.Serializable;
+
 public class TransactionLockObject extends TransactionObject
 {
-	public enum LockType {
+	public enum LockType implements Serializable {
 		LOCK_READ,
 		LOCK_WRITE,
 		LOCK_UNKNOWN

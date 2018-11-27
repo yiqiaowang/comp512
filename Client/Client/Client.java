@@ -8,7 +8,9 @@ import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.ConnectException;
 import java.rmi.ServerException;
-import java.rmi.UnmarshalException; public abstract class Client
+import java.rmi.UnmarshalException;
+
+public abstract class Client
 {
 	IResourceManager m_resourceManager = null;
 
@@ -95,7 +97,7 @@ import java.rmi.UnmarshalException; public abstract class Client
                                               } else {
                                                   String name = arguments.elementAt(1);
                                                   int mode = toInt(arguments.elementAt(2));
-                                                  m_resourceManager.CrashResourceManager(name, mode);
+                                                  m_resourceManager.crashResourceManager(name, mode);
                                                   System.out.println("Enabled crash mode: " + mode + " at " +name);
                                               }
                                               break;
