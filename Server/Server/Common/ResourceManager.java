@@ -20,8 +20,8 @@ public class ResourceManager implements IResourceManager
      */
 
 
-    protected ChaosMonkey chaosMonkey = new ChaosMonkey();
-    protected RMFailureDetector failureDetector;
+    protected transient ChaosMonkey chaosMonkey = new ChaosMonkey();
+    protected transient RMFailureDetector failureDetector;
 
     protected static String s_rmiPrefix = "groupFive_";
 
@@ -29,24 +29,21 @@ public class ResourceManager implements IResourceManager
 
 
     protected String m_name = "";
-	protected final RMHashMap m_data = new RMHashMap();
-	protected final Map<Integer, TransactionHandler> uncommittedTransactions = new ConcurrentHashMap<>();
+	protected RMHashMap m_data = new RMHashMap();
+	protected Map<Integer, TransactionHandler> uncommittedTransactions = new ConcurrentHashMap<>();
 
 
 	private void startup() {
-	    m_data.clear();
-	    uncommittedTransactions.clear();
+        readPersistedData();
 
-        Map<Integer, TransactionHandler> transactionsInProgress = loadPreviousTransactionData();
+		System.out.println("uncommitted transactions are " + uncommittedTransactions);
 
-        if (transactionsInProgress.size() > 0) {
-	        // TODO: Handle previous, uncommitted transactions (either abort or commit)
-			transactionsInProgress.forEach((transactionId, transactionInProgress) -> {
+		if (uncommittedTransactions.size() > 0) {
+			// TODO: Handle previous, uncommitted transactions (either abort or commit)
+			for (TransactionHandler transactionHandler : uncommittedTransactions.values()) {
 
-			});
-        }
-
-        readCommittedData();
+			}
+		}
     }
 
 	private Map<Integer, TransactionHandler> loadPreviousTransactionData() {
@@ -78,41 +75,41 @@ public class ResourceManager implements IResourceManager
         return uncommittedTransactions;
     }
 
-    private synchronized void writeCommittedData() {
+    private synchronized void persistData() {
+		System.out.println("Persisting data");
         try (
             OutputStream file = new FileOutputStream(persistentCommittedDataPath + m_name);
             ObjectOutputStream outputStream = new ObjectOutputStream(file)
         ) {
-            outputStream.writeObject(m_data);
-            outputStream.writeObject(uncommittedTransactions);
+            outputStream.writeObject(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     @SuppressWarnings("unchecked")
-    private synchronized void readCommittedData() {
+    private synchronized void readPersistedData() {
 	    try (
 	            InputStream file = new FileInputStream(persistentCommittedDataPath + m_name);
 	            ObjectInputStream inputStream = new ObjectInputStream(file)
         ) {
-	        RMHashMap data = (RMHashMap) inputStream.readObject();
-            m_data.putAll(data);
-
-	        Map<Integer, TransactionHandler> transactions = (Map<Integer, TransactionHandler>) inputStream.readObject();
-	        uncommittedTransactions.putAll(transactions);
+	        ResourceManager resourceManager = (ResourceManager) inputStream.readObject();
+	        uncommittedTransactions = resourceManager.uncommittedTransactions;
+	        m_data = resourceManager.m_data;
         }
         // TODO: Log any errors or handle them
         catch (IOException e) {
             // If this happens, then there is no data to read
         } catch (ClassNotFoundException e) {
             // Should never get called
+			System.out.println("Class not found exception in readPersistedData: ");
+			e.printStackTrace();
         }
     }
 
-	protected IResourceManager middleware;
+	protected transient IResourceManager middleware;
 
-	private final Object createCustomerLock = new Object();
+	private final transient Object createCustomerLock = new Object();
 
 
 	public ResourceManager(String p_name)
@@ -121,25 +118,36 @@ public class ResourceManager implements IResourceManager
 		startup();
 	}
 
+
 	// Reads a data item
 	protected RMItem readData(int xid, String key)
 	{
-		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid, m_name));
+		boolean[] wasModified = new boolean[] {false};
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> {
+			wasModified[0] = true;
+			return new TransactionHandler(m_data, xid);
+		});
+		if (wasModified[0]) {
+			persistData();
+		}
+
 		return transactionData.readItem(key);
 	}
 
 	// Writes a data item
 	protected void writeData(int xid, String key, RMItem value)
 	{
-		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid, m_name));
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid));
 		transactionData.addItem(key, value);
+		persistData();
 	}
 
 	// Remove the item out of storage
 	protected void removeData(int xid, String key)
 	{
-		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid, m_name));
+		TransactionHandler transactionData = uncommittedTransactions.computeIfAbsent(xid, k -> new TransactionHandler(m_data, xid));
 		transactionData.deleteItem(key);
+        persistData();
 
 	}
 
@@ -160,6 +168,7 @@ public class ResourceManager implements IResourceManager
 			{
 				removeData(xid, curObj.getKey());
 				Trace.info("RM::deleteItem(" + xid + ", " + key + ") item deleted");
+                persistData();
 				return true;
 			}
 			else
@@ -492,6 +501,7 @@ public class ResourceManager implements IResourceManager
 	@Override
 	public void abort(int xid) throws RemoteException {
 		uncommittedTransactions.remove(xid);
+		persistData();
 	}
 
 	@Override
@@ -508,12 +518,16 @@ public class ResourceManager implements IResourceManager
 	public boolean commit(int xid) throws RemoteException {
 		TransactionHandler transactionHandler = uncommittedTransactions.remove(xid);
 
+		System.out.println("transaction handler is " + transactionHandler);
+
 		if (transactionHandler == null) {
 			return false;
 		}
 
 		boolean result = transactionHandler.commit();
-		writeCommittedData();
+
+		System.out.println("m_data is now " + m_data);
+        persistData();
 
 		return result;
 	}

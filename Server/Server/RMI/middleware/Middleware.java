@@ -553,17 +553,19 @@ public class Middleware implements IResourceManager {
 
     @Override
     public boolean commit(int xid) throws RemoteException {
+        System.out.println("Commit " + xid + " called");
         try {
             if (prepare(xid)) {
-                transactionManager.commit(xid);
+                System.out.println("prepare = true");
                 synchronized (committedTransactions) {
                     committedTransactions.add(xid);
                 }
+                transactionManager.commit(xid);
                 return true;
             }
-        } catch (InvalidTransactionException | RemoteException e) {
+        } catch (InvalidTransactionException ignored) { /* Never gets caught - the exception is caught in prepare() */ }
 
-        }
+        System.out.println("prepare = false");
 
         transactionManager.abort(xid);
         return false;
@@ -644,7 +646,7 @@ public class Middleware implements IResourceManager {
         for (int i = 0; i < numTimeouts; i++) {
             try {
                 return transactionManager.prepare(xid);
-            } catch (RemoteException e) {
+            } catch (RemoteException | InvalidTransactionException e) {
                 try {
                     Thread.sleep(10 * 1000);
                 } catch (InterruptedException e1) {

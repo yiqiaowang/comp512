@@ -11,7 +11,6 @@ class TransactionHandler implements Serializable {
     private final Set<String> deletedItems = new HashSet<>();
     private final RMHashMap resourceData;
     private final int transactionId;
-    private final String resourceName;
 
     private volatile boolean receivedVoteRequest = false;
     private volatile boolean sentResponse = false;
@@ -21,10 +20,9 @@ class TransactionHandler implements Serializable {
 
     public static final String DATA_PATH = "./transaction_data/";
 
-    TransactionHandler(RMHashMap resourceData, int transactionId, String resourceName) {
+    TransactionHandler(RMHashMap resourceData, int transactionId) {
         this.resourceData = resourceData;
         this.transactionId = transactionId;
-        this.resourceName = resourceName;
     }
 
     public int getTransactionId() {
@@ -51,17 +49,11 @@ class TransactionHandler implements Serializable {
     synchronized void addItem(String key, RMItem value) {
         addedItems.put(key, value);
         deletedItems.remove(key);
-
-        persist();
     }
 
     synchronized void deleteItem(String key) {
-        boolean modified = deletedItems.add(key);
-        RMItem valueRemoved = addedItems.remove(key);
-
-        if (modified || valueRemoved != null) {
-            persist();
-        }
+        deletedItems.add(key);
+        addedItems.remove(key);
     }
 
     synchronized boolean commit() {
@@ -74,33 +66,13 @@ class TransactionHandler implements Serializable {
             resourceData.putAll(addedItems);
         }
 
-        delete();
+        System.out.println("Resource data is now " + resourceData);
+
 
         return true;
     }
 
 
-    private String getPath() {
-        return DATA_PATH + resourceName + "/transaction_" + transactionId;
-    }
-
-    private void delete() {
-        File file = new File(getPath());
-        file.delete();
-    }
-
-
-    private void persist() {
-        try (
-                OutputStream file = new FileOutputStream(getPath());
-                ObjectOutputStream outputStream = new ObjectOutputStream(file)
-        ) {
-            outputStream.writeObject(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-            // TODO: Handle this error (or at least report it)
-        }
-    }
 
     /**
      * This method is called when a resource manager is asked to vote on a transaction.
@@ -118,5 +90,19 @@ class TransactionHandler implements Serializable {
 
         sentResponse = true;
         return vote == COMMIT;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionHandler{\n" +
+                "addedItems=" + addedItems +
+                "\n, deletedItems=" + deletedItems +
+                "\n, resourceData=" + resourceData +
+                "\n, transactionId=" + transactionId +
+                "\n, receivedVoteRequest=" + receivedVoteRequest +
+                "\n, sentResponse=" + sentResponse +
+                "\n, vote=" + vote +
+                "\n, finalDecision=" + finalDecision +
+                "\n}";
     }
 }

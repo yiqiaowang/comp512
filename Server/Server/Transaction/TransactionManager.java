@@ -71,6 +71,8 @@ public class TransactionManager implements Serializable {
             transactionManager.transactions = new ConcurrentHashMap<>();
         } catch (ClassNotFoundException e) {
             // Should never happen
+            System.out.println("Class not found exception happened in Transaction Manager's initialize: ");
+            e.printStackTrace();
             return null;
         }
 

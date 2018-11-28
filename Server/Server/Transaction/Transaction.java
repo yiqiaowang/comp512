@@ -8,7 +8,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,6 +20,8 @@ public class Transaction implements Serializable {
 
     private int transactionId;
     private Map<String, IResourceManager> resourceManagersInvolved;
+    private Set<String> resourceManagersThatVoted;
+
     private AtomicBoolean isAborted = new AtomicBoolean(false);
 
     private AtomicLong lastOperationTimestamp = new AtomicLong();
@@ -32,6 +36,7 @@ public class Transaction implements Serializable {
 
     private void setup() {
         resourceManagersInvolved = new ConcurrentHashMap<>();
+        resourceManagersThatVoted = new HashSet<>();
         isAborted = new AtomicBoolean(false);
         lastOperationTimestamp = new AtomicLong();
         lock = new Object();
@@ -110,6 +115,10 @@ public class Transaction implements Serializable {
             outputStream.writeObject(resourceManagerEntry.getValue());
         }
 
+        outputStream.writeInt(resourceManagersThatVoted.size());
+        for (String resourceManager : resourceManagersThatVoted) {
+            outputStream.writeUTF(resourceManager);
+        }
     }
 
     private void readObject(ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
@@ -126,13 +135,20 @@ public class Transaction implements Serializable {
             String resourceManagerName = inputStream.readUTF();
             resourceManagersInvolved.put(resourceManagerName, (IResourceManager) inputStream.readObject());
         }
+
+        int numAlreadyVoted = inputStream.readInt();
+        for (int i = 0; i < numAlreadyVoted; i++) {
+            resourceManagersThatVoted.add(inputStream.readUTF());
+        }
     }
 
     public boolean checkForCommit() throws InvalidTransactionException, RemoteException {
         if (isAborted.get()) return false;
 
-        for (IResourceManager resourceManager : resourceManagersInvolved.values()) {
-            if (!resourceManager.prepare(transactionId)) {
+        for (Map.Entry<String, IResourceManager> resourceManagerEntry : resourceManagersInvolved.entrySet()) {
+            boolean notVoted = resourceManagersThatVoted.add(resourceManagerEntry.getKey());
+
+            if (notVoted && !resourceManagerEntry.getValue().prepare(transactionId)) {
                 abort();
                 return false;
             }
