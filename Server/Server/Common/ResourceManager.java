@@ -516,6 +516,10 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public boolean commit(int xid) throws RemoteException {
+
+		// Resource manager crash mode 4
+		this.chaosMonkey.crashIfEnabled(CrashModes.R_FOUR);
+
 		TransactionHandler transactionHandler = uncommittedTransactions.remove(xid);
 
 		System.out.println("transaction handler is " + transactionHandler);
@@ -574,10 +578,24 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {
+		
+		/* Crash mode 1 at resource manager */
+		this.chaosMonkey.crashIfEnabled(CrashModes.R_ONE);
+		
 		TransactionHandler transaction = uncommittedTransactions.get(xid);
 		if (transaction == null) {
 			return false;
 		}
+
+		/* Crash mode 3 at resource manager */
+		if (this.chaosMonkey.checkIfEnabled(CrashModes.R_THREE)){
+			Thread asyncDo = new Thread(() -> {
+				Thread.sleep(5000);
+				System.exit(1);
+			});
+			asyncDo.start();
+		}
+
 		return transaction.vote();
 	}
 
