@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransactionManager implements Serializable {
 
-    protected ChaosMonkey chaosMonkey = new ChaosMonkey();
+    public ChaosMonkey chaosMonkey = new ChaosMonkey();
 
     private Map<Integer, Transaction> transactions;
     private AtomicInteger transactionIdGenerator;

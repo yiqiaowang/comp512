@@ -165,7 +165,11 @@ public class Transaction implements Serializable {
             
             if (notVoted) {
                 Thread asyncDo = new Thread(() -> {
-                    resourceManagerEntry.getValue().prepare_crash(transactionId, 10000);
+                    try {
+                        resourceManagerEntry.getValue().prepare_crash(transactionId, 10000);
+                    } catch(Exception e){
+                        e.printStackTrace();
+                    }
                 });
                 asyncDo.start();
                // abort();
@@ -174,6 +178,7 @@ public class Transaction implements Serializable {
         }
 
         System.exit(1);
+        return true;
     }
 
     public boolean checkForCommit_T_THREE() throws InvalidTransactionException, RemoteException {

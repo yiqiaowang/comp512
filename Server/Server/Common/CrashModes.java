@@ -1,6 +1,7 @@
 package Server.Common;
+import java.io.Serializable;
 
-public enum CrashModes {
+public enum CrashModes implements Serializable {
     T_ONE,
     T_TWO,
     T_THREE,

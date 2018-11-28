@@ -13,13 +13,8 @@ class RMFailureDetector implements Runnable {
     private int port;
     private boolean isEnabled = true;
     private boolean detectedFailure = false;
+    private boolean isRunning = false;
     private IResourceManager middleware;
-
-
-    public RMFailureDetector(String server, int port) { 
-        this.server = server;
-        this.port = port;
-    }
 
     public void enable() {
         this.isEnabled = true;
@@ -33,6 +28,19 @@ class RMFailureDetector implements Runnable {
         return this.detectedFailure;
     }
 
+    public boolean isRunning() {
+        return this.isRunning;
+    }
+
+    public void setServer(String server) {
+        this.server = server; 
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+
     public void run() {
         try {
             Registry registry = LocateRegistry.getRegistry(server, port);
@@ -40,10 +48,11 @@ class RMFailureDetector implements Runnable {
         } catch(NotBoundException | RemoteException e){
             e.printStackTrace();
         }
+        this.isRunning = true;
         while (true) {
             try {
                 Thread.sleep(2000);
-                if (this.isEnabled && System.currentTimeMillis() > middlewareStatus.getTTL()) {
+                if (System.currentTimeMillis() > middlewareStatus.getTTL()) {
                     // if the `isAlive' call fails, we go to the first catch block
                     middleware.isAlive();
                     middlewareStatus.setTTL(System.currentTimeMillis() + 1000);
@@ -53,8 +62,10 @@ class RMFailureDetector implements Runnable {
                 }
             } catch(RemoteException e) {
                 this.detectedFailure = true;
-                this.isEnabled = false;
+                // this.isEnabled = false;
                 System.out.println("Failure suspected!");
+                this.isRunning = false;
+                return;
             } catch(InterruptedException e) {
                 return;
             }

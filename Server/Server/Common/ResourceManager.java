@@ -21,7 +21,7 @@ public class ResourceManager implements IResourceManager
 
 
     protected transient ChaosMonkey chaosMonkey = new ChaosMonkey();
-    protected transient RMFailureDetector failureDetector;
+    protected transient RMFailureDetector failureDetector = new RMFailureDetector();
 
     protected static String s_rmiPrefix = "groupFive_";
 
@@ -517,7 +517,9 @@ public class ResourceManager implements IResourceManager
 	@Override
 	public boolean commit(int xid) throws RemoteException {
 
-		// Resource manager crash mode 4
+                // TODO: LOG DECISION TO COMMIT HERE
+		
+                // Resource manager crash mode 4
 		this.chaosMonkey.crashIfEnabled(CrashModes.R_FOUR);
 
 		TransactionHandler transactionHandler = uncommittedTransactions.remove(xid);
@@ -543,10 +545,21 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public void startFailureDetector(String server, int port) {
-		this.failureDetector = new RMFailureDetector(server, port);
+            this.registerFailureDetector(server, port);
+            this.runFailureDetector();
+	}
+
+        private void registerFailureDetector(String server, int port) {
+            this.failureDetector.setServer(server);
+            this.failureDetector.setPort(port);
+        }
+
+        private void runFailureDetector(){ 
+            if (! this.failureDetector.isRunning()) {
 		Thread t = new Thread(this.failureDetector);
 		t.start();
-	}
+            }
+        }
         
 	@Override
 	public void resetCrashes() throws RemoteException {
@@ -588,25 +601,33 @@ public class ResourceManager implements IResourceManager
 		}
 
 		/* Crash mode 3 at resource manager */
-		if (this.chaosMonkey.checkIfEnabled(CrashModes.R_THREE)){
-			Thread asyncDo = new Thread(() -> {
-				Thread.sleep(5000);
-				System.exit(1);
-			});
-			asyncDo.start();
-		}
+                if (this.chaosMonkey.checkIfEnabled(CrashModes.R_THREE)){
+                    Thread asyncDo = new Thread(() -> {
+                        try {
+                            Thread.sleep(50);
+                        } catch(Exception e){
+                            System.exit(1);
+                        }
+                        System.exit(1);
+                    });
+                    asyncDo.start();
+                }
 
 		return transaction.vote();
 	}
 
 	@Override
-	public boolean prepare_crash(int xid, long timeout) throws RemoteException, InvalidTransactionException {
-		Thread.sleep(timeout);
-		TransactionHandler transaction = uncommittedTransactions.get(xid);
-		if (transaction == null) {
-			return false;
-		}
-		return transaction.vote();
-	}
+        public boolean prepare_crash(int xid, long timeout) throws RemoteException, InvalidTransactionException {
+            try {
+                Thread.sleep(timeout);
+            } catch(Exception e){
+                System.exit(1);
+            }
+            TransactionHandler transaction = uncommittedTransactions.get(xid);
+            if (transaction == null) {
+                return false;
+            }
+            return transaction.vote();
+        }
 }
  

@@ -617,19 +617,24 @@ public class Middleware implements IResourceManager {
     @Override
     public void crashResourceManager(String name, int mode) throws RemoteException {
         // TODO: Perhaps fix the names not sure how this is supposed to work..
-        if (name.equals(flightsResourceManager.getName())) {
+        if (name.equals(flightsResourceManager.getName().toLowerCase())) {
             flightsResourceManager.crashResourceManager(name, mode);
         }
-        else if (name.equals(carsResourceManager.getName())){
+        else if (name.equals(carsResourceManager.getName().toLowerCase())){
                 carsResourceManager.crashResourceManager(name, mode);
         }
-        else if (name.equals(roomsResourceManager.getName())) {
+        else if (name.equals(roomsResourceManager.getName().toLowerCase())) {
                 roomsResourceManager.crashResourceManager(name, mode);
         }
-        else if (name.equals(customersResourceManager.getName())) {
+        else if (name.equals(customersResourceManager.getName().toLowerCase())) {
                 customersResourceManager.crashResourceManager(name, mode);
         } else {
             System.out.println("Could not find resource manager: " + name);
+            System.out.println("Available names are");
+            System.out.println(flightsResourceManager.getName());
+            System.out.println(carsResourceManager.getName());
+            System.out.println(roomsResourceManager.getName());
+            System.out.println(customersResourceManager.getName());
         }
     }
 
@@ -638,8 +643,8 @@ public class Middleware implements IResourceManager {
     }
 
 
-     @Override
-     public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {  
+    @Override
+    public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {  
         int numTimeouts = 5;
         for (int i = 0; i < numTimeouts; i++) {
             try {
@@ -655,4 +660,10 @@ public class Middleware implements IResourceManager {
 
         return false;
      }
+
+    @Override
+    public boolean prepare_crash(int xid, long timeout){
+        System.out.println("Prepare crash should not be called at the middleware!");  
+        return false;
+    }
 }

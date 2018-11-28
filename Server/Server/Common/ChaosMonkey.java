@@ -1,8 +1,9 @@
 package Server.Common;
 
 import java.util.*;
+import java.io.Serializable;
 
-public class ChaosMonkey {
+public class ChaosMonkey implements Serializable {
    private HashSet<CrashModes> activeModes = new HashSet<>();
 
    public void enableCrashMode(CrashModes mode) {
