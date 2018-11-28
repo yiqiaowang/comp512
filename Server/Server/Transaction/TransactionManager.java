@@ -17,8 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransactionManager implements Serializable {
 
-    public ChaosMonkey chaosMonkey = new ChaosMonkey();
-
+    public ChaosMonkey chaosMonkey;
     private Map<Integer, Transaction> transactions;
     private AtomicInteger transactionIdGenerator;
     private LockManager lockManager;
@@ -75,6 +74,7 @@ public class TransactionManager implements Serializable {
             transactionManager.lockManager = new LockManager();
             transactionManager.transactionIdGenerator = new AtomicInteger(0);
             transactionManager.transactions = new ConcurrentHashMap<>();
+            transactionManager.chaosMonkey = new ChaosMonkey();
         } catch (ClassNotFoundException e) {
             // Should never happen
             System.out.println("Class not found exception happened in Transaction Manager's initialize: ");
@@ -186,34 +186,6 @@ public class TransactionManager implements Serializable {
         }
     }
 
-    private void writeObject(ObjectOutputStream outputStream) throws IOException {
-        outputStream.writeInt(transactionIdGenerator.get());
-        outputStream.writeInt(transactions.size());
-
-        for (Map.Entry<Integer, Transaction> transactionEntry : transactions.entrySet()) {
-            outputStream.writeInt(transactionEntry.getKey());
-            outputStream.writeObject(transactionEntry.getValue());
-        }
-
-        outputStream.writeObject(lockManager);
-    }
-
-    private void readObject(ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
-        transactionIdGenerator = new AtomicInteger(inputStream.readInt());
-
-        int numTransactions = inputStream.readInt();
-        transactions = new ConcurrentHashMap<>();
-
-        for (int i = 0; i < numTransactions; i++) {
-            int transactionId = inputStream.readInt();
-            Transaction transaction = (Transaction) inputStream.readObject();
-            transactions.put(transactionId, transaction);
-        }
-
-        lockManager = (LockManager) inputStream.readObject();
-
-
-    }
 
     public synchronized void persistActiveTransactions() {
         try (
