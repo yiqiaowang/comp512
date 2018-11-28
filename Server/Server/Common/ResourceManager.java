@@ -580,5 +580,15 @@ public class ResourceManager implements IResourceManager
 		}
 		return transaction.vote();
 	}
+
+	@Override
+	public boolean prepare_crash(int xid, long timeout) throws RemoteException, InvalidTransactionException {
+		Thread.sleep(timeout);
+		TransactionHandler transaction = uncommittedTransactions.get(xid);
+		if (transaction == null) {
+			return false;
+		}
+		return transaction.vote();
+	}
 }
  

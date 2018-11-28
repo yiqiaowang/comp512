@@ -5,7 +5,6 @@ import Server.Common.Flight;
 import Server.Common.Room;
 import Server.Common.PeerStatus;
 import Server.Common.CrashModes;
-import Server.Common.ChaosMonkey;
 import Server.Interface.IResourceManager;
 import Server.Interface.InvalidTransactionException;
 import Server.RMI.RMIMiddleware;
@@ -24,7 +23,6 @@ public class Middleware implements IResourceManager {
     private static final String name = "Middleware";
 
     // Failure Detection of resource managers
-    protected ChaosMonkey chaosMonkey = new ChaosMonkey();
     private HashMap<IResourceManager, PeerStatus> resourceManagerStatus = new HashMap<>();
     private ArrayList<IResourceManager> failedPeers = new ArrayList<>();
 
@@ -589,7 +587,7 @@ public class Middleware implements IResourceManager {
     }
     @Override
     public void resetCrashes() throws RemoteException {
-        this.chaosMonkey.disableAll();
+        this.transactionManager.chaosMonkey.disableAll();
     }
 
     @Override
@@ -613,7 +611,7 @@ public class Middleware implements IResourceManager {
             case 8: cmode = CrashModes.T_EIGHT;
                     break;
         }
-        this.chaosMonkey.enableCrashMode(cmode);
+        this.transactionManager.chaosMonkey.enableCrashMode(cmode);
     }
 
     @Override
@@ -641,7 +639,7 @@ public class Middleware implements IResourceManager {
 
 
      @Override
-     public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {
+     public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {  
         int numTimeouts = 5;
         for (int i = 0; i < numTimeouts; i++) {
             try {

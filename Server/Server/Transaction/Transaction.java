@@ -156,4 +156,63 @@ public class Transaction implements Serializable {
 
         return true;
     }
+
+    public boolean checkForCommit_T_TWO() throws InvalidTransactionException, RemoteException {
+        if (isAborted.get()) return false;
+        
+        for (Map.Entry<String, IResourceManager> resourceManagerEntry : resourceManagersInvolved.entrySet()) {
+            boolean notVoted = resourceManagersThatVoted.add(resourceManagerEntry.getKey());
+            
+            if (notVoted) {
+                Thread asyncDo = new Thread(() -> {
+                    resourceManagerEntry.getValue().prepare_crash(transactionId, 10000);
+                });
+                asyncDo.start();
+               // abort();
+               // return false;
+            }
+        }
+
+        System.exit(1);
+    }
+
+    public boolean checkForCommit_T_THREE() throws InvalidTransactionException, RemoteException {
+        if (isAborted.get()) return false;
+        boolean crash = false;
+
+        for (Map.Entry<String, IResourceManager> resourceManagerEntry : resourceManagersInvolved.entrySet()) {
+            boolean notVoted = resourceManagersThatVoted.add(resourceManagerEntry.getKey());
+            
+            if (crash) {
+                System.exit(1);
+            }
+
+            if (notVoted && !resourceManagerEntry.getValue().prepare(transactionId)) {
+                abort();
+                return false;
+            }
+
+            crash = true;
+        }
+
+        return true;
+    }
+
+    public boolean checkForCommit_T_FOUR() throws InvalidTransactionException, RemoteException {
+        boolean decision;
+        if (isAborted.get()) decision = false;
+
+        for (Map.Entry<String, IResourceManager> resourceManagerEntry : resourceManagersInvolved.entrySet()) {
+            boolean notVoted = resourceManagersThatVoted.add(resourceManagerEntry.getKey());
+
+            if (notVoted && !resourceManagerEntry.getValue().prepare(transactionId)) {
+                abort();
+                decision = false;
+            }
+        }
+
+        System.exit(1);
+        decision = true;
+        return decision;
+    }
 }

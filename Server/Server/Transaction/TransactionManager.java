@@ -3,6 +3,9 @@ package Server.Transaction;
 import Server.Interface.InvalidTransactionException;
 import Server.LockManager.DeadlockException;
 import Server.LockManager.LockManager;
+import Server.Common.ChaosMonkey;
+import Server.Common.CrashModes;
+
 
 import java.io.*;
 import java.rmi.RemoteException;
@@ -13,6 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransactionManager implements Serializable {
+
+    protected ChaosMonkey chaosMonkey = new ChaosMonkey();
+
     private Map<Integer, Transaction> transactions;
     private AtomicInteger transactionIdGenerator;
     private LockManager lockManager;
@@ -221,11 +227,26 @@ public class TransactionManager implements Serializable {
     }
 
     public boolean prepare(int transactionId) throws RemoteException, InvalidTransactionException {
+        
+        // TransactionManager crash mode 1
+        this.chaosMonkey.crashIfEnabled(CrashModes.T_ONE);
+        
         Transaction transaction = transactions.get(transactionId);
         if (transaction == null) {
             throw new InvalidTransactionException(transactionId);
         }
 
-        return transaction.checkForCommit();
+        // TransactionManager crash mode 2
+        if (this.chaosMonkey.checkIfEnabled(CrashModes.T_TWO)){
+            return transaction.checkForCommit_T_TWO();
+        // TransactionManager crash mode 3
+        } else if (this.chaosMonkey.checkIfEnabled(CrashModes.T_THREE)) {
+            return transaction.checkForCommit_T_THREE();
+        // TransactionManager crash mode 4
+        } else if (this.chaosMonkey.checkIfEnabled(CrashModes.T_FOUR)) {
+            return transaction.checkForCommit_T_FOUR();
+        } else {
+            return transaction.checkForCommit();
+        }
     }
 }

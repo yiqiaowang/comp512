@@ -13,6 +13,10 @@ public class ChaosMonkey {
        this.activeModes.clear();
    }
 
+   public boolean checkIfEnabled(CrashModes mode) {
+       return this.activeModes.contains(mode);
+   }
+
    public void crashIfEnabled(CrashModes mode) { 
        if (this.activeModes.contains(mode)) {
            System.out.println("Crashing due to " + mode.name());

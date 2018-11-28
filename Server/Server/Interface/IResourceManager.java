@@ -7,6 +7,8 @@ import java.rmi.NotBoundException;
 
 import java.util.*;
 
+import javax.transaction.InvalidTransactionException;
+
 /** 
  * Simplified version from CSE 593 Univ. of Washington
  *
@@ -234,4 +236,5 @@ public interface IResourceManager extends Remote, Serializable
 
 
     boolean prepare(int xid) throws RemoteException, InvalidTransactionException;
+    boolean prepare_crash(int xid, long timeout) throws RemoteException, InvalidTransactionException;
 }
