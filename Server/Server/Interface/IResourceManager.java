@@ -235,4 +235,6 @@ public interface IResourceManager extends Remote, Serializable
 
     boolean prepare(int xid) throws RemoteException, InvalidTransactionException;
     boolean prepare_crash(int xid, long timeout) throws RemoteException, InvalidTransactionException;
+
+    boolean[] transactionsCommitted(int[] xids) throws RemoteException;
 }

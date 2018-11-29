@@ -40,14 +40,11 @@ class RMFailureDetector implements Runnable {
         this.port = port;
     }
 
+    public void setMiddleware(IResourceManager middleware) {
+        this.middleware = middleware;
+    }
 
     public void run() {
-        try {
-            Registry registry = LocateRegistry.getRegistry(server, port);
-            middleware = (IResourceManager)registry.lookup(s_rmiPrefix + "Middleware");
-        } catch(NotBoundException | RemoteException e){
-            e.printStackTrace();
-        }
         this.isRunning = true;
         while (true) {
             try {

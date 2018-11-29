@@ -12,10 +12,10 @@ class TransactionHandler implements Serializable {
     private final RMHashMap resourceData;
     private final int transactionId;
 
-    private volatile boolean receivedVoteRequest = false;
-    private volatile boolean sentResponse = false;
-    private volatile TransactionDecision vote = IN_PROGRESS;
-    private volatile TransactionDecision finalDecision = IN_PROGRESS;
+    volatile boolean receivedVoteRequest = false;
+    volatile boolean sentResponse = false;
+    volatile TransactionDecision vote = IN_PROGRESS;
+    volatile TransactionDecision finalDecision = IN_PROGRESS;
 
 
     public static final String DATA_PATH = "./transaction_data/";
@@ -57,7 +57,6 @@ class TransactionHandler implements Serializable {
     }
 
     synchronized boolean commit() {
-        // TODO: change state of committed or not
         synchronized (resourceData) {
             for (String deletedItem : deletedItems) {
                 resourceData.remove(deletedItem);

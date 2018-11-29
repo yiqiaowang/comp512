@@ -9,7 +9,10 @@ import Server.Interface.IResourceManager;
 import Server.Interface.InvalidTransactionException;
 
 import java.io.*;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,48 +35,48 @@ public class ResourceManager implements IResourceManager
 	protected RMHashMap m_data = new RMHashMap();
 	protected Map<Integer, TransactionHandler> uncommittedTransactions = new ConcurrentHashMap<>();
 
+	protected final List<TransactionHandler> voteSentMissingResponse = new ArrayList<>();
 
 	private void startup() {
         readPersistedData();
 
 		System.out.println("uncommitted transactions are " + uncommittedTransactions);
 
+		List<TransactionHandler> abortedTransactions = new ArrayList<>();
+
 		if (uncommittedTransactions.size() > 0) {
 			// TODO: Handle previous, uncommitted transactions (either abort or commit)
 			for (TransactionHandler transactionHandler : uncommittedTransactions.values()) {
-
+				if (transactionHandler.sentResponse) {
+					switch (transactionHandler.finalDecision) {
+						case COMMIT:
+							try {
+								commit(transactionHandler.getTransactionId());
+							} catch (RemoteException ignored) { /* Never gets thrown */ }
+							break;
+						case ABORT:
+							abortedTransactions.add(transactionHandler);
+							break;
+						case IN_PROGRESS:
+							voteSentMissingResponse.add(transactionHandler);
+						    break;
+					}
+				} else {
+					abortedTransactions.add(transactionHandler);
+				}
 			}
 		}
-    }
 
-	private Map<Integer, TransactionHandler> loadPreviousTransactionData() {
-	    File directory = new File(TransactionHandler.DATA_PATH + m_name);
-	    File[] transactionsInProgress = directory.listFiles();
-
-	    if (transactionsInProgress == null) {
-	        // The directory doesn't exist - there is no data
-            return Collections.emptyMap();
+        for (TransactionHandler abortedTransaction : abortedTransactions) {
+            uncommittedTransactions.remove(abortedTransaction.getTransactionId());
         }
 
-        Map<Integer, TransactionHandler> uncommittedTransactions = new HashMap<>();
-
-        for (File transaction : transactionsInProgress) {
-            try (
-                ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(transaction))
-            ) {
-                TransactionHandler handler = (TransactionHandler) inputStream.readObject();
-                uncommittedTransactions.put(handler.getTransactionId(), handler);
-            }
-            catch (ClassNotFoundException e) {
-                e.printStackTrace();
-                // TODO: Better error handling
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        if (abortedTransactions.size() > 0) {
+		    persistData();
         }
-
-        return uncommittedTransactions;
     }
+
+
 
     private synchronized void persistData() {
 		System.out.println("Persisting data");
@@ -109,7 +112,7 @@ public class ResourceManager implements IResourceManager
 
 	protected transient IResourceManager middleware;
 
-	private final transient Object createCustomerLock = new Object();
+	private final SerializableLock createCustomerLock = new SerializableLock();
 
 
 	public ResourceManager(String p_name)
@@ -500,8 +503,12 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public void abort(int xid) throws RemoteException {
-		uncommittedTransactions.remove(xid);
-		persistData();
+		TransactionHandler remove = uncommittedTransactions.remove(xid);
+
+		if (remove != null) {
+			remove.finalDecision = TransactionDecision.ABORT;
+			persistData();
+		}
 	}
 
 	@Override
@@ -516,25 +523,21 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public boolean commit(int xid) throws RemoteException {
-
-                // TODO: LOG DECISION TO COMMIT HERE
-		
-                // Resource manager crash mode 4
-		this.chaosMonkey.crashIfEnabled(CrashModes.R_FOUR);
-
 		TransactionHandler transactionHandler = uncommittedTransactions.remove(xid);
-
-		System.out.println("transaction handler is " + transactionHandler);
-
 		if (transactionHandler == null) {
 			return false;
 		}
 
+		transactionHandler.finalDecision = TransactionDecision.COMMIT;
+		persistData();
+
+		// Resource manager crash mode 4
+		this.chaosMonkey.crashIfEnabled(CrashModes.R_FOUR);
+
+
 		boolean result = transactionHandler.commit();
 
-		System.out.println("m_data is now " + m_data);
         persistData();
-
 		return result;
 	}
 
@@ -543,23 +546,57 @@ public class ResourceManager implements IResourceManager
 		return true;
 	}
 
-	@Override
-	public void startFailureDetector(String server, int port) {
-            this.registerFailureDetector(server, port);
-            this.runFailureDetector();
+	private void commitOrAbortOldTransactions() {
+		int[] transactionIds = new int[voteSentMissingResponse.size()];
+		for (int i = 0; i < transactionIds.length; i++) {
+			transactionIds[i] = voteSentMissingResponse.get(i).getTransactionId();
+		}
+
+		try {
+			boolean[] transactionsCommitted = middleware.transactionsCommitted(transactionIds);
+
+			for (int i = 0; i < transactionsCommitted.length; i++) {
+				if (transactionsCommitted[i]) {
+					commit(transactionIds[i]);
+				} else {
+					abort(transactionIds[i]);
+				}
+			}
+
+			voteSentMissingResponse.clear();
+		} catch (RemoteException e) {
+		}
 	}
 
-        private void registerFailureDetector(String server, int port) {
-            this.failureDetector.setServer(server);
-            this.failureDetector.setPort(port);
+	@Override
+	public void startFailureDetector(String server, int port) {
+        try {
+            Registry registry = LocateRegistry.getRegistry(server, port);
+            middleware = (IResourceManager)registry.lookup(s_rmiPrefix + "Middleware");
+        } catch(NotBoundException | RemoteException e){
+            e.printStackTrace();
         }
 
-        private void runFailureDetector(){ 
-            if (! this.failureDetector.isRunning()) {
-		Thread t = new Thread(this.failureDetector);
-		t.start();
-            }
+        this.registerFailureDetector(server, port, middleware);
+        this.runFailureDetector();
+
+        commitOrAbortOldTransactions();
+
+
+	}
+
+    private void registerFailureDetector(String server, int port, IResourceManager middleware) {
+        this.failureDetector.setServer(server);
+        this.failureDetector.setPort(port);
+        this.failureDetector.setMiddleware(middleware);
+    }
+
+    private void runFailureDetector(){
+        if (! this.failureDetector.isRunning()) {
+            Thread t = new Thread(this.failureDetector);
+            t.start();
         }
+    }
         
 	@Override
 	public void resetCrashes() throws RemoteException {
@@ -629,5 +666,15 @@ public class ResourceManager implements IResourceManager
             }
             return transaction.vote();
         }
+
+	@Override
+	public boolean[] transactionsCommitted(int[] xids) throws RemoteException {
+		boolean[] committed = new boolean[xids.length];
+		for (int i = 0; i < xids.length; i++) {
+			committed[i] = uncommittedTransactions.containsKey(xids[i]);
+		}
+
+		return committed;
+	}
 }
  

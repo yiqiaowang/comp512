@@ -616,7 +616,6 @@ public class Middleware implements IResourceManager {
 
     @Override
     public void crashResourceManager(String name, int mode) throws RemoteException {
-        // TODO: Perhaps fix the names not sure how this is supposed to work..
         if (name.equals(flightsResourceManager.getName().toLowerCase())) {
             flightsResourceManager.crashResourceManager(name, mode);
         }
@@ -638,8 +637,16 @@ public class Middleware implements IResourceManager {
         }
     }
 
-    public boolean transactionCommitted(int xid) throws RemoteException {
-        return committedTransactions.contains(xid);
+
+    public boolean[] transactionsCommitted(int[] xids) throws RemoteException {
+        boolean[] committed = new boolean[xids.length];
+        synchronized (committedTransactions) {
+            for (int i = 0; i < xids.length; i++) {
+                committed[i] = committedTransactions.contains(xids[i]);
+            }
+        }
+
+        return committed;
     }
 
 

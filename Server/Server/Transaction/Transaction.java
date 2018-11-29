@@ -1,5 +1,6 @@
 package Server.Transaction;
 
+import Server.Common.SerializableLock;
 import Server.Interface.IResourceManager;
 import Server.Interface.InvalidTransactionException;
 
@@ -26,7 +27,7 @@ public class Transaction implements Serializable {
 
     private AtomicLong lastOperationTimestamp = new AtomicLong();
 
-    Object lock;
+    SerializableLock lock;
 
     Transaction(int transactionId) {
         setup();
@@ -39,7 +40,7 @@ public class Transaction implements Serializable {
         resourceManagersThatVoted = new HashSet<>();
         isAborted = new AtomicBoolean(false);
         lastOperationTimestamp = new AtomicLong();
-        lock = new Object();
+        lock = new SerializableLock();
     }
 
     /**
@@ -101,45 +102,48 @@ public class Transaction implements Serializable {
         return isAborted.get();
     }
 
-    private void writeObject(ObjectOutputStream outputStream) throws IOException {
-        System.out.println("Write object for transaction called");
-        outputStream.writeInt(transactionId);
-        System.out.println("isAborted: " + isAborted);
-        outputStream.writeBoolean(isAborted.get());
-
-        System.out.println("resource managers involved: " + resourceManagersInvolved);
-        outputStream.writeInt(resourceManagersInvolved.size());
-
-        for (Map.Entry<String, IResourceManager> resourceManagerEntry : resourceManagersInvolved.entrySet()) {
-            outputStream.writeUTF(resourceManagerEntry.getKey());
-            outputStream.writeObject(resourceManagerEntry.getValue());
-        }
-
-        outputStream.writeInt(resourceManagersThatVoted.size());
-        for (String resourceManager : resourceManagersThatVoted) {
-            outputStream.writeUTF(resourceManager);
-        }
-    }
+//    private void writeObject(ObjectOutputStream outputStream) throws IOException {
+//        System.out.println("Write object for transaction called");
+//        outputStream.writeInt(transactionId);
+//        System.out.println("isAborted: " + isAborted);
+//        outputStream.writeBoolean(isAborted.get());
+//
+//        System.out.println("resource managers involved: " + resourceManagersInvolved);
+//        outputStream.writeInt(resourceManagersInvolved.size());
+//
+//        for (Map.Entry<String, IResourceManager> resourceManagerEntry : resourceManagersInvolved.entrySet()) {
+//            outputStream.writeUTF(resourceManagerEntry.getKey());
+//            outputStream.writeObject(resourceManagerEntry.getValue());
+//        }
+//
+//        outputStream.writeInt(resourceManagersThatVoted.size());
+//        for (String resourceManager : resourceManagersThatVoted) {
+//            outputStream.writeUTF(resourceManager);
+//        }
+//    }
 
     private void readObject(ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
-        System.out.println("Read object for transaction called");
-        setup();
+//        System.out.println("Read object for transaction called");
+//        setup();
+//
+//        transactionId = inputStream.readInt();
+//        isAborted.set(inputStream.readBoolean());
+//
+//        lastOperationTimestamp.set(System.currentTimeMillis());
+//
+//        int numResourceManagers = inputStream.readInt();
+//        for (int i = 0; i < numResourceManagers; i++) {
+//            String resourceManagerName = inputStream.readUTF();
+//            resourceManagersInvolved.put(resourceManagerName, (IResourceManager) inputStream.readObject());
+//        }
+//
+//        int numAlreadyVoted = inputStream.readInt();
+//        for (int i = 0; i < numAlreadyVoted; i++) {
+//            resourceManagersThatVoted.add(inputStream.readUTF());
+//        }
 
-        transactionId = inputStream.readInt();
-        isAborted.set(inputStream.readBoolean());
-
+        inputStream.defaultReadObject();
         lastOperationTimestamp.set(System.currentTimeMillis());
-
-        int numResourceManagers = inputStream.readInt();
-        for (int i = 0; i < numResourceManagers; i++) {
-            String resourceManagerName = inputStream.readUTF();
-            resourceManagersInvolved.put(resourceManagerName, (IResourceManager) inputStream.readObject());
-        }
-
-        int numAlreadyVoted = inputStream.readInt();
-        for (int i = 0; i < numAlreadyVoted; i++) {
-            resourceManagersThatVoted.add(inputStream.readUTF());
-        }
     }
 
     public boolean checkForCommit() throws InvalidTransactionException, RemoteException {
