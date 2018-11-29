@@ -22,7 +22,7 @@ public class TransactionManager implements Serializable {
     private AtomicInteger transactionIdGenerator;
     private LockManager lockManager;
 
-    private static final String ACTIVE_TRANSACTIONS_LOG = "./middleware_active_transactions";
+    private static final String MIDDLEWARE_TRANSACTION_DATA = "./middleware_transaction_data";
 
     private void startCheckForTimeouts() {
         Thread checkForTimeouts = new Thread(() -> {
@@ -61,7 +61,7 @@ public class TransactionManager implements Serializable {
         TransactionManager transactionManager;
 
         try (
-                InputStream file = new FileInputStream(ACTIVE_TRANSACTIONS_LOG);
+                InputStream file = new FileInputStream(MIDDLEWARE_TRANSACTION_DATA);
                 ObjectInputStream inputStream = new ObjectInputStream(file)
         ) {
             System.out.println("Created and returning transaction manager object from file");
@@ -189,7 +189,7 @@ public class TransactionManager implements Serializable {
 
     public synchronized void persistActiveTransactions() {
         try (
-                OutputStream file = new FileOutputStream(ACTIVE_TRANSACTIONS_LOG);
+                OutputStream file = new FileOutputStream(MIDDLEWARE_TRANSACTION_DATA);
                 ObjectOutputStream outputStream = new ObjectOutputStream(file)
         ) {
             outputStream.writeObject(this);

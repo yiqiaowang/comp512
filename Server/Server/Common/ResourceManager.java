@@ -28,7 +28,7 @@ public class ResourceManager implements IResourceManager
 
     protected static String s_rmiPrefix = "groupFive_";
 
-    private static final String persistentCommittedDataPath = "./committed_data/";
+    private static final String persistentDataPath = "./resource_manager_data/";
 
 
     protected String m_name = "";
@@ -81,8 +81,8 @@ public class ResourceManager implements IResourceManager
     private synchronized void persistData() {
 		System.out.println("Persisting data");
         try (
-            OutputStream file = new FileOutputStream(persistentCommittedDataPath + m_name);
-            ObjectOutputStream outputStream = new ObjectOutputStream(file)
+				OutputStream file = new FileOutputStream(persistentDataPath + m_name);
+				ObjectOutputStream outputStream = new ObjectOutputStream(file)
         ) {
             outputStream.writeObject(this);
         } catch (IOException e) {
@@ -93,8 +93,8 @@ public class ResourceManager implements IResourceManager
     @SuppressWarnings("unchecked")
     private synchronized void readPersistedData() {
 	    try (
-	            InputStream file = new FileInputStream(persistentCommittedDataPath + m_name);
-	            ObjectInputStream inputStream = new ObjectInputStream(file)
+				InputStream file = new FileInputStream(persistentDataPath + m_name);
+				ObjectInputStream inputStream = new ObjectInputStream(file)
         ) {
 	        ResourceManager resourceManager = (ResourceManager) inputStream.readObject();
 	        uncommittedTransactions = resourceManager.uncommittedTransactions;
@@ -521,6 +521,7 @@ public class ResourceManager implements IResourceManager
 		return false;
 	}
 
+
 	@Override
 	public boolean commit(int xid) throws RemoteException {
 		TransactionHandler transactionHandler = uncommittedTransactions.remove(xid);
@@ -553,12 +554,13 @@ public class ResourceManager implements IResourceManager
 		}
 
 		try {
-			boolean[] transactionsCommitted = middleware.transactionsCommitted(transactionIds);
+			byte[] transactionsCommitted = middleware.getTransactionsStatus(transactionIds);
 
 			for (int i = 0; i < transactionsCommitted.length; i++) {
-				if (transactionsCommitted[i]) {
+				int status = transactionsCommitted[i];
+				if (status == 0) {
 					commit(transactionIds[i]);
-				} else {
+				} else if (status == 1) {
 					abort(transactionIds[i]);
 				}
 			}
@@ -668,13 +670,9 @@ public class ResourceManager implements IResourceManager
         }
 
 	@Override
-	public boolean[] transactionsCommitted(int[] xids) throws RemoteException {
-		boolean[] committed = new boolean[xids.length];
-		for (int i = 0; i < xids.length; i++) {
-			committed[i] = uncommittedTransactions.containsKey(xids[i]);
-		}
-
-		return committed;
+	public byte[] getTransactionsStatus(int[] xids) throws RemoteException {
+		// never used
+		return null;
 	}
 }
  

@@ -638,15 +638,25 @@ public class Middleware implements IResourceManager {
     }
 
 
-    public boolean[] transactionsCommitted(int[] xids) throws RemoteException {
-        boolean[] committed = new boolean[xids.length];
+    @Override
+    public byte[] getTransactionsStatus(int[] xids) throws RemoteException {
+        byte[] status = new byte[xids.length];
         synchronized (committedTransactions) {
             for (int i = 0; i < xids.length; i++) {
-                committed[i] = committedTransactions.contains(xids[i]);
+                if (committedTransactions.contains(xids[i])) {
+                    // committed
+                    status[i] = 0;
+                } else if (transactionManager.isOngoingTransaction(xids[i])) {
+                    // in progress
+                    status[i] = 2;
+                } else {
+                    // aborted
+                    status[i] = 1;
+                }
             }
         }
 
-        return committed;
+        return status;
     }
 
 

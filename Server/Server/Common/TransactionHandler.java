@@ -18,8 +18,6 @@ class TransactionHandler implements Serializable {
     volatile TransactionDecision finalDecision = IN_PROGRESS;
 
 
-    public static final String DATA_PATH = "./transaction_data/";
-
     TransactionHandler(RMHashMap resourceData, int transactionId) {
         this.resourceData = resourceData;
         this.transactionId = transactionId;
