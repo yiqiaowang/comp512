@@ -34,7 +34,7 @@ public class TransactionManager implements Serializable {
         File whichRecord = new File(whichRecordPath);
         if (whichRecord.exists()) {
             try (InputStream input = new FileInputStream(whichRecord)) {
-                return input.read();
+                return input.read() - '0';
             } catch (IOException ignored) { }
         }
 

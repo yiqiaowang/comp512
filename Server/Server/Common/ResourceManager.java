@@ -50,7 +50,7 @@ public class ResourceManager implements IResourceManager
 		int suffix = 0;
 		if (whichRecord.exists()) {
             try (InputStream input = new FileInputStream(whichRecord)) {
-                suffix = input.read();
+                suffix = input.read() - '0';
             } catch (IOException e) { }
         }
 
