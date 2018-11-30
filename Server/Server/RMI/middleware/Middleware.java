@@ -587,6 +587,10 @@ public class Middleware implements IResourceManager {
     @Override
     public void resetCrashes() throws RemoteException {
         this.transactionManager.chaosMonkey.disableAll();
+        this.flightsResourceManager.resetCrashes();
+        this.carsResourceManager.resetCrashes();
+        this.roomsResourceManager.resetCrashes();
+        this.customersResourceManager.resetCrashes();
     }
 
     @Override
