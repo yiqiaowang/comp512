@@ -39,6 +39,11 @@ public class TransactionManager implements Serializable {
     }
 
     private void startCheckForTimeouts() {
+        
+        // Crash mode 8
+        // can't even disable this without deleting the backup file?
+        this.chaosMonkey.crashIfEnabled(CrashModes.T_EIGHT);
+
         Thread checkForTimeouts = new Thread(() -> {
             while (true) {
                 try {
@@ -168,16 +173,30 @@ public class TransactionManager implements Serializable {
 
     public boolean commit(int transactionId) throws RemoteException {
         Transaction transaction = transactions.get(transactionId);
+        boolean commitResult;
 
         if (transaction == null) {
             return false;
         }
+        // Commit has been decided already in prepare!
+        //
+        // Crash mode 5 at the transaction manager
+        this.chaosMonkey.crashIfEnabled(CrashModes.T_FIVE);
 
-        boolean commitResult = transaction.commit();
+        // Crash mode 6 at the transaction manager
+        if (this.chaosMonkey.checkIfEnabled(CrashModes.T_SIX)) {
+            commitResult = transaction.commit_fail();     
+        }
+
+        // Sends the commit to resource managers
+        commitResult = transaction.commit();
         transactions.remove(transactionId);
         lockManager.UnlockAll(transactionId);
 
         persistData();
+
+        // crash mode 6
+        this.chaosMonkey.crashIfEnabled(CrashModes.T_SEVEN);
 
         return commitResult;
     }
@@ -234,6 +253,7 @@ public class TransactionManager implements Serializable {
     }
 
     public boolean prepare(int transactionId) throws RemoteException, InvalidTransactionException {
+        boolean decision;
         
         // TransactionManager crash mode 1
         this.chaosMonkey.crashIfEnabled(CrashModes.T_ONE);
@@ -245,19 +265,26 @@ public class TransactionManager implements Serializable {
 
         // TransactionManager crash mode 2
         if (this.chaosMonkey.checkIfEnabled(CrashModes.T_TWO)){
-            return transaction.checkForCommit_T_TWO();
+            decision = transaction.checkForCommit_T_TWO();
         // TransactionManager crash mode 3
         } else if (this.chaosMonkey.checkIfEnabled(CrashModes.T_THREE)) {
-            return transaction.checkForCommit_T_THREE();
+            decision = transaction.checkForCommit_T_THREE();
         // TransactionManager crash mode 4
         } else if (this.chaosMonkey.checkIfEnabled(CrashModes.T_FOUR)) {
-            return transaction.checkForCommit_T_FOUR();
+            decision = transaction.checkForCommit_T_FOUR();
         } else {
-            return transaction.checkForCommit();
+            decision = transaction.checkForCommit();
         }
+
+        // TODO: Is this the correct place to persist transaction decision?
+        if (decision) {
+            synchronized (committedTransactions) {
+                committedTransactions.add(transactionId);
+            }
+            persistData();
+        }
+        return decision;
     }
-
-
 
     public Set<Integer> getCommittedTransactions() {
         return committedTransactions;

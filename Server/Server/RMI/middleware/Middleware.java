@@ -554,10 +554,10 @@ public class Middleware implements IResourceManager {
         try {
             if (prepare(xid)) {
                 System.out.println("prepare = true");
-                Set<Integer> committedTransactions = transactionManager.getCommittedTransactions();
-                synchronized (committedTransactions) {
-                    committedTransactions.add(xid);
-                }
+                // Set<Integer> committedTransactions = transactionManager.getCommittedTransactions();
+                // synchronized (committedTransactions) {
+                //     committedTransactions.add(xid);
+                // }
                 transactionManager.commit(xid);
                 return true;
             }

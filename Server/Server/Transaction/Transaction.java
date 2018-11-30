@@ -80,6 +80,28 @@ public class Transaction implements Serializable {
         return committed;
     }
 
+    // For crash mode 6, fails after 1 commit
+    public synchronized boolean commit_fail() {
+        if (isAborted.get()) return false;
+
+        boolean committed = true;
+
+        boolean fail = false;
+        for (IResourceManager resourceManager : resourceManagersInvolved.values()) {
+            if (fail) {
+                System.exit(1);
+            }
+            try {
+                resourceManager.commit(transactionId);
+            } catch(RemoteException e) {
+                committed = false;
+            }
+            fail = true;
+        }
+
+        return committed;
+    }
+
     public synchronized void abort() {
         if (isAborted.get()) return;
 

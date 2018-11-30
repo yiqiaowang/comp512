@@ -67,6 +67,9 @@ public class ResourceManager implements IResourceManager
 	private void startup() {
 		findMaster();
 
+                // crash mode 5
+                this.chaosMonkey.crashIfEnabled(CrashModes.R_FIVE);
+
 		List<TransactionHandler> abortedTransactions = new ArrayList<>();
 
 		for (TransactionHandler transactionHandler : uncommittedTransactions.values()) {
@@ -668,6 +671,15 @@ public class ResourceManager implements IResourceManager
 			return false;
 		}
 
+
+		boolean decision = transaction.vote();
+
+                // TODO: Is this the correct place to persist decision?
+                persistData();
+
+                // Crash mode 2
+                this.chaosMonkey.crashIfEnabled(CrashModes.R_TWO);
+                
 		/* Crash mode 3 at resource manager */
                 if (this.chaosMonkey.checkIfEnabled(CrashModes.R_THREE)){
                     Thread asyncDo = new Thread(() -> {
@@ -680,8 +692,7 @@ public class ResourceManager implements IResourceManager
                     });
                     asyncDo.start();
                 }
-
-		return transaction.vote();
+                return decision;
 	}
 
 	@Override
