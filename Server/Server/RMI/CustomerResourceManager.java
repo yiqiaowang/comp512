@@ -9,11 +9,8 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class CustomerResourceManager extends RMIResourceManager implements ICustomerResourceManager {
-    private final String ID;
-
-    public CustomerResourceManager(String name, String id) {
+    public CustomerResourceManager(String name) {
         super(name);
-        ID = id;
     }
 
 
@@ -35,18 +32,16 @@ public class CustomerResourceManager extends RMIResourceManager implements ICust
 
     public static void main(String args[])
     {
-        if (args.length > 0)
-        {
-            s_serverName = args[0];
+        if (args.length > 0) {
+            port = Integer.parseInt(args[0]);
         }
-        if (args.length > 1) {
-            port = Integer.parseInt(args[1]);
-        }
+
+        s_serverName = "CUSTOMERS";
 
         // Create the RMI server entry
         try {
             // Create a new Server object
-            CustomerResourceManager server = new CustomerResourceManager(s_serverName, "CUSTOMERS");
+            CustomerResourceManager server = new CustomerResourceManager(s_serverName);
 
             // Dynamically generate the stub (client proxy)
             ICustomerResourceManager resourceManager = (ICustomerResourceManager) UnicastRemoteObject.exportObject(server, 0);

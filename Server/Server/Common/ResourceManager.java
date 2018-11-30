@@ -9,6 +9,13 @@ import Server.Interface.IResourceManager;
 import Server.Interface.InvalidTransactionException;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -21,14 +28,15 @@ public class ResourceManager implements IResourceManager
     /*
      * Failure Detection
      */
-
-
-    protected transient ChaosMonkey chaosMonkey = new ChaosMonkey();
+    protected ChaosMonkey chaosMonkey = new ChaosMonkey();
     protected transient RMFailureDetector failureDetector = new RMFailureDetector();
 
     protected static String s_rmiPrefix = "groupFive_";
 
     private static final String persistentDataPath = "./resource_manager_data/";
+    private static final String whichRecordPath = persistentDataPath + "record_name";
+
+    private transient volatile int masterSuffix = 0;
 
 
     protected String m_name = "";
@@ -37,35 +45,48 @@ public class ResourceManager implements IResourceManager
 
 	protected final List<TransactionHandler> voteSentMissingResponse = new ArrayList<>();
 
-	private void startup() {
-        readPersistedData();
+	private void findMaster() {
+		File whichRecord = new File(whichRecordPath);
+		int suffix = 0;
+		if (whichRecord.exists()) {
+            try (InputStream input = new FileInputStream(whichRecord)) {
+                suffix = input.read();
+            } catch (IOException e) { }
+        }
 
-		System.out.println("uncommitted transactions are " + uncommittedTransactions);
+        for (int fileSuffix: new int[] {masterSuffix, (masterSuffix + 1) % 2}) {
+            if (readPersistedData(fileSuffix)) {
+                this.masterSuffix = fileSuffix;
+                return;
+            }
+        }
+	}
+
+
+
+	private void startup() {
+		findMaster();
 
 		List<TransactionHandler> abortedTransactions = new ArrayList<>();
 
-		if (uncommittedTransactions.size() > 0) {
-			// TODO: Handle previous, uncommitted transactions (either abort or commit)
-			for (TransactionHandler transactionHandler : uncommittedTransactions.values()) {
-				if (transactionHandler.sentResponse) {
-					switch (transactionHandler.finalDecision) {
-						case COMMIT:
-							try {
-								commit(transactionHandler.getTransactionId());
-							} catch (RemoteException ignored) { /* Never gets thrown */ }
-							break;
-						case ABORT:
-							abortedTransactions.add(transactionHandler);
-							break;
-						case IN_PROGRESS:
-							voteSentMissingResponse.add(transactionHandler);
-						    break;
-					}
-				} else {
-					abortedTransactions.add(transactionHandler);
+		for (TransactionHandler transactionHandler : uncommittedTransactions.values()) {
+			if (transactionHandler.sentResponse) {
+				switch (transactionHandler.finalDecision) {
+					case COMMIT:
+						try {
+							commit(transactionHandler.getTransactionId());
+						} catch (RemoteException ignored) { /* Never gets thrown */ }
+						break;
+					case ABORT:
+						abortedTransactions.add(transactionHandler);
+						break;
+					case IN_PROGRESS:
+						voteSentMissingResponse.add(transactionHandler);
+						break;
 				}
 			}
 		}
+
 
         for (TransactionHandler abortedTransaction : abortedTransactions) {
             uncommittedTransactions.remove(abortedTransaction.getTransactionId());
@@ -76,39 +97,48 @@ public class ResourceManager implements IResourceManager
         }
     }
 
+    private String filePath(int suffix) {
+	    return persistentDataPath + m_name + "_" + suffix;
+    }
+
 
 
     private synchronized void persistData() {
-		System.out.println("Persisting data");
         try (
-				OutputStream file = new FileOutputStream(persistentDataPath + m_name);
+				OutputStream file = new FileOutputStream(filePath((masterSuffix + 1) % 2));
 				ObjectOutputStream outputStream = new ObjectOutputStream(file)
         ) {
             outputStream.writeObject(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+            masterSuffix = (masterSuffix + 1) % 2;
+            try (OutputStream output = new FileOutputStream(whichRecordPath)) {
+                output.write(masterSuffix);
+            }
+        } catch (IOException ignored) { }
+	}
 
     @SuppressWarnings("unchecked")
-    private synchronized void readPersistedData() {
+    private synchronized boolean readPersistedData(int suffix) {
 	    try (
-				InputStream file = new FileInputStream(persistentDataPath + m_name);
+				InputStream file = new FileInputStream(filePath(suffix));
 				ObjectInputStream inputStream = new ObjectInputStream(file)
         ) {
 	        ResourceManager resourceManager = (ResourceManager) inputStream.readObject();
 	        uncommittedTransactions = resourceManager.uncommittedTransactions;
 	        m_data = resourceManager.m_data;
-        }
-        // TODO: Log any errors or handle them
-        catch (IOException e) {
+	        chaosMonkey = resourceManager.chaosMonkey;
+	        return true;
+        } catch (IOException e) {
             // If this happens, then there is no data to read
         } catch (ClassNotFoundException e) {
             // Should never get called
 			System.out.println("Class not found exception in readPersistedData: ");
 			e.printStackTrace();
         }
+
+        return false;
     }
+
+
 
 	protected transient IResourceManager middleware;
 
@@ -413,7 +443,6 @@ public class ResourceManager implements IResourceManager
 
 			Customer customer = new Customer(cid);
 			writeData(xid, customer.getKey(), customer);
-			System.out.println("Wrote customer to the table");
 			Trace.info("RM::newCustomer(" + cid + ") returns ID=" + cid);
 			return cid;
 		}

@@ -1,17 +1,14 @@
 package Server.Transaction;
 
+import Server.Common.ChaosMonkey;
+import Server.Common.CrashModes;
 import Server.Interface.InvalidTransactionException;
 import Server.LockManager.DeadlockException;
 import Server.LockManager.LockManager;
-import Server.Common.ChaosMonkey;
-import Server.Common.CrashModes;
-
 
 import java.io.*;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,7 +19,24 @@ public class TransactionManager implements Serializable {
     private AtomicInteger transactionIdGenerator;
     private LockManager lockManager;
 
+    private Set<Integer> committedTransactions;
+
     private static final String MIDDLEWARE_TRANSACTION_DATA = "./middleware_transaction_data";
+    private static final String whichRecordPath = "./middleware_record_name";
+
+    private transient volatile int masterSuffix = 0;
+
+
+    private static int findMaster() {
+        File whichRecord = new File(whichRecordPath);
+        if (whichRecord.exists()) {
+            try (InputStream input = new FileInputStream(whichRecord)) {
+                return input.read();
+            } catch (IOException ignored) { }
+        }
+
+        return 0;
+    }
 
     private void startCheckForTimeouts() {
         Thread checkForTimeouts = new Thread(() -> {
@@ -47,7 +61,7 @@ public class TransactionManager implements Serializable {
                 }
 
                 if (timedOutTransactionIds.size() > 0) {
-                    persistActiveTransactions();
+                    persistData();
                 }
             }
         });
@@ -55,31 +69,43 @@ public class TransactionManager implements Serializable {
     }
 
 
-    public static TransactionManager initialize() {
-        System.out.println("Initialize transaction manager called");
+    public static TransactionManager create() {
+        int masterSuffix = findMaster();
 
+        for (int fileSuffix: new int[] {masterSuffix, (masterSuffix + 1) % 2}) {
+            try {
+                TransactionManager transactionManager = initialize(new File(filePath(fileSuffix)));
+                transactionManager.masterSuffix = fileSuffix;
+                return transactionManager;
+            } catch (IOException | ClassNotFoundException ignored) { }
+        }
+
+
+        return createBlankTransaction();
+    }
+
+    private static TransactionManager createBlankTransaction() {
+        TransactionManager transactionManager = new TransactionManager();
+        transactionManager.lockManager = new LockManager();
+        transactionManager.transactionIdGenerator = new AtomicInteger(0);
+        transactionManager.transactions = new ConcurrentHashMap<>();
+        transactionManager.chaosMonkey = new ChaosMonkey();
+        transactionManager.committedTransactions = new HashSet<>();
+
+        transactionManager.startCheckForTimeouts();
+
+        return transactionManager;
+    }
+
+
+    private static TransactionManager initialize(File fileToInitializeFrom) throws IOException, ClassNotFoundException {
         TransactionManager transactionManager;
 
         try (
-                InputStream file = new FileInputStream(MIDDLEWARE_TRANSACTION_DATA);
+                InputStream file = new FileInputStream(fileToInitializeFrom);
                 ObjectInputStream inputStream = new ObjectInputStream(file)
         ) {
-            System.out.println("Created and returning transaction manager object from file");
             transactionManager = (TransactionManager) inputStream.readObject();
-        }
-        // TODO: Log any errors or handle them
-        catch (IOException e) {
-            // If this happens, then there is no data to read. Initialize with default values
-            transactionManager = new TransactionManager();
-            transactionManager.lockManager = new LockManager();
-            transactionManager.transactionIdGenerator = new AtomicInteger(0);
-            transactionManager.transactions = new ConcurrentHashMap<>();
-            transactionManager.chaosMonkey = new ChaosMonkey();
-        } catch (ClassNotFoundException e) {
-            // Should never happen
-            System.out.println("Class not found exception happened in Transaction Manager's initialize: ");
-            e.printStackTrace();
-            return null;
         }
 
         transactionManager.startCheckForTimeouts();
@@ -93,7 +119,7 @@ public class TransactionManager implements Serializable {
         Transaction transaction = new Transaction(transactionId);
         transactions.put(transactionId, transaction);
 
-        persistActiveTransactions();
+        persistData();
 
         return transactionId;
     }
@@ -133,7 +159,7 @@ public class TransactionManager implements Serializable {
             }
 
             if (resourceLockRequests.length > 0) {
-                persistActiveTransactions();
+                persistData();
             }
 
             return true;
@@ -151,7 +177,7 @@ public class TransactionManager implements Serializable {
         transactions.remove(transactionId);
         lockManager.UnlockAll(transactionId);
 
-        persistActiveTransactions();
+        persistData();
 
         return commitResult;
     }
@@ -167,7 +193,7 @@ public class TransactionManager implements Serializable {
         transactions.remove(transactionId);
         lockManager.UnlockAll(transactionId);
 
-        persistActiveTransactions();
+        persistData();
     }
 
     public boolean isOngoingTransaction(int transactionId) {
@@ -179,7 +205,7 @@ public class TransactionManager implements Serializable {
             Transaction transaction = new Transaction(transactionId);
             transactions.put(transactionId, transaction);
 
-            persistActiveTransactions();
+            persistData();
             return true;
         } else {
             return false;
@@ -187,14 +213,23 @@ public class TransactionManager implements Serializable {
     }
 
 
-    public synchronized void persistActiveTransactions() {
+    private static String filePath(int suffix) {
+        return MIDDLEWARE_TRANSACTION_DATA + "_" + suffix;
+    }
+
+    public synchronized void persistData() {
         try (
-                OutputStream file = new FileOutputStream(MIDDLEWARE_TRANSACTION_DATA);
+                OutputStream file = new FileOutputStream(filePath((masterSuffix + 1) % 2));
                 ObjectOutputStream outputStream = new ObjectOutputStream(file)
         ) {
             outputStream.writeObject(this);
+            masterSuffix = (masterSuffix + 1) % 2;
+            try (OutputStream output = new FileOutputStream(whichRecordPath)) {
+                output.write(masterSuffix);
+            }
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
     }
 
@@ -220,5 +255,11 @@ public class TransactionManager implements Serializable {
         } else {
             return transaction.checkForCommit();
         }
+    }
+
+
+
+    public Set<Integer> getCommittedTransactions() {
+        return committedTransactions;
     }
 }

@@ -31,10 +31,9 @@ public class Middleware implements IResourceManager {
     private final IResourceManager roomsResourceManager;
 
     private final ICustomerResourceManager customersResourceManager;
-    private final TransactionManager transactionManager = TransactionManager.initialize();
+    private final TransactionManager transactionManager = TransactionManager.create();
 
-    // TODO: Store set of committed transactions
-    private final Set<Integer> committedTransactions = new HashSet<>();
+
 
 
     public Middleware(IResourceManager flightsResourceManager, IResourceManager carsResourceManager, IResourceManager roomsResourceManager, ICustomerResourceManager customersResourceManager) {
@@ -555,6 +554,7 @@ public class Middleware implements IResourceManager {
         try {
             if (prepare(xid)) {
                 System.out.println("prepare = true");
+                Set<Integer> committedTransactions = transactionManager.getCommittedTransactions();
                 synchronized (committedTransactions) {
                     committedTransactions.add(xid);
                 }
@@ -641,14 +641,15 @@ public class Middleware implements IResourceManager {
     @Override
     public byte[] getTransactionsStatus(int[] xids) throws RemoteException {
         byte[] status = new byte[xids.length];
+        Set<Integer> committedTransactions = transactionManager.getCommittedTransactions();
         synchronized (committedTransactions) {
             for (int i = 0; i < xids.length; i++) {
-                if (committedTransactions.contains(xids[i])) {
-                    // committed
-                    status[i] = 0;
-                } else if (transactionManager.isOngoingTransaction(xids[i])) {
+                if (transactionManager.isOngoingTransaction(xids[i])) {
                     // in progress
                     status[i] = 2;
+                } else if (committedTransactions.contains(xids[i])) {
+                    // committed
+                    status[i] = 0;
                 } else {
                     // aborted
                     status[i] = 1;
