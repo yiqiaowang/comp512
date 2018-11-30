@@ -53,7 +53,6 @@ class RMFailureDetector implements Runnable {
                     // if the `isAlive' call fails, we go to the first catch block
                     middleware.isAlive();
                     middlewareStatus.setTTL(System.currentTimeMillis() + 1000);
-                    System.out.println("Health checks passed!");
                 } else {
                     System.out.println("Health checks skipped!");  
                 }

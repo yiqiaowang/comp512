@@ -61,7 +61,6 @@ public class Middleware implements IResourceManager {
                     return;
                 }
 
-                System.out.println("Running health checks!");
                 for (IResourceManager peer : this.resourceManagerStatus.keySet()) {
                     try {
                         PeerStatus status = this.resourceManagerStatus.get(peer);
