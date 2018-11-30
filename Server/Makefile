@@ -21,3 +21,7 @@ clean:
 	rm -f Server/Interface/*.class Server/LockManager/*.class Server/RMI/middleware/*.class Server/Transaction/*.class Server/Common/*.class Server/RMI/*.class
 	rm -f RMIInterface.jar
 	rm -f java.policy 
+
+reset:
+	rm -f $(wildcard middleware*)
+	rm -f $(wildcard resource_manager_data/*)
