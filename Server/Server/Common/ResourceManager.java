@@ -46,7 +46,7 @@ public class ResourceManager implements IResourceManager
 	protected final List<TransactionHandler> voteSentMissingResponse = new ArrayList<>();
 
 	private void findMaster() {
-		File whichRecord = new File(whichRecordPath);
+		File whichRecord = new File(whichRecordPath + "_" + m_name);
 		int suffix = 0;
 		if (whichRecord.exists()) {
             try (InputStream input = new FileInputStream(whichRecord)) {
@@ -110,7 +110,7 @@ public class ResourceManager implements IResourceManager
         ) {
             outputStream.writeObject(this);
             masterSuffix = (masterSuffix + 1) % 2;
-            try (OutputStream output = new FileOutputStream(whichRecordPath)) {
+            try (OutputStream output = new FileOutputStream(whichRecordPath + "_" + m_name)) {
                 output.write(masterSuffix);
             }
         } catch (IOException ignored) { }
