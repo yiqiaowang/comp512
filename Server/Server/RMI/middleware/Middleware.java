@@ -71,7 +71,7 @@ public class Middleware implements IResourceManager {
                             // If the `isAlive' method call fails
                             // we go directly to the catch block
                             peer.isAlive();
-                            status.setTTL(System.currentTimeMillis() + 5000);
+                            status.setTTL(System.currentTimeMillis() + 4000);
                         }
                     } catch (RemoteException e) {
                         this.failedPeers.add(peer);

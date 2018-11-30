@@ -28,7 +28,7 @@ public class ResourceManager implements IResourceManager
     /*
      * Failure Detection
      */
-    protected transient ChaosMonkey chaosMonkey = new ChaosMonkey();
+    protected ChaosMonkey chaosMonkey = new ChaosMonkey();
     protected transient RMFailureDetector failureDetector = new RMFailureDetector();
 
     protected static String s_rmiPrefix = "groupFive_";
@@ -131,7 +131,7 @@ public class ResourceManager implements IResourceManager
 	        ResourceManager resourceManager = (ResourceManager) inputStream.readObject();
 	        uncommittedTransactions = resourceManager.uncommittedTransactions;
 	        m_data = resourceManager.m_data;
-//	        chaosMonkey = resourceManager.chaosMonkey;
+	        chaosMonkey = resourceManager.chaosMonkey;
                 System.out.println("Recovered resource manager from disk");
 	        return true;
         } catch (IOException e) {

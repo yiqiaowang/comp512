@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransactionManager implements Serializable {
 
-    public transient ChaosMonkey chaosMonkey;
+    public ChaosMonkey chaosMonkey;
     private Map<Integer, Transaction> transactions;
     private AtomicInteger transactionIdGenerator;
     private LockManager lockManager;
