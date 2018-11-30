@@ -1,12 +1,10 @@
 package Server.Transaction;
 
-import Server.Common.SerializableLock;
 import Server.Interface.IResourceManager;
 import Server.Interface.InvalidTransactionException;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.HashSet;
@@ -27,7 +25,6 @@ public class Transaction implements Serializable {
 
     private AtomicLong lastOperationTimestamp = new AtomicLong();
 
-    SerializableLock lock;
 
     Transaction(int transactionId) {
         setup();
@@ -40,7 +37,6 @@ public class Transaction implements Serializable {
         resourceManagersThatVoted = new HashSet<>();
         isAborted = new AtomicBoolean(false);
         lastOperationTimestamp = new AtomicLong();
-        lock = new SerializableLock();
     }
 
     /**

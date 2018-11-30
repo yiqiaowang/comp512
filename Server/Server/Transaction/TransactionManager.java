@@ -2,6 +2,7 @@ package Server.Transaction;
 
 import Server.Common.ChaosMonkey;
 import Server.Common.CrashModes;
+import Server.Common.SerializableLock;
 import Server.Interface.InvalidTransactionException;
 import Server.LockManager.DeadlockException;
 import Server.LockManager.LockManager;
@@ -14,17 +15,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TransactionManager implements Serializable {
 
-    public ChaosMonkey chaosMonkey;
+    public transient ChaosMonkey chaosMonkey;
     private Map<Integer, Transaction> transactions;
     private AtomicInteger transactionIdGenerator;
     private LockManager lockManager;
 
     private Set<Integer> committedTransactions;
+    private Set<Integer> abortedTransactions;
 
     private static final String MIDDLEWARE_TRANSACTION_DATA = "./middleware_transaction_data";
     private static final String whichRecordPath = "./middleware_record_name";
 
     private transient volatile int masterSuffix = 0;
+    private transient Map<Integer, SerializableLock> transactionLocks;
 
 
     private static int findMaster() {
@@ -39,7 +42,7 @@ public class TransactionManager implements Serializable {
     }
 
     private void startCheckForTimeouts() {
-        
+
         // Crash mode 8
         // can't even disable this without deleting the backup file?
         this.chaosMonkey.crashIfEnabled(CrashModes.T_EIGHT);
@@ -82,6 +85,9 @@ public class TransactionManager implements Serializable {
             try {
                 TransactionManager transactionManager = initialize(new File(filePath(fileSuffix)));
                 transactionManager.masterSuffix = fileSuffix;
+                transactionManager.transactionLocks = new WeakHashMap<>();
+                transactionManager.chaosMonkey = new ChaosMonkey();
+                transactionManager.startCheckForTimeouts();
                 System.out.println("Recovered transaction manager from disk.");
                 return transactionManager;
             } catch (IOException | ClassNotFoundException ignored) { }
@@ -97,7 +103,9 @@ public class TransactionManager implements Serializable {
         transactionManager.transactionIdGenerator = new AtomicInteger(0);
         transactionManager.transactions = new ConcurrentHashMap<>();
         transactionManager.chaosMonkey = new ChaosMonkey();
-        transactionManager.committedTransactions = new HashSet<>();
+        transactionManager.committedTransactions = ConcurrentHashMap.newKeySet();
+        transactionManager.abortedTransactions = ConcurrentHashMap.newKeySet();
+        transactionManager.transactionLocks = new WeakHashMap<>();
 
         transactionManager.startCheckForTimeouts();
 
@@ -115,7 +123,6 @@ public class TransactionManager implements Serializable {
             transactionManager = (TransactionManager) inputStream.readObject();
         }
 
-        transactionManager.startCheckForTimeouts();
 
         return transactionManager;
     }
@@ -146,7 +153,7 @@ public class TransactionManager implements Serializable {
             return false;
         }
 
-        synchronized (transaction.lock)
+        synchronized (getTransactionLock(transactionId))
         {
             for (ResourceLockRequest resourceLockRequest : resourceLockRequests) {
                 try {
@@ -187,7 +194,7 @@ public class TransactionManager implements Serializable {
 
         // Crash mode 6 at the transaction manager
         if (this.chaosMonkey.checkIfEnabled(CrashModes.T_SIX)) {
-            commitResult = transaction.commit_fail();     
+            commitResult = transaction.commit_fail();
         }
 
         // Sends the commit to resource managers
@@ -198,7 +205,10 @@ public class TransactionManager implements Serializable {
         persistData();
 
         // crash mode 7
-        System.out.println("Crashing due to crash mode seven");
+        if (chaosMonkey.checkIfEnabled(CrashModes.T_SEVEN)) {
+            System.out.println("Crashing due to crash mode seven");
+        }
+
         this.chaosMonkey.crashIfEnabled(CrashModes.T_SEVEN);
 
         return commitResult;
@@ -210,6 +220,8 @@ public class TransactionManager implements Serializable {
         if (transaction == null) {
             return;
         }
+
+        abortedTransactions.add(transactionId);
 
         transaction.abort();
         transactions.remove(transactionId);
@@ -247,21 +259,20 @@ public class TransactionManager implements Serializable {
             outputStream.writeObject(this);
             masterSuffix = (masterSuffix + 1) % 2;
             try (OutputStream output = new FileOutputStream(whichRecordPath)) {
-                output.write(masterSuffix);
-                System.out.println("Succesfully persisted data and updated write pointer.");
+                output.write(masterSuffix + '0');
+                System.out.println("Successfully persisted data and updated write pointer.");
             }
         } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
     }
 
     public boolean prepare(int transactionId) throws RemoteException, InvalidTransactionException {
         boolean decision;
-        
+
         // TransactionManager crash mode 1
         this.chaosMonkey.crashIfEnabled(CrashModes.T_ONE);
-        
+
         Transaction transaction = transactions.get(transactionId);
         if (transaction == null) {
             throw new InvalidTransactionException(transactionId);
@@ -280,17 +291,26 @@ public class TransactionManager implements Serializable {
             decision = transaction.checkForCommit();
         }
 
-        // TODO: Is this the correct place to persist transaction decision?
         if (decision) {
-            synchronized (committedTransactions) {
-                committedTransactions.add(transactionId);
-            }
-            persistData();
+            committedTransactions.add(transactionId);
+        } else {
+            abortedTransactions.add(transactionId);
         }
+
+        persistData();
+
         return decision;
     }
 
     public Set<Integer> getCommittedTransactions() {
         return committedTransactions;
+    }
+
+    public Set<Integer> getAbortedTransactions() {
+        return abortedTransactions;
+    }
+
+    public SerializableLock getTransactionLock(int transactionId) {
+        return transactionLocks.computeIfAbsent(transactionId, xid -> new SerializableLock());
     }
 }

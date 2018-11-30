@@ -55,6 +55,7 @@ class TransactionHandler implements Serializable {
     }
 
     synchronized boolean commit() {
+        System.out.println("Commit called on transaction " + transactionId);
         synchronized (resourceData) {
             for (String deletedItem : deletedItems) {
                 resourceData.remove(deletedItem);
@@ -62,8 +63,6 @@ class TransactionHandler implements Serializable {
 
             resourceData.putAll(addedItems);
         }
-
-        System.out.println("Resource data is now " + resourceData);
 
 
         return true;

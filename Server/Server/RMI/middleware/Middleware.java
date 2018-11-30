@@ -555,10 +555,6 @@ public class Middleware implements IResourceManager {
         try {
             if (prepare(xid)) {
                 System.out.println("prepare = true");
-                // Set<Integer> committedTransactions = transactionManager.getCommittedTransactions();
-                // synchronized (committedTransactions) {
-                //     committedTransactions.add(xid);
-                // }
                 transactionManager.commit(xid);
                 return true;
             }
@@ -583,7 +579,7 @@ public class Middleware implements IResourceManager {
         return allShutdown;
     }
 
-    public boolean isAlive() throws RemoteException { 
+    public boolean isAlive() throws RemoteException {
         return true;
     }
     @Override
@@ -647,20 +643,26 @@ public class Middleware implements IResourceManager {
     public byte[] getTransactionsStatus(int[] xids) throws RemoteException {
         byte[] status = new byte[xids.length];
         Set<Integer> committedTransactions = transactionManager.getCommittedTransactions();
-        synchronized (committedTransactions) {
-            for (int i = 0; i < xids.length; i++) {
-                if (transactionManager.isOngoingTransaction(xids[i])) {
-                    // in progress
-                    status[i] = 2;
-                } else if (committedTransactions.contains(xids[i])) {
+        Set<Integer> abortedTransactions = transactionManager.getAbortedTransactions();
+
+        for (int i = 0; i < xids.length; i++) {
+            synchronized (transactionManager.getTransactionLock(xids[i])) {
+                if (committedTransactions.contains(xids[i])) {
                     // committed
                     status[i] = 0;
-                } else {
+                } else if (abortedTransactions.contains(xids[i])) {
                     // aborted
                     status[i] = 1;
+                } else if (transactionManager.isOngoingTransaction(xids[i])) {
+                    // in progress
+                    status[i] = 2;
+                } else {
+                    // transaction doesn't exist (not needed)
+                    status[i] = 3;
                 }
             }
         }
+
 
         return status;
     }

@@ -28,7 +28,7 @@ public class ResourceManager implements IResourceManager
     /*
      * Failure Detection
      */
-    protected ChaosMonkey chaosMonkey = new ChaosMonkey();
+    protected transient ChaosMonkey chaosMonkey = new ChaosMonkey();
     protected transient RMFailureDetector failureDetector = new RMFailureDetector();
 
     protected static String s_rmiPrefix = "groupFive_";
@@ -116,8 +116,8 @@ public class ResourceManager implements IResourceManager
             outputStream.writeObject(this);
             masterSuffix = (masterSuffix + 1) % 2;
             try (OutputStream output = new FileOutputStream(whichRecordPath + "_" + m_name)) {
-                output.write(masterSuffix);
-                System.out.println("Succesfully persisted data and updated write pointer.");
+                output.write(masterSuffix + '0');
+                System.out.println("Successfully persisted data and updated write pointer. m_data was " + m_data);
             }
         } catch (IOException ignored) { }
 	}
@@ -131,7 +131,7 @@ public class ResourceManager implements IResourceManager
 	        ResourceManager resourceManager = (ResourceManager) inputStream.readObject();
 	        uncommittedTransactions = resourceManager.uncommittedTransactions;
 	        m_data = resourceManager.m_data;
-	        chaosMonkey = resourceManager.chaosMonkey;
+//	        chaosMonkey = resourceManager.chaosMonkey;
                 System.out.println("Recovered resource manager from disk");
 	        return true;
         } catch (IOException e) {
@@ -539,10 +539,10 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public void abort(int xid) throws RemoteException {
-		TransactionHandler remove = uncommittedTransactions.remove(xid);
+		TransactionHandler transactionHandler = uncommittedTransactions.remove(xid);
 
-		if (remove != null) {
-			remove.finalDecision = TransactionDecision.ABORT;
+		if (transactionHandler != null) {
+			transactionHandler.finalDecision = TransactionDecision.ABORT;
 			persistData();
 		}
 	}
@@ -560,7 +560,7 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public boolean commit(int xid) throws RemoteException {
-		TransactionHandler transactionHandler = uncommittedTransactions.remove(xid);
+		TransactionHandler transactionHandler = uncommittedTransactions.get(xid);
 		if (transactionHandler == null) {
 			return false;
 		}
@@ -571,6 +571,7 @@ public class ResourceManager implements IResourceManager
 		// Resource manager crash mode 4
 		this.chaosMonkey.crashIfEnabled(CrashModes.R_FOUR);
 
+		uncommittedTransactions.remove(xid);
 
 		boolean result = transactionHandler.commit();
 
@@ -602,8 +603,7 @@ public class ResourceManager implements IResourceManager
 			}
 
 			voteSentMissingResponse.clear();
-		} catch (RemoteException e) {
-		}
+		} catch (RemoteException ignored) { }
 	}
 
 	@Override
@@ -666,11 +666,11 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {
-                System.out.println("Vote request received at resouce manager");
-		
+                System.out.println("Vote request received at resource manager");
+
 		/* Crash mode 1 at resource manager */
 		this.chaosMonkey.crashIfEnabled(CrashModes.R_ONE);
-		
+
 		TransactionHandler transaction = uncommittedTransactions.get(xid);
 		if (transaction == null) {
 			return false;
@@ -679,25 +679,24 @@ public class ResourceManager implements IResourceManager
 
 		boolean decision = transaction.vote();
 
-                // TODO: Is this the correct place to persist decision?
-                persistData();
+		persistData();
 
-                // Crash mode 2
-                this.chaosMonkey.crashIfEnabled(CrashModes.R_TWO);
-                
+		// Crash mode 2
+		this.chaosMonkey.crashIfEnabled(CrashModes.R_TWO);
+
 		/* Crash mode 3 at resource manager */
-                if (this.chaosMonkey.checkIfEnabled(CrashModes.R_THREE)){
-                    Thread asyncDo = new Thread(() -> {
-                        try {
-                            Thread.sleep(50);
-                        } catch(Exception e){
-                            System.exit(1);
-                        }
-                        System.exit(1);
-                    });
-                    asyncDo.start();
-                }
-                return decision;
+		if (this.chaosMonkey.checkIfEnabled(CrashModes.R_THREE)){
+			Thread asyncDo = new Thread(() -> {
+				try {
+					Thread.sleep(50);
+				} catch(Exception e){
+					System.exit(1);
+				}
+				System.exit(1);
+			});
+			asyncDo.start();
+		}
+		return decision;
 	}
 
 	@Override
@@ -707,7 +706,7 @@ public class ResourceManager implements IResourceManager
             } catch(Exception e){
                 System.exit(1);
             }
-            System.out.println("Vote request received at resouce manager");
+            System.out.println("Vote request received at resource manager");
             TransactionHandler transaction = uncommittedTransactions.get(xid);
             if (transaction == null) {
                 return false;
