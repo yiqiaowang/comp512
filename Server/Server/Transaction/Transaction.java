@@ -23,7 +23,7 @@ public class Transaction implements Serializable {
 
     private AtomicBoolean isAborted = new AtomicBoolean(false);
 
-    private AtomicLong lastOperationTimestamp = new AtomicLong();
+    public AtomicLong lastOperationTimestamp = new AtomicLong();
 
 
     Transaction(int transactionId) {

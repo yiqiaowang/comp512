@@ -641,6 +641,7 @@ public class ResourceManager implements IResourceManager
 	@Override
 	public void resetCrashes() throws RemoteException {
 		this.chaosMonkey.disableAll();
+		persistData();
 	}
 
 	@Override
@@ -664,6 +665,8 @@ public class ResourceManager implements IResourceManager
 					break;
 		}
 		this.chaosMonkey.enableCrashMode(cmode);
+
+		persistData();
 	}
 
 	@Override

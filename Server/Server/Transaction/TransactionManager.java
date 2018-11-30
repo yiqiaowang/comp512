@@ -55,20 +55,23 @@ public class TransactionManager implements Serializable {
                     return;
                 }
 
-                List<Integer> timedOutTransactionIds = new ArrayList<>();
+                List<Transaction> timedOutTransactions = new ArrayList<>();
 
                 for (Transaction transaction : transactions.values()) {
                     if (transaction.checkForTimeout()) {
-                        timedOutTransactionIds.add(transaction.getTransactionId());
+                        timedOutTransactions.add(transaction);
                     }
                 }
 
-                for (Integer timedOutTransactionId : timedOutTransactionIds) {
-                    System.out.println("Transaction " + timedOutTransactionId + " has timed out");
-                    abort(timedOutTransactionId);
+                timedOutTransactions.sort(Comparator.comparing(transaction -> transaction.lastOperationTimestamp.get()));
+
+
+                for (Transaction timedOutTransaction : timedOutTransactions) {
+                    System.out.println("Transaction " + timedOutTransaction.getTransactionId() + " has timed out");
+                    abort(timedOutTransaction.getTransactionId());
                 }
 
-                if (timedOutTransactionIds.size() > 0) {
+                if (timedOutTransactions.size() > 0) {
                     persistData();
                 }
             }

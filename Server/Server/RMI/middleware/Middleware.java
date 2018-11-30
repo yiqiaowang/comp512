@@ -589,6 +589,8 @@ public class Middleware implements IResourceManager {
         this.carsResourceManager.resetCrashes();
         this.roomsResourceManager.resetCrashes();
         this.customersResourceManager.resetCrashes();
+
+        transactionManager.persistData();
     }
 
     @Override
@@ -613,6 +615,8 @@ public class Middleware implements IResourceManager {
                     break;
         }
         this.transactionManager.chaosMonkey.enableCrashMode(cmode);
+
+        transactionManager.persistData();
     }
 
     @Override
