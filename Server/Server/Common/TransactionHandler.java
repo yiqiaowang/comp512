@@ -86,7 +86,9 @@ class TransactionHandler implements Serializable {
         }
 
         sentResponse = true;
-        return vote == COMMIT;
+        boolean decision = vote == COMMIT;
+        System.out.println("Vote decision is " + decision);
+        return decision;
     }
 
     @Override

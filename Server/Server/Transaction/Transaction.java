@@ -89,6 +89,7 @@ public class Transaction implements Serializable {
         boolean fail = false;
         for (IResourceManager resourceManager : resourceManagersInvolved.values()) {
             if (fail) {
+                System.out.println("Crashing due to crash mode six");
                 System.exit(1);
             }
             try {
@@ -166,6 +167,7 @@ public class Transaction implements Serializable {
             }
         }
 
+        System.out.println("Crashing due to crash mode two");
         System.exit(1);
         return true;
     }
@@ -178,6 +180,7 @@ public class Transaction implements Serializable {
             boolean notVoted = resourceManagersThatVoted.add(resourceManagerEntry.getKey());
             
             if (crash) {
+                System.out.println("Crashing due to crash mode three");
                 System.exit(1);
             }
 
@@ -205,6 +208,8 @@ public class Transaction implements Serializable {
             }
         }
 
+
+        System.out.println("Crashing due to crash mode four");
         System.exit(1);
         decision = true;
         return decision;

@@ -54,26 +54,28 @@ public class Middleware implements IResourceManager {
 
         // Start health checks here
         Thread checkForFailures = new Thread(() -> {
+            System.out.println("Starting health checks");
             while (true) {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     return;
                 }
 
                 for (IResourceManager peer : this.resourceManagerStatus.keySet()) {
+                    String peerName = "Unknown";
                     try {
                         PeerStatus status = this.resourceManagerStatus.get(peer);
-                        String peerName = peer.getName();
+                        peerName = peer.getName();
                         if (System.currentTimeMillis() > status.getTTL()) {
                             // If the `isAlive' method call fails
                             // we go directly to the catch block
                             peer.isAlive();
-                            status.setTTL(System.currentTimeMillis() + 2000);
+                            status.setTTL(System.currentTimeMillis() + 5000);
                         }
                     } catch (RemoteException e) {
                         this.failedPeers.add(peer);
-                        System.out.println("Suspected failure detected at a resource manager!");
+                        System.out.println("Suspected failure detected at resource manager " + peerName);
                     }
                 }
             }
@@ -666,10 +668,13 @@ public class Middleware implements IResourceManager {
 
     @Override
     public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {  
+        System.out.println("Starting vote request");
         int numTimeouts = 5;
         for (int i = 0; i < numTimeouts; i++) {
             try {
-                return transactionManager.prepare(xid);
+                boolean decision = transactionManager.prepare(xid);
+                System.out.println("Decision of vote request is " + decision);
+                return decision; 
             } catch (RemoteException | InvalidTransactionException e) {
                 try {
                     Thread.sleep(10 * 1000);

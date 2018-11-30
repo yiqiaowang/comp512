@@ -65,6 +65,8 @@ public class ResourceManager implements IResourceManager
 
 
 	private void startup() {
+            System.out.println("Starting up resource manager ");
+                            
 		findMaster();
 
                 // crash mode 5
@@ -115,6 +117,7 @@ public class ResourceManager implements IResourceManager
             masterSuffix = (masterSuffix + 1) % 2;
             try (OutputStream output = new FileOutputStream(whichRecordPath + "_" + m_name)) {
                 output.write(masterSuffix);
+                System.out.println("Succesfully persisted data and updated write pointer.");
             }
         } catch (IOException ignored) { }
 	}
@@ -129,6 +132,7 @@ public class ResourceManager implements IResourceManager
 	        uncommittedTransactions = resourceManager.uncommittedTransactions;
 	        m_data = resourceManager.m_data;
 	        chaosMonkey = resourceManager.chaosMonkey;
+                System.out.println("Recovered resource manager from disk");
 	        return true;
         } catch (IOException e) {
             // If this happens, then there is no data to read
@@ -662,6 +666,7 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public boolean prepare(int xid) throws RemoteException, InvalidTransactionException {
+                System.out.println("Vote request received at resouce manager");
 		
 		/* Crash mode 1 at resource manager */
 		this.chaosMonkey.crashIfEnabled(CrashModes.R_ONE);
@@ -702,6 +707,7 @@ public class ResourceManager implements IResourceManager
             } catch(Exception e){
                 System.exit(1);
             }
+            System.out.println("Vote request received at resouce manager");
             TransactionHandler transaction = uncommittedTransactions.get(xid);
             if (transaction == null) {
                 return false;

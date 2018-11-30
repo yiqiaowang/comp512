@@ -7,10 +7,12 @@ public class ChaosMonkey implements Serializable {
    private HashSet<CrashModes> activeModes = new HashSet<>();
 
    public void enableCrashMode(CrashModes mode) {
+       System.out.println("Added crash mode " + mode.name());
        this.activeModes.add(mode);
    }
 
    public void disableAll() {
+       System.out.println("Cleared crash modes");
        this.activeModes.clear();
    }
 

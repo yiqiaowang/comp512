@@ -75,17 +75,19 @@ public class TransactionManager implements Serializable {
 
 
     public static TransactionManager create() {
+
         int masterSuffix = findMaster();
 
         for (int fileSuffix: new int[] {masterSuffix, (masterSuffix + 1) % 2}) {
             try {
                 TransactionManager transactionManager = initialize(new File(filePath(fileSuffix)));
                 transactionManager.masterSuffix = fileSuffix;
+                System.out.println("Recovered transaction manager from disk.");
                 return transactionManager;
             } catch (IOException | ClassNotFoundException ignored) { }
         }
 
-
+        System.out.println("Created new transaction manager.");
         return createBlankTransaction();
     }
 
@@ -195,7 +197,8 @@ public class TransactionManager implements Serializable {
 
         persistData();
 
-        // crash mode 6
+        // crash mode 7
+        System.out.println("Crashing due to crash mode seven");
         this.chaosMonkey.crashIfEnabled(CrashModes.T_SEVEN);
 
         return commitResult;
@@ -245,6 +248,7 @@ public class TransactionManager implements Serializable {
             masterSuffix = (masterSuffix + 1) % 2;
             try (OutputStream output = new FileOutputStream(whichRecordPath)) {
                 output.write(masterSuffix);
+                System.out.println("Succesfully persisted data and updated write pointer.");
             }
         } catch (IOException e) {
             e.printStackTrace();
