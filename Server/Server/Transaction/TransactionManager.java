@@ -79,14 +79,13 @@ public class TransactionManager implements Serializable {
 
     public static TransactionManager create() {
 
-        int masterSuffix = findMaster();
+        int suffix = findMaster();
 
-        for (int fileSuffix: new int[] {masterSuffix, (masterSuffix + 1) % 2}) {
+        for (int fileSuffix: new int[] {suffix, (suffix + 1) % 2}) {
             try {
                 TransactionManager transactionManager = initialize(new File(filePath(fileSuffix)));
                 transactionManager.masterSuffix = fileSuffix;
                 transactionManager.transactionLocks = new WeakHashMap<>();
-                transactionManager.chaosMonkey = new ChaosMonkey();
                 transactionManager.startCheckForTimeouts();
                 System.out.println("Recovered transaction manager from disk.");
                 return transactionManager;

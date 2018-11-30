@@ -405,7 +405,7 @@ public class Middleware implements IResourceManager {
                 return false;
             }
 
-            int rentalPrice = flightsResourceManager.queryCarsPrice(id, location);
+            int rentalPrice = carsResourceManager.queryCarsPrice(id, location);
 
             customersResourceManager.reserveCustomer(id, customerID, Car.getKey(location), location, rentalPrice);
 

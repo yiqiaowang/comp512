@@ -54,7 +54,7 @@ public class ResourceManager implements IResourceManager
             } catch (IOException e) { }
         }
 
-        for (int fileSuffix: new int[] {masterSuffix, (masterSuffix + 1) % 2}) {
+        for (int fileSuffix: new int[] {suffix, (suffix + 1) % 2}) {
             if (readPersistedData(fileSuffix)) {
                 this.masterSuffix = fileSuffix;
                 return;
@@ -65,12 +65,12 @@ public class ResourceManager implements IResourceManager
 
 
 	private void startup() {
-            System.out.println("Starting up resource manager ");
+		System.out.println("Starting up resource manager ");
                             
 		findMaster();
 
-                // crash mode 5
-                this.chaosMonkey.crashIfEnabled(CrashModes.R_FIVE);
+		// crash mode 5
+		this.chaosMonkey.crashIfEnabled(CrashModes.R_FIVE);
 
 		List<TransactionHandler> abortedTransactions = new ArrayList<>();
 
@@ -117,7 +117,9 @@ public class ResourceManager implements IResourceManager
             masterSuffix = (masterSuffix + 1) % 2;
             try (OutputStream output = new FileOutputStream(whichRecordPath + "_" + m_name)) {
                 output.write(masterSuffix + '0');
-                System.out.println("Successfully persisted data and updated write pointer. m_data was " + m_data);
+                System.out.println("Successfully persisted data and updated write pointer");
+                System.out.println("m_data was " + m_data);
+                System.out.println("uncommitted transactions was " + uncommittedTransactions);
             }
         } catch (IOException ignored) { }
 	}
@@ -132,7 +134,7 @@ public class ResourceManager implements IResourceManager
 	        uncommittedTransactions = resourceManager.uncommittedTransactions;
 	        m_data = resourceManager.m_data;
 	        chaosMonkey = resourceManager.chaosMonkey;
-                System.out.println("Recovered resource manager from disk");
+	        System.out.println("Recovered resource manager from disk");
 	        return true;
         } catch (IOException e) {
             // If this happens, then there is no data to read
